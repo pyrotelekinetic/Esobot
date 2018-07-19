@@ -27,7 +27,7 @@ def get_command_signature(command):
     return result
 
 
-class General(object):
+class General:
     """General-purpose commands."""
 
     def __init__(self, bot):

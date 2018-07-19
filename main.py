@@ -61,11 +61,6 @@ async def on_resume():
     l.info("Resumed session")
 
 
-error_descriptions = {
-    commands.MissingRequiredArgument: lambda exc: f"Missing required argument: {exc.param.name}.",
-}
-
-
 @bot.event
 async def on_command_error(ctx, exc, *args, **kwargs):
     command_name = ctx.command.name if ctx.command else 'unknown command'

@@ -57,7 +57,7 @@ class DiscordOutput:
         await self.message.edit(content="```\n" + clean(self.output) + "\n```")
 
 
-class Esolangs(object):
+class Esolangs:
     """Commands related to esoteric programming languages."""
 
     def __init__(self, bot):
@@ -112,6 +112,7 @@ class Esolangs(object):
         else:
             program = program_msg.content
             if program == "@hello world":
+                await ctx.send(f"Running Hello World: `{interpreter.hello_world}`")
                 program = interpreter.hello_world
 
         console = await ctx.send("```\n```")

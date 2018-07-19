@@ -2,6 +2,7 @@ import asyncio
 import discord
 import json
 import pytz
+import time
 
 from constants import colors, channels, paths
 from utils import make_embed
@@ -9,7 +10,7 @@ from discord.ext import commands
 from datetime import datetime
 
 
-class Time(object):
+class Time:
     """Commands related to time and delaying messages."""
 
     def __init__(self, bot):
@@ -85,12 +86,12 @@ class Time(object):
             await ctx.send(
                 embed=make_embed(
                     title="...I'm sorry?",
-                    description=f"You don't have a timezone set."
+                    description=f"You don't have a timezone set.",
                     color=colors.EMBED_ERROR
                 )
             )
             return
-        self.time.config.pop(str(ctx.author.id))
+        self.time_config.pop(str(ctx.author.id))
         with open(paths.TIME_SAVES, "w") as f:
             json.dump(self.time_config, f)
         await ctx.send(
@@ -103,19 +104,69 @@ class Time(object):
 
     async def time_loop(self, channel_id):
         await self.bot.wait_until_ready()
-
         channel = self.bot.get_channel(channel_id)
+        while True:
+            if int(time.time()) % 60 == 0:
+                break
+            await asyncio.sleep(0)
 
         while True:
+            await channel.purge()
             paginator = commands.Paginator()
             for id in self.time_config:
-                member = discord.utils.get(channel.guild.members, id=id)
+                member = discord.utils.get(channel.guild.members, id=int(id))
                 # member may be None if the member left the server since putting their timezone in
                 if member:
                     paginator.add_line(f"{member.mention}'s time is {self.get_time(id)}")
             for page in paginator.pages:
-                await ctx.send(page)
+                await channel.send(embed=make_embed(title="Times", description=page[3:-3]))
             await asyncio.sleep(60)
+
+    @commands.group(
+        aliases=["pw", "pwhen", "pingw"]
+    )
+    async def pingwhen(self, ctx):
+        """Ping someone when a certain criterium is met.
+        If the condition does not complete after 48 hours, then the command will terminate.
+        """
+
+    @pingwhen.command(
+        aliases=["on"]
+    )
+    async def online(self, ctx, member: discord.Member, *, message=None):
+        message = f"{member.mention}, {ctx.author.mention} has sent you a scheduled ping." + (f" A message was attached:\n\n```\n{message}\n```" if message else "")
+        await ctx.send(
+            embed=make_embed(
+                title="Ping scheduled",
+                description=f"{member.mention} will be pinged when they go online with the message:\n\n{message}",
+                color=colors.EMBED_SUCCESS
+            )
+        )
+        if member.status != discord.Status.online:
+            await self.bot.wait_for(
+                "member_update", 
+                check=lambda before, after: after.id == member.id and after.status == discord.Status.online
+            )
+        await ctx.send(message)
+
+    @pingwhen.command(
+        aliases=["nogame"]
+    )
+    async def free(self, ctx, member: discord.Member, *, message=None):
+        message = f"{member.mention}, {ctx.author.mention} has sent you a scheduled ping." + (f" A message was attached:\n\n```\n{message}\n```" if message else "")
+        await ctx.send(
+            embed=make_embed(
+                title="Ping scheduled",
+                description=f"{member.mention} will be pinged when they stop playing a game with the message:\n\n{message}",
+                color=colors.EMBED_SUCCESS
+            )
+        )
+        if member.activity:
+            await self.bot.wait_for(
+                "member_update", 
+                check=lambda before, after: after.id == member.id and after.activity == None
+            )
+        await ctx.send(message)
 
 
 def setup(bot):
