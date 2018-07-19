@@ -77,25 +77,45 @@ class Time(object):
                 )
             )
 
+    @time.command(
+        aliases=["remove"]
+    )
+    async def unset(self, ctx):
+        if str(ctx.author.id) not in self.time_config:
+            await ctx.send(
+                embed=make_embed(
+                    title="...I'm sorry?",
+                    description=f"You don't have a timezone set."
+                    color=colors.EMBED_ERROR
+                )
+            )
+            return
+        self.time.config.pop(str(ctx.author.id))
+        with open(paths.TIME_SAVES, "w") as f:
+            json.dump(self.time_config, f)
+        await ctx.send(
+            embed=make_embed(
+                title="Unset timezone",
+                description=f"Your timezone is now unset.",
+                color=colors.EMBED_SUCCESS
+            )
+        )
+
     async def time_loop(self, channel_id):
         await self.bot.wait_until_ready()
 
         channel = self.bot.get_channel(channel_id)
-        await channel.purge()
-        info_msg = await channel.send("Processing times...")
 
         while True:
-            next_msg = []
+            paginator = commands.Paginator()
             for id in self.time_config:
                 member = discord.utils.get(channel.guild.members, id=id)
                 # member may be None if the member left the server since putting their timezone in
                 if member:
-                    next_msg.append(f"{member.mention}'s time is {self.get_time(id)}")
-            if next_msg:
-                await info_msg.edit(content="\n".join(next_msg))
-            else:
-                await info_msg.edit(content="Nobody has added a timezone to the bot yet.")
-            await asyncio.sleep(30)
+                    paginator.add_line(f"{member.mention}'s time is {self.get_time(id)}")
+            for page in paginator.pages:
+                await ctx.send(page)
+            await asyncio.sleep(60)
 
 
 def setup(bot):
