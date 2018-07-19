@@ -87,7 +87,10 @@ class Time(object):
         while True:
             next_msg = []
             for id in self.time_config:
-               next_msg.append(f"<@{id}>'s time is {self.get_time(id)}")
+                member = discord.utils.get(channel.guild.members, id=id)
+                # member may be None if the member left the server since putting their timezone in
+                if member:
+                    next_msg.append(f"{member.mention}'s time is {self.get_time(id)}")
             if next_msg:
                 await info_msg.edit(content="\n".join(next_msg))
             else:

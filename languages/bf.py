@@ -1,5 +1,8 @@
 import random
 
+display_name = "BF"
+hello_world = "+[-[<<[+[--->]-[<<<]]]>>>-]>-.---.>..>.<<<<-.<+.>>>>>.>.<<.<-."
+
 async def interpret(program, _, stdin, stdout):
     # make sure brackets match
     count = 0
@@ -9,18 +12,18 @@ async def interpret(program, _, stdin, stdout):
         elif i == "]":
             count -= 1
         if count < 0:
-            return stdout.write("unmatched brackets")
+            return await stdout.write("unmatched brackets")
     if count != 0: 
-        return stdout.write("unmatched brackets")
+        return await stdout.write("unmatched brackets")
     cells = [0]
     pointer = 0
     idx = 0
     while idx < len(program):
         char = program[idx]
         if char == "+":
-            cells[pointer] = (cells[pointer] + 1) if cells[pointer] < 255 else 0
+            cells[pointer] = (cells[pointer] + 1) % 256
         elif char == "-":
-            cells[pointer] = (cells[pointer] - 1) if cells[pointer] > 0 else 255
+            cells[pointer] = (cells[pointer] - 1) % 256
         elif char == "<":
             if pointer > 0:
                 pointer -= 1

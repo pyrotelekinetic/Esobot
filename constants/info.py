@@ -9,6 +9,6 @@ ABOUT_TEXT = f'''\
 [Esolang Discord Server](https://discord.gg/vwsaeee).
 '''
 
-AUTHOR = 'HactarCE'
+AUTHOR = 'LyricLy'
 AUTHOR_LINK = f'https://github.com/{AUTHOR}'
 GITHUB_LINK = f'{AUTHOR_LINK}/{NAME}'
