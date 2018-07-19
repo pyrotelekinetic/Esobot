@@ -1,15 +1,17 @@
-from discord.ext import commands
 import asyncio
 import os
-from subprocess import PIPE
 import sys
+import io
+import traceback
 
-from . import ALL_EXTENSIONS
+from . import get_extensions
+from discord.ext import commands
+from subprocess import PIPE
 from constants import colors, emoji, info
 from utils import l, make_embed, react_yes_no, report_error
 
 
-class Admin(object):
+class Admin:
     """Admin-only commands."""
 
     def __init__(self, bot):
@@ -19,7 +21,7 @@ class Admin(object):
         return await self.bot.is_owner(ctx.author)
 
     @commands.command(
-        aliases=['quit']
+        aliases=['die', 'q', 'quit']
     )
     async def shutdown(self, ctx):
         """Shuts down the bot.
@@ -30,7 +32,7 @@ class Admin(object):
 
     @commands.command(
         name='shutdown!',
-        aliases=['quit!'],
+        aliases=['die!', 'q!', 'quit!'],
         hidden=True
     )
     async def shutdown_noconfirm(self, ctx):
@@ -96,7 +98,9 @@ class Admin(object):
         await m.edit(embed=embed)
         await self.reload_(ctx, '*')
 
-    @commands.command()
+    @commands.command(
+        aliases=['r']
+    )
     async def reload(self, ctx, *, extensions: str = '*'):
         """Reload an extension.
 
@@ -121,7 +125,7 @@ class Admin(object):
         color = colors.EMBED_SUCCESS
         description = ''
         if '*' in extensions:
-            extensions = ALL_EXTENSIONS
+            extensions = get_extensions()
         for extension in extensions:
             self.bot.unload_extension('cogs.' + extension)
             try:
@@ -139,6 +143,33 @@ class Admin(object):
             title=title.replace("ing", "ed"),
             description=description
         ))
+
+    @commands.command(
+        aliases=["exec"]
+    )
+    async def eval(self, ctx, *, code):
+        env = {
+            "bot": self.bot,
+            "ctx": ctx
+        }
+        try:
+            result = repr(eval(code, env))
+        except SyntaxError:
+            output = io.StringIO()
+            sys.stdout = output
+            sys.stderr = output
+            try:
+                exec(code, env)
+            except Exception:
+                traceback.print_exc()
+            sys.stdout = sys.__stdout__
+            sys.stderr = sys.__stderr__
+            output.seek(0)
+            result = output.read()
+        except Exception as e:
+            result = traceback.format_exc()
+
+        await ctx.send(f"```\n{result.replace('```', '<triple backtick removed>')}\n```")
 
 
 def setup(bot):

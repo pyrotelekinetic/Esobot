@@ -1,7 +1,9 @@
-DEV = False
+import os
+
+DEV = "ESOBOT_DEV" in os.environ
 
 NAME = 'Esobot'
-VERSION = '1.0.0' + ('-dev' * DEV)
+VERSION = '1.0.1' + ('-dev' * DEV)
 
 ABOUT_TEXT = f'''\
 {NAME} is an open source Discord bot created using \
@@ -9,6 +11,6 @@ ABOUT_TEXT = f'''\
 [Esolang Discord Server](https://discord.gg/vwsaeee).
 '''
 
-AUTHOR = 'HactarCE'
+AUTHOR = 'LyricLy'
 AUTHOR_LINK = f'https://github.com/{AUTHOR}'
 GITHUB_LINK = f'{AUTHOR_LINK}/{NAME}'

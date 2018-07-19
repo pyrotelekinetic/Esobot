@@ -1,82 +1,175 @@
-import discord
 import asyncio
+import discord
+import json
+import pytz
+import time
 
-from discord.ext import commands
-from collections import defaultdict
+from constants import colors, channels, paths
 from utils import make_embed
-from constants import colors
+from discord.ext import commands
+from datetime import datetime
 
-class Time(object):
+
+class Time:
     """Commands related to time and delaying messages."""
 
     def __init__(self, bot):
         self.bot = bot
-        self.events = defaultdict(list)
+        with open(paths.TIME_SAVES) as f:
+            self.time_config = json.load(f)
 
-    def activity(self, member, value):
-        notted = value.startswith("not ")
-        val = value if not notted else value[4:]
-        result = member.activity.name == val if member.activity else False
-        return result if not notted else not result
+    def get_time(self, id):
+        if str(id) not in self.time_config:
+            return None
 
-    def status(self, member, value):
-        notted = value.startswith("not ")
-        val = value if not notted else value[4:]
-        result = str(member.status) == value
-        return result if not notted else not result
+        now = datetime.now(pytz.timezone(self.time_config[str(id)]))
+        return now.strftime("%H:%M on %A, timezone %Z%z")
 
-    @commands.command(
+    @commands.group(
+        aliases=["tz", "when", "t"],
+        invoke_without_command=True
+    )
+    async def time(self, ctx, *, user: discord.Member = None):
+        user = ctx.author if not user else user
+        time = self.get_time(user.id)
+
+        if not time:
+            message = ("You don't have a timezone set. You can set one with `time set`." if user == ctx.author
+                  else "That user doesn't have a timezone set.")
+            await ctx.send(
+                embed=make_embed(
+                    title="Timezone not set",
+                    description=message,
+                    color=colors.EMBED_ERROR
+                )
+            )
+            return
+
+        await ctx.send(
+            embed=make_embed(
+                title=f"{user.name}'s time",
+                description=time,
+                color=colors.EMBED_SUCCESS
+            )
+        )
+
+    @time.command()
+    async def set(self, ctx, timezone="invalid"):
+        try:
+            pytz.timezone(timezone)
+            self.time_config[str(ctx.author.id)] = timezone
+            with open(paths.TIME_SAVES, "w") as f:
+                json.dump(self.time_config, f)
+            await ctx.send(
+                embed=make_embed(
+                    title="Set timezone",
+                    description=f"Your timezone is now {timezone}.",
+                    color=colors.EMBED_SUCCESS
+                )
+            )
+        except pytz.exceptions.UnknownTimeZoneError:
+            url = "https://github.com/sdispater/pytzdata/blob/master/pytzdata/_timezones.py"
+            await ctx.send(
+                embed=make_embed(
+                    title="Invalid timezone",
+                    description=f"You either set an invalid timezone or didn't specify one at all. "
+                                 "Read a list of valid timezone names [here]({url}).",
+                    color=colors.EMBED_ERROR
+                )
+            )
+
+    @time.command(
+        aliases=["remove"]
+    )
+    async def unset(self, ctx):
+        if str(ctx.author.id) not in self.time_config:
+            await ctx.send(
+                embed=make_embed(
+                    title="...I'm sorry?",
+                    description=f"You don't have a timezone set.",
+                    color=colors.EMBED_ERROR
+                )
+            )
+            return
+        self.time_config.pop(str(ctx.author.id))
+        with open(paths.TIME_SAVES, "w") as f:
+            json.dump(self.time_config, f)
+        await ctx.send(
+            embed=make_embed(
+                title="Unset timezone",
+                description=f"Your timezone is now unset.",
+                color=colors.EMBED_SUCCESS
+            )
+        )
+
+    async def time_loop(self, channel_id):
+        await self.bot.wait_until_ready()
+        channel = self.bot.get_channel(channel_id)
+        while True:
+            if int(time.time()) % 60 == 0:
+                break
+            await asyncio.sleep(0)
+
+        while True:
+            await channel.purge()
+            paginator = commands.Paginator()
+            for id in self.time_config:
+                member = discord.utils.get(channel.guild.members, id=int(id))
+                # member may be None if the member left the server since putting their timezone in
+                if member:
+                    paginator.add_line(f"{member.mention}'s time is {self.get_time(id)}")
+            for page in paginator.pages:
+                await channel.send(embed=make_embed(title="Times", description=page[3:-3]))
+            await asyncio.sleep(60)
+
+    @commands.group(
         aliases=["pw", "pwhen", "pingw"]
     )
-    async def pingwhen(self, ctx, member: discord.Member, *, criteria):
-        """Ping someone when certain critera is met.
-        `criteria` should be a comma-seperated list of `name=value`, where `name` is one of the following:
-        
-        `activity` - in which case `value` is the name of the activity and the criteria will be true once their activity is the same as the given value.
-        `status` - in which case `value` is the name of the status and the criteria will be true once their status matches the given status.
-        These values can be prepended with `not` to invert them, or you can put multiple criteria in the same place and seperate them with `or` to make the criteria count if any of the contained criteria are true.
+    async def pingwhen(self, ctx):
+        """Ping someone when a certain criterium is met.
+        If the condition does not complete after 48 hours, then the command will terminate.
         """
-        possible_criteria = {
-            "activity": self.activity,
-            "status": self.status
-        }
-        criteria_list = criteria.split(",")
-        criteria_list_ = []
-        for criteria_ in criteria_list:
-            criterias = criteria_.split(" or ")
-            criteria_list__ = []
-            for criteria__ in criterias:
-                criteria___ = criteria__.split("=")
-                try:
-                    criteria_list__.append((possible_criteria[criteria___[0].strip()], 
-                                           criteria___[1].strip()))
-                except KeyError:
-                    embed = make_embed(title="Error",
-                                       description="Invalid criteria.",
-                                       color=colors.EMBED_ERROR)
-                    await ctx.send(embed=embed)
-                    return
-            criteria_list_.append(criteria_list__)
-        self.events[member].append((criteria_list_, ctx.author, ctx.channel))
-        criteria_message = "\n".join(["\N{BULLET} " + " or ".join([y[0].__name__ + " = " + y[1] for y in x]) for x in criteria_list_])
-        embed = make_embed(title=f"Scheduled a ping for {member.name}",
-                           description=criteria_message,
-                           color=colors.EMBED_SUCCESS)
-        await ctx.send(embed=embed)
 
-    async def loop(self):
-        await self.bot.wait_until_ready()
-        while True:
-            events_copy = self.events.copy()
-            for member in self.events:
-                for event in self.events[member]:
-                    if all([any([y[0](member, y[1]) for y in x]) for x in event[0]]):
-                        await event[2].send(f"{member.mention} You have received a scheduled ping from {event[1].mention}.")
-                        events_copy[member].remove(event)
-            self.events = events_copy
-            await asyncio.sleep(1)
+    @pingwhen.command(
+        aliases=["on"]
+    )
+    async def online(self, ctx, member: discord.Member, *, message=None):
+        message = f"{member.mention}, {ctx.author.mention} has sent you a scheduled ping." + (f" A message was attached:\n\n```\n{message}\n```" if message else "")
+        await ctx.send(
+            embed=make_embed(
+                title="Ping scheduled",
+                description=f"{member.mention} will be pinged when they go online with the message:\n\n{message}",
+                color=colors.EMBED_SUCCESS
+            )
+        )
+        if member.status != discord.Status.online:
+            await self.bot.wait_for(
+                "member_update", 
+                check=lambda before, after: after.id == member.id and after.status == discord.Status.online
+            )
+        await ctx.send(message)
+
+    @pingwhen.command(
+        aliases=["nogame"]
+    )
+    async def free(self, ctx, member: discord.Member, *, message=None):
+        message = f"{member.mention}, {ctx.author.mention} has sent you a scheduled ping." + (f" A message was attached:\n\n```\n{message}\n```" if message else "")
+        await ctx.send(
+            embed=make_embed(
+                title="Ping scheduled",
+                description=f"{member.mention} will be pinged when they stop playing a game with the message:\n\n{message}",
+                color=colors.EMBED_SUCCESS
+            )
+        )
+        if member.activity:
+            await self.bot.wait_for(
+                "member_update", 
+                check=lambda before, after: after.id == member.id and after.activity == None
+            )
+        await ctx.send(message)
+
 
 def setup(bot):
     time = Time(bot)
-    bot.loop.create_task(time.loop())
-    bot.add_cog(time)
+    bot.loop.create_task(time.time_loop(channels.TIME_CHANNEL))
+    bot.add_cog(Time(bot))
