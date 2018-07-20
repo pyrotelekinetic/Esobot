@@ -7,13 +7,11 @@ import io
 from discord.ext import commands
 from urllib import parse
 from constants import colors, info
-from utils import make_embed
+from utils import make_embed, clean
 
 
 TIMEOUT = 60
 
-def clean(text):
-    return text.replace("```", "<triple backtick removed>")
 
 def format_language(module_name):
     module = importlib.import_module(f"languages.{module_name.rsplit('.', 1)[0]}")

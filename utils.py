@@ -8,6 +8,11 @@ from constants import colors, emoji
 l = logging.getLogger('bot')
 
 
+def clean(text):
+    """Clean a string for use in a multi-line code block."""
+    return text.replace("```", "<triple backtick removed>")
+
+
 def make_embed(*, fields=[], footer_text=None, **kwargs):
     # TODO Add docstring
     embed = discord.Embed(**kwargs)
@@ -64,7 +69,7 @@ async def report_error(ctx, exc, *args, bot=None, **kwargs):
         ]
     else:
         fields = []
-    tb = ''.join(traceback.format_tb(exc.__traceback__))
+    tb = clean(''.join(traceback.format_tb(exc.__traceback__)))
     fields += [
         ("Args", f"```\n{repr(args)}\n```" if args else "None", True),
         ("Keyword Args", f"```\n{repr(kwargs)}\n```" if kwargs else "None", True),
