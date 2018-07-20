@@ -72,6 +72,9 @@ async def report_error(ctx, exc, *args, bot=None, **kwargs):
     ]
     if not bot:
         bot = ctx.bot
+    if not bot.get_user(bot.owner_id):
+        return
+
     await bot.get_user(bot.owner_id).send(embed=make_embed(
         color=colors.EMBED_ERROR,
         title="Error",
