@@ -136,14 +136,11 @@ class Time:
             lambda x: self.get_time(x[1])
         )
         for key, group in groups:
-            print(key)
             if not key:
                 continue
             group_message = [key]
             for member, _ in group:
-                print(member)
                 group_message.append(member.mention)
-            print("\n    ".join(group_message))
             paginator.add_line("\n    ".join(group_message))
 
         for page in paginator.pages:
