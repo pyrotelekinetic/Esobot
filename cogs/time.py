@@ -72,8 +72,8 @@ class Time:
             await ctx.send(
                 embed=make_embed(
                     title="Invalid timezone",
-                    description=f"You either set an invalid timezone or didn't specify one at all. "
-                                 "Read a list of valid timezone names [here]({url}).",
+                    description="You either set an invalid timezone or didn't specify one at all. "
+                               f"Read a list of valid timezone names [here]({url}).",
                     color=colors.EMBED_ERROR
                 )
             )
