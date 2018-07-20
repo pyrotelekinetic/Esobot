@@ -32,7 +32,12 @@ class General:
 
     def __init__(self, bot):
         self.bot = bot
+        bot.original_help = bot.get_command('help')
         bot.remove_command('help')
+
+    def __unload(self):
+        self.bot.add_command(self.bot.original_help)
+
 
     @commands.command(
         aliases=['h', 'man'],
@@ -59,13 +64,16 @@ class General:
                     fields.append(("Aliases", aliases, True))
                 if command.help:
                     fields.append(("Description", command.help))
+                if hasattr(command, "commands"):
+                    subcommands = [f"`{get_command_signature(x)}`" + f" \N{EM DASH} {x.short_doc}" if x.short_doc else "" for x in command.commands]
+                    fields.append(("Subcommands", "\n".join(subcommands)))
                 misc = ''
                 if not command.enabled:
                     misc += "This command is currently disabled.\n"
                 if command.hidden:
                     misc += "This command is usually hidden.\n"
                 if misc:
-                    fields.append(("Miscallenous", misc))
+                    fields.append(("Miscellaneous", misc))
                 await ctx.send(embed=make_embed(
                     color=colors.EMBED_HELP,
                     title="Command help",
@@ -107,6 +115,7 @@ class General:
         aliases=['i', 'info']
     )
     async def about(self, ctx):
+        """Information about the bot."""
         await ctx.send(embed=make_embed(
             title=f"About {info.NAME}",
             description=info.ABOUT_TEXT,

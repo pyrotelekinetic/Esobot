@@ -144,33 +144,6 @@ class Admin:
             description=description
         ))
 
-    @commands.command(
-        aliases=["exec"]
-    )
-    async def eval(self, ctx, *, code):
-        env = {
-            "bot": self.bot,
-            "ctx": ctx
-        }
-        try:
-            result = repr(eval(code, env))
-        except SyntaxError:
-            output = io.StringIO()
-            sys.stdout = output
-            sys.stderr = output
-            try:
-                exec(code, env)
-            except Exception:
-                traceback.print_exc()
-            sys.stdout = sys.__stdout__
-            sys.stderr = sys.__stderr__
-            output.seek(0)
-            result = output.read()
-        except Exception as e:
-            result = traceback.format_exc()
-
-        await ctx.send(f"```\n{result.replace('```', '<triple backtick removed>')}\n```")
-
 
 def setup(bot):
     bot.add_cog(Admin(bot))

@@ -1,3 +1,4 @@
+import asyncio
 import random
 
 display_name = "BF"
@@ -19,6 +20,7 @@ async def interpret(program, _, stdin, stdout):
     pointer = 0
     idx = 0
     while idx < len(program):
+        await asyncio.sleep(0)  # yield control to the event loop
         char = program[idx]
         if char == "+":
             cells[pointer] = (cells[pointer] + 1) % 256

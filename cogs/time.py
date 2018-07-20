@@ -30,6 +30,7 @@ class Time:
         invoke_without_command=True
     )
     async def time(self, ctx, *, user: discord.Member = None):
+        """Get a user's time."""
         user = ctx.author if not user else user
         time = self.get_time(user.id)
 
@@ -55,6 +56,7 @@ class Time:
 
     @time.command()
     async def set(self, ctx, timezone="invalid"):
+        """Set a timezone for you in the database."""
         try:
             pytz.timezone(timezone)
             self.time_config[str(ctx.author.id)] = timezone
@@ -82,6 +84,7 @@ class Time:
         aliases=["remove"]
     )
     async def unset(self, ctx):
+        """Remove your timezone from the database."""
         if str(ctx.author.id) not in self.time_config:
             await ctx.send(
                 embed=make_embed(
@@ -134,6 +137,7 @@ class Time:
         aliases=["on"]
     )
     async def online(self, ctx, member: discord.Member, *, message=None):
+        """Ping when the user is online."""
         message = f"{member.mention}, {ctx.author.mention} has sent you a scheduled ping." + (f" A message was attached:\n\n```\n{message}\n```" if message else "")
         await ctx.send(
             embed=make_embed(
@@ -153,6 +157,7 @@ class Time:
         aliases=["nogame"]
     )
     async def free(self, ctx, member: discord.Member, *, message=None):
+        """Ping when the user is not playing a game."""
         message = f"{member.mention}, {ctx.author.mention} has sent you a scheduled ping." + (f" A message was attached:\n\n```\n{message}\n```" if message else "")
         await ctx.send(
             embed=make_embed(
