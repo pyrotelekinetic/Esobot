@@ -3,6 +3,7 @@ import discord
 import json
 import pytz
 import time
+import itertools
 
 from constants import colors, channels, paths
 from utils import make_embed
@@ -18,13 +19,10 @@ class Time:
         with open(paths.TIME_SAVES) as f:
             self.time_config = json.load(f)
 
-    def get_time(self, id):
-        if str(id) not in self.time_config:
-            return None
-
-        timezone = pytz.timezone(self.time_config[str(id)])
+    def get_time(self, timezone_name):
+        timezone = pytz.timezone(timezone_name)
         now = datetime.now().astimezone(timezone)
-        return now.strftime("%H:%M on %A, timezone %Z%z")
+        return now.strftime("**%H:%M** on %A (%Z%z)")
 
     @commands.group(
         aliases=["tz", "when", "t"],
@@ -33,9 +31,9 @@ class Time:
     async def time(self, ctx, *, user: discord.Member = None):
         """Get a user's time."""
         user = ctx.author if not user else user
-        time = self.get_time(user.id)
-
-        if not time:
+        try:
+            time = self.get_time(self.time_config[str(user.id)])
+        except KeyError:
             message = ("You don't have a timezone set. You can set one with `time set`." if user == ctx.author
                   else "That user doesn't have a timezone set.")
             await ctx.send(
@@ -46,14 +44,14 @@ class Time:
                 )
             )
             return
-
-        await ctx.send(
-            embed=make_embed(
-                title=f"{user.name}'s time",
-                description=time,
-                color=colors.EMBED_SUCCESS
+        else:
+            await ctx.send(
+                embed=make_embed(
+                    title=f"{user.name}'s time",
+                    description=time,
+                    color=colors.EMBED_SUCCESS
+                )
             )
-        )
 
     @time.command()
     async def set(self, ctx, timezone="invalid"):
@@ -125,12 +123,29 @@ class Time:
     async def update_times(self):
         channel = self.bot.get_channel(channels.TIME_CHANNEL)
         await channel.purge()
+
         paginator = commands.Paginator()
-        for id in self.time_config:
-            member = discord.utils.get(channel.guild.members, id=int(id))
-            # member may be None if the member left the server since putting their timezone in
-            if member:
-                paginator.add_line(f"{member.mention}'s time is {self.get_time(id)}")
+        time_config_members = {channel.guild.get_member(int(id)): timezone 
+                               for id, timezone in self.time_config.items()
+                               if channel.guild.get_member(int(id))}
+        groups = itertools.groupby(
+            sorted(
+                time_config_members.items(), 
+                key=lambda m: (self.get_time(m[1]), str(m[0]))
+            ),
+            lambda x: self.get_time(x[1])
+        )
+        for key, group in groups:
+            print(key)
+            if not key:
+                continue
+            group_message = [key]
+            for member, _ in group:
+                print(member)
+                group_message.append(member.mention)
+            print("\n    ".join(group_message))
+            paginator.add_line("\n    ".join(group_message))
+
         for page in paginator.pages:
             await channel.send(embed=make_embed(title="Times", description=page[3:-3]))
 
