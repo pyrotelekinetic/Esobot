@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 
-from discord.ext import commands
 import logging
 import sys
+import os
 
 from cogs import get_extensions
 from constants import colors, info
+from discord.ext import commands
 from utils import l, make_embed, report_error
 
 LOG_LEVEL_API = logging.WARNING
@@ -26,6 +27,9 @@ try:
 except IOError:
     print("Create a file token.txt and place the bot token in it.")
     exit(1)
+
+if not os.path.exists("config/time.json"):
+    print("Create a folder config and create a file inside of it named time.json with an empty JSON collection inside.")
 
 
 if info.DEV:
