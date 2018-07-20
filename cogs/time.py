@@ -27,7 +27,8 @@ class Time:
         if str(id) not in self.time_config:
             return None
 
-        now = datetime.now(pytz.timezone(self.time_config[str(id)]))
+        timezone = pytz.timezone(self.time_config[str(id)])
+        now = datetime.now().astimezone(timezone)
         return now.strftime("%H:%M on %A, timezone %Z%z")
 
     @commands.group(
@@ -65,6 +66,7 @@ class Time:
         try:
             pytz.timezone(timezone)
             self.time_config[str(ctx.author.id)] = timezone
+            await self.update_times()
             with open(paths.TIME_SAVES, "w") as f:
                 json.dump(self.time_config, f)
             await ctx.send(
@@ -99,9 +101,12 @@ class Time:
                 )
             )
             return
+
         self.time_config.pop(str(ctx.author.id))
+        await self.update_times()
         with open(paths.TIME_SAVES, "w") as f:
             json.dump(self.time_config, f)
+
         await ctx.send(
             embed=make_embed(
                 title="Unset timezone",
@@ -110,25 +115,29 @@ class Time:
             )
         )
 
-    async def time_loop(self, channel_id):
+    async def time_loop(self):
         await self.bot.wait_until_ready()
-        channel = self.bot.get_channel(channel_id)
+
         while True:
             if int(time.time()) % 60 == 0:
                 break
             await asyncio.sleep(0)
 
         while True:
-            await channel.purge()
-            paginator = commands.Paginator()
-            for id in self.time_config:
-                member = discord.utils.get(channel.guild.members, id=int(id))
-                # member may be None if the member left the server since putting their timezone in
-                if member:
-                    paginator.add_line(f"{member.mention}'s time is {self.get_time(id)}")
-            for page in paginator.pages:
-                await channel.send(embed=make_embed(title="Times", description=page[3:-3]))
+            await self.update_times()
             await asyncio.sleep(60)
+
+    async def update_times(self):
+        channel = self.bot.get_channel(channels.TIME_CHANNEL)
+        await channel.purge()
+        paginator = commands.Paginator()
+        for id in self.time_config:
+            member = discord.utils.get(channel.guild.members, id=int(id))
+            # member may be None if the member left the server since putting their timezone in
+            if member:
+                paginator.add_line(f"{member.mention}'s time is {self.get_time(id)}")
+        for page in paginator.pages:
+            await channel.send(embed=make_embed(title="Times", description=page[3:-3]))
 
     @commands.group(
         aliases=["pw", "pwhen", "pingw"]
@@ -181,5 +190,5 @@ class Time:
 
 def setup(bot):
     time = Time(bot)
-    bot.loop.create_task(time.time_loop(channels.TIME_CHANNEL))
+    bot.loop.create_task(time.time_loop())
     bot.add_cog(Time(bot))
