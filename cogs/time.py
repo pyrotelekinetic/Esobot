@@ -22,7 +22,7 @@ class Time:
     def get_time(self, timezone_name):
         timezone = pytz.timezone(timezone_name)
         now = datetime.now().astimezone(timezone)
-        return now.strftime("**%H:%M** on %A (%Z%z)")
+        return now.strftime("**%H:%M** (**%I:%M%p**) on %A (%Z, UTC%z)")
 
     @commands.group(
         aliases=["tz", "when", "t"],

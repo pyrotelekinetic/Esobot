@@ -98,10 +98,10 @@ class Esolangs:
             await ctx.send(embed=make_embed(
                 color=colors.EMBED_ERROR,
                 title="Error",
-                description=f"**{esolang_name}** has no interpreter at this point in time. Consider sending a pull request to add an interpreter."
+                description=f"**{language}** has no interpreter at this point in time. Consider sending a pull request to add an interpreter."
             ))
 
-        await ctx.send("Enter a program as a message or an attachment, or enter `@hello world` for a Hello World example.")
+        await ctx.send("Enter a program as a message or an attachment.")
         def check(message):
             return (message.channel == ctx.channel and
                    (message.content or message.attachments) and
