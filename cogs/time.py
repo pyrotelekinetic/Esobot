@@ -15,8 +15,13 @@ class Time:
 
     def __init__(self, bot):
         self.bot = bot
-        with open(paths.TIME_SAVES) as f:
-            self.time_config = json.load(f)
+        try:
+            with open(paths.TIME_SAVES) as f:
+                self.time_config = json.load(f)
+        except FileNotFoundError:
+            with open(paths.TIME_SAVES, "w+") as f:
+                f.write("{}")
+            self.time_config = {}
 
     def get_time(self, id):
         if str(id) not in self.time_config:
