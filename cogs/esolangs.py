@@ -15,6 +15,10 @@ TIMEOUT = 60
 def clean(text):
     return text.replace("```", "<triple backtick removed>")
 
+def format_language(module_name):
+    module = importlib.import_module(f"languages.{module_name.rsplit('.', 1)[0]}")
+    return f"\N{BULLET} {module.display_name}\n```\n{clean(module.hello_world)}\n```"
+
 
 class DiscordInput:
     def __init__(self, ctx):
@@ -111,9 +115,6 @@ class Esolangs:
             program = string.read()
         else:
             program = program_msg.content
-            if program == "@hello world":
-                await ctx.send(f"Running Hello World: `{interpreter.hello_world}`")
-                program = interpreter.hello_world
 
         console = await ctx.send("```\n```")
         try:
@@ -138,9 +139,9 @@ class Esolangs:
     async def list(self, ctx):
         """Get a list of languages supported currently."""
         await ctx.send(
-            make_embed(
+            embed=make_embed(
                 title="Languages",
-                description="\n".join(f"\N{BULLET} {importlib.import_module(f'languages.{x}').display_name}" for x in os.listdir("languages"))
+                description="\n\n".join(format_language(x) for x in os.listdir("languages") if "__" not in x)
             )
         )
 
