@@ -66,8 +66,6 @@ async def interpret(program, _, stdin, stdout):
         elif char == ",":
             cells[pointer] = ord(await stdin.read(1))
         elif char == ".":
-           await stdout.write(chr(cells[pointer]))
-           if random.random() > 0.9:
-               await stdout.flush()
+            await stdout.write(chr(cells[pointer]))
         idx += 1
     await stdout.flush()
