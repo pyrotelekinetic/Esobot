@@ -100,6 +100,7 @@ class Esolangs:
                 title="Error",
                 description=f"**{language}** has no interpreter at this point in time. Consider sending a pull request to add an interpreter."
             ))
+            return
 
         await ctx.send("Enter a program as a message or an attachment.")
         def check(message):
