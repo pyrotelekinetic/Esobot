@@ -8,7 +8,7 @@ import itertools
 from constants import colors, channels, paths
 from utils import make_embed
 from discord.ext import commands
-from datetime import datetime
+from datetime import datetime, timedelta
 
 
 class Time:
@@ -19,10 +19,15 @@ class Time:
         with open(paths.TIME_SAVES) as f:
             self.time_config = json.load(f)
 
-    def get_time(self, timezone_name):
+    @staticmethod
+    def get_time(datetime):
+        return datetime.strftime("**%H:%M** (**%I:%M%p**) on %A (%Z, UTC%z)")
+
+    @staticmethod
+    def get_datetime(timezone_name):
         timezone = pytz.timezone(timezone_name)
-        now = datetime.now().astimezone(timezone)
-        return now.strftime("**%H:%M** (**%I:%M%p**) on %A (%Z, UTC%z)")
+        date = datetime.now().astimezone(timezone)
+        return date - timedelta(microseconds=date.microsecond)
 
     @commands.group(
         aliases=["tz", "when", "t"],
@@ -32,7 +37,7 @@ class Time:
         """Get a user's time."""
         user = ctx.author if not user else user
         try:
-            time = self.get_time(self.time_config[str(user.id)])
+            time = self.get_time(self.get_datetime(self.time_config[str(user.id)]))
         except KeyError:
             message = ("You don't have a timezone set. You can set one with `time set`." if user == ctx.author
                   else "That user doesn't have a timezone set.")
@@ -125,20 +130,21 @@ class Time:
         await channel.purge()
 
         paginator = commands.Paginator()
-        time_config_members = {channel.guild.get_member(int(id)): timezone 
-                               for id, timezone in self.time_config.items()
-                               if channel.guild.get_member(int(id))}
         groups = itertools.groupby(
             sorted(
-                time_config_members.items(), 
-                key=lambda m: (self.get_time(m[1]), str(m[0]))
+                (
+                    (channel.guild.get_member(int(id)), timezone)
+                    for id, timezone in self.time_config.items() 
+                    if channel.guild.get_member(int(id))
+                ),
+                key=lambda m: (self.get_datetime(m[1]), str(m[0]))
             ),
-            lambda x: self.get_time(x[1])
+            lambda x: self.get_datetime(x[1])
         )
         for key, group in groups:
             if not key:
                 continue
-            group_message = [key]
+            group_message = [self.get_time(key)]
             for member, _ in group:
                 group_message.append(member.mention)
             paginator.add_line("\n    ".join(group_message))
