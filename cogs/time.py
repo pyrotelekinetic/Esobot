@@ -20,22 +20,14 @@ class Time:
             self.time_config = json.load(f)
 
     @staticmethod
-    def get_time(date):
-        return date.strftime("**%H:%M** (**%I:%M%p**) on %A (%Z, UTC%z)")
+    def get_time(datetime):
+        return datetime.strftime("**%H:%M** (**%I:%M%p**) on %A (%Z, UTC%z)")
 
     @staticmethod
     def get_datetime(timezone_name):
         timezone = pytz.timezone(timezone_name)
         date = datetime.now().astimezone(timezone)
         return date - timedelta(microseconds=date.microsecond)
-
-    @staticmethod
-    def time_encode(date):
-        return date.strftime("%H %M %S %A %z")
-
-    @staticmethod
-    def time_decode(datestring):
-        return datetime.strptime(datestring, "%H %M %S %A %z")
 
     @commands.group(
         aliases=["tz", "when", "t"],
@@ -141,19 +133,18 @@ class Time:
         groups = itertools.groupby(
             sorted(
                 (
-                    (channel.guild.get_member(int(id)), self.get_datetime(timezone))
+                    (channel.guild.get_member(int(id)), timezone)
                     for id, timezone in self.time_config.items() 
                     if channel.guild.get_member(int(id))
                 ),
-                key=lambda m: (m[1], str(m[0])),
-                reverse=True
+                key=lambda m: (self.get_datetime(m[1]), str(m[0]))
             ),
-            lambda x: self.time_encode(x[1])
+            lambda x: self.get_datetime(x[1])
         )
         for key, group in groups:
             if not key:
                 continue
-            group_message = [self.get_time(self.time_decode(key))]
+            group_message = [self.get_time(key)]
             for member, _ in group:
                 group_message.append(member.mention)
             paginator.add_line("\n    ".join(group_message))
