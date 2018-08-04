@@ -1,4 +1,5 @@
 import asyncio
+import discord
 
 from discord.ext import commands
 from utils import l, make_embed
@@ -26,6 +27,20 @@ def get_command_signature(command):
                 else:
                     result += f' <{name}>'
     return result
+
+async def get_message_guild(guild, id, priority_channel=None):
+    channels = guild.text_channels
+    if priority_channel:
+        channels.remove(priority_channel)
+        try:
+            return await priority_channel.get_message(id)
+        except discord.NotFound:
+            pass
+    for channel in channels:
+        try:
+            return await channel.get_message(id)
+        except discord.NotFound:
+            pass
 
 
 class General:
@@ -153,9 +168,16 @@ class General:
                 )
                 return
 
-            message = await ctx.channel.get_message(payload.message_id)
+            message = await get_message_guild(ctx.guild, payload.message_id)
         else:
-            message = await ctx.channel.get_message(message_id)
+            message = await get_message_guild(ctx.guild, message_id)
+            if not message:
+                await ctx.send(
+                    embed=make_embed(
+                        title="No message",
+                        description="Bad message ID given."
+                    )
+                )
             quote_message = ctx.channel
 
         embed = make_embed(
