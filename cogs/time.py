@@ -6,7 +6,7 @@ import time
 import itertools
 
 from constants import colors, channels, paths
-from utils import make_embed
+from utils import make_embed, clean
 from discord.ext import commands
 from datetime import datetime
 
@@ -159,7 +159,7 @@ class Time:
     )
     async def online(self, ctx, member: discord.Member, *, message=None):
         """Ping when the user is online."""
-        message = f"{member.mention}, {ctx.author.mention} has sent you a scheduled ping." + (f" A message was attached:\n\n```\n{message}\n```" if message else "")
+        message = f"{member.mention}, {ctx.author.mention} has sent you a scheduled ping." + (f" A message was attached:\n\n```\n{clean(message)}\n```" if message else "")
         await ctx.send(
             embed=make_embed(
                 title="Ping scheduled",
