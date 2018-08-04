@@ -141,8 +141,7 @@ class General:
             try:
                 payload = await self.bot.wait_for(
                     "raw_reaction_add", 
-                    check=lambda m: m.channel_id == ctx.channel.id 
-                                and m.emoji.name == emoji.QUOTE,
+                    check=lambda m: m.emoji.name == emoji.QUOTE,
                     timeout=60
                 )
             except asyncio.TimeoutError:
@@ -161,7 +160,8 @@ class General:
 
         embed = make_embed(
             description=message.content,
-            timestamp=message.edited_at or message.created_at
+            timestamp=message.edited_at or message.created_at,
+            footer_text="#" + message.channel.name
         )
         embed.set_author(name=message.author.name, icon_url=message.author.avatar_url)
         if message.attachments:
