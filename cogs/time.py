@@ -131,7 +131,7 @@ class Time:
         groups = itertools.groupby(
             sorted(
                 time_config_members.items(), 
-                key=lambda m: (datetime.now().astimezone(pytz.timezone(m[1])), str(m[0]))
+                key=lambda m: ((datetime.now().astimezone(pytz.timezone(m[1])) - datetime(1970, 1, 1)).total_seconds(), str(m[0]))
             ),
             lambda x: self.get_time(x[1])
         )
