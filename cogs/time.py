@@ -109,16 +109,17 @@ class Time:
         )
 
     async def time_loop(self):
-        await self.bot.wait_until_ready()
-
         while True:
-            if int(time.time()) % 60 == 0:
-                break
-            await asyncio.sleep(0)
+            await self.bot.wait_until_ready()
 
-        while True:
-            await self.update_times()
-            await asyncio.sleep(60)
+            while True:
+                if int(time.time()) % 60 == 0:
+                    break
+                await asyncio.sleep(0)
+
+            while not bot.is_closed():
+                await self.update_times()
+                await asyncio.sleep(60)
 
     async def update_times(self):
         channel = self.bot.get_channel(channels.TIME_CHANNEL)
@@ -131,7 +132,11 @@ class Time:
         groups = itertools.groupby(
             sorted(
                 time_config_members.items(), 
-                key=lambda m: (datetime.now().astimezone(pytz.timezone(m[1])).replace(tzinfo=None), str(m[0]))
+                key=lambda m: (
+                    datetime.now().astimezone(pytz.timezone(m[1])).replace(tzinfo=None),
+                    self.get_time(x[1]),
+                    str(m[0])
+                )
             ),
             lambda x: self.get_time(x[1])
         )
