@@ -134,7 +134,7 @@ class Time:
                 time_config_members.items(), 
                 key=lambda m: (
                     datetime.now().astimezone(pytz.timezone(m[1])).replace(tzinfo=None),
-                    self.get_time(x[1]),
+                    self.get_time(m[1]),
                     str(m[0])
                 )
             ),
