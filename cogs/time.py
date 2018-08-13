@@ -117,7 +117,7 @@ class Time:
                     break
                 await asyncio.sleep(0)
 
-            while not bot.is_closed():
+            while not self.bot.is_closed():
                 await self.update_times()
                 await asyncio.sleep(60)
 
