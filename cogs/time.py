@@ -30,7 +30,6 @@ class Time:
     )
     async def time(self, ctx, *, user: discord.Member = None):
         """Get a user's time."""
-        assert False
         user = ctx.author if not user else user
         try:
             time = self.get_time(self.time_config[str(user.id)])
@@ -134,7 +133,7 @@ class Time:
             sorted(
                 time_config_members.items(), 
                 key=lambda m: (
-                    datetime.now().astimezone(pytz.timezone(m[1])).replace(tzinfo=None),
+                    datetime.now().astimezone(pytz.timezone(m[1])).replace(tzinfo=None).day,
                     self.get_time(m[1]),
                     str(m[0])
                 )
