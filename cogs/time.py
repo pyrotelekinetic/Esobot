@@ -30,6 +30,7 @@ class Time:
     )
     async def time(self, ctx, *, user: discord.Member = None):
         """Get a user's time."""
+        assert False
         user = ctx.author if not user else user
         try:
             time = self.get_time(self.time_config[str(user.id)])
