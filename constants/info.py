@@ -3,7 +3,7 @@ import os
 DEV = "ESOBOT_DEV" in os.environ
 
 NAME = 'Esobot'
-VERSION = '1.3.0' + ('-dev' * DEV)
+VERSION = '1.5.0' + ('-dev' * DEV)
 
 ABOUT_TEXT = f'''\
 {NAME} is an open source Discord bot created using \
