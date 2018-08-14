@@ -5,7 +5,7 @@ import sys
 import os
 
 from cogs import get_extensions
-from constants import colors, info
+from constants import colors, info, paths
 from discord.ext import commands
 from utils import l, make_embed, report_error
 
@@ -28,8 +28,12 @@ except IOError:
     print("Create a file token.txt and place the bot token in it.")
     exit(1)
 
-if not os.path.exists("config/time.json"):
-    print("Create a folder config and create a file inside of it named time.json with an empty JSON collection inside.")
+if not os.path.exists(paths.CONFIG_FOLDER):
+    os.makedirs(paths.CONFIG_FOLDER)
+for file in paths.SAVE_FILES:
+    if not os.path.exists(paths.CONFIG_FOLDER + "/" + file):
+        with open(paths.CONFIG_FOLDER + "/" + file, "w") as f:
+            f.write("{}")
 
 
 if info.DEV:
