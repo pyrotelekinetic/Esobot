@@ -133,6 +133,8 @@ class Time:
             sorted(
                 time_config_members.items(), 
                 key=lambda m: (
+                    datetime.now().astimezone(pytz.timezone(m[1])).replace(tzinfo=None).year,
+                    datetime.now().astimezone(pytz.timezone(m[1])).replace(tzinfo=None).month,
                     datetime.now().astimezone(pytz.timezone(m[1])).replace(tzinfo=None).day,
                     self.get_time(m[1]),
                     str(m[0])
