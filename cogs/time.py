@@ -341,6 +341,7 @@ class Time:
 
     @manager.command()
     async def add(self, ctx, event: Event, member: discord.Member):
+        """Add a manager."""
         if ctx.author.id != event.owner:
             await show_error("You are not the owner of this event.")
         if member.id in event.managers:
@@ -355,8 +356,9 @@ class Time:
             )
         )
 
-    @manager.command()
-    async def remove(self, ctx, event: Event, member: discord.Member):
+    @manager.command(name="remove")
+    async def remove_(self, ctx, event: Event, member: discord.Member):
+        """Remove a manager."""
         if ctx.author.id != event.owner:
             await show_error("You are not the owner of this event.")
         if member.id not in event.managers:
