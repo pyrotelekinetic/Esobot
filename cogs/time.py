@@ -249,7 +249,7 @@ class Time:
     async def remove(self, ctx, event: Event):
         """Remove an event."""
         if ctx.author.id != event.owner:
-            await show_error("You are not the owner of this event.")
+            await show_error(ctx, "You are not the owner of this event.")
         event_config.pop(event.name.lower())
         with open(paths.CONFIG_FOLDER + "/" + paths.EVENT_SAVES, "w") as f:
             saving = {}
@@ -360,9 +360,9 @@ class Time:
     async def remove_(self, ctx, event: Event, member: discord.Member):
         """Remove a manager."""
         if ctx.author.id != event.owner:
-            await show_error("You are not the owner of this event.")
+            await show_error(ctx, "You are not the owner of this event.")
         if member.id not in event.managers:
-            await show_error("That member isn't a manager of this event.")
+            await show_error(ctx, "That member isn't a manager of this event.")
 
         event.managers.remove(member.id)
         await ctx.send(
