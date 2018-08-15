@@ -7,7 +7,7 @@ import os
 from cogs import get_extensions
 from constants import colors, info, paths
 from discord.ext import commands
-from utils import l, make_embed, report_error
+from utils import l, make_embed, report_error, ShowErrorException
 
 LOG_LEVEL_API = logging.WARNING
 LOG_LEVEL_BOT = logging.INFO
@@ -71,6 +71,9 @@ async def on_resume():
 
 @bot.event
 async def on_command_error(ctx, exc, *args, **kwargs):
+    if isinstance(exc, commands.CommandInvokeError) and isinstance(exc.original, ShowErrorException):
+        return
+
     command_name = ctx.command.name if ctx.command else 'unknown command'
     l.error(f"'{str(exc)}' encountered while executing '{command_name}' (args: {args}; kwargs: {kwargs})")
     if isinstance(exc, commands.UserInputError):

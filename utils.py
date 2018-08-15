@@ -86,3 +86,16 @@ async def report_error(ctx, exc, *args, bot=None, **kwargs):
         description=f'`{str(exc)}`',
         fields=fields
     ))
+
+class ShowErrorException(Exception):
+    pass  
+
+async def show_error(ctx, message, title="Error"):
+    await ctx.send(
+        embed=make_embed(
+            title=title,
+            description=message,
+            color=colors.EMBED_ERROR
+        )
+    )
+    raise ShowErrorException()

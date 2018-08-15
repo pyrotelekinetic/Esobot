@@ -1,4 +1,5 @@
 import asyncio
+import calendar
 import datetime
 import dateparser
 import discord
@@ -10,10 +11,29 @@ import itertools
 from constants import colors, channels, paths
 from collections import namedtuple
 from discord.ext import commands
-from utils import make_embed, clean
+from utils import make_embed, clean, show_error
 
 
-Event = namedtuple("Event", ["name", "times", "members"])
+class Event(commands.Converter):
+    def __init__(self, name=None, times=None, members=None, owner=None, managers=None):
+        self.name = name
+        self.times = times
+        self.members = members
+        self.owner = owner
+        self.managers = managers
+
+
+    def __iter__(self):
+        return iter([self.name, self.times, self.members, self.owner, self.managers])
+
+    async def convert(self, ctx, argument):
+        return event_config[argument.lower()]
+
+with open(paths.CONFIG_FOLDER + "/" + paths.EVENT_SAVES) as f:
+    event_config = {}
+    save = json.load(f)
+    for event in save:
+        event_config[event] = Event(*save[event])
 
 
 class Time:
@@ -23,11 +43,6 @@ class Time:
         self.bot = bot
         with open(paths.CONFIG_FOLDER + "/" + paths.TIME_SAVES) as f:
             self.time_config = json.load(f)
-        with open(paths.CONFIG_FOLDER + "/" + paths.EVENT_SAVES) as f:
-            self.event_config = {}
-            save = json.load(f)
-            for event in save:
-                self.event_config[event] = Event(*save[event])
 
     def get_time(self, timezone_name):
         timezone = pytz.timezone(timezone_name)
@@ -46,14 +61,7 @@ class Time:
         except KeyError:
             message = ("You don't have a timezone set. You can set one with `time set`." if user == ctx.author
                   else "That user doesn't have a timezone set.")
-            await ctx.send(
-                embed=make_embed(
-                    title="Timezone not set",
-                    description=message,
-                    color=colors.EMBED_ERROR
-                )
-            )
-            return
+            await show_error(ctx, message, "Timezone not set")
         else:
             await ctx.send(
                 embed=make_embed(
@@ -81,13 +89,10 @@ class Time:
             )
         except pytz.exceptions.UnknownTimeZoneError:
             url = "https://github.com/sdispater/pytzdata/blob/master/pytzdata/_timezones.py"
-            await ctx.send(
-                embed=make_embed(
-                    title="Invalid timezone",
-                    description="You either set an invalid timezone or didn't specify one at all. "
-                               f"Read a list of valid timezone names [here]({url}).",
-                    color=colors.EMBED_ERROR
-                )
+            await show_error(
+                message="You either set an invalid timezone or didn't specify one at all. "
+                       f"Read a list of valid timezone names [here]({url}).",
+                title="Invalid timezone"
             )
 
     @time.command(
@@ -96,14 +101,7 @@ class Time:
     async def unset(self, ctx):
         """Remove your timezone from the database."""
         if str(ctx.author.id) not in self.time_config:
-            await ctx.send(
-                embed=make_embed(
-                    title="...I'm sorry?",
-                    description=f"You don't have a timezone set.",
-                    color=colors.EMBED_ERROR
-                )
-            )
-            return
+            await show_error(ctx, "You don't have a timezone set.")
 
         self.time_config.pop(str(ctx.author.id))
         await self.update_times()
@@ -217,7 +215,9 @@ class Time:
     async def event(self, ctx):
         """Commands related to events."""
 
-    @event.command()
+    @event.command(
+        aliases=["add"]
+    )
     async def create(self, ctx, name, *, times=""):
         """Create an event.
         If no times are given, the event will only be able to be triggered manually.
@@ -225,23 +225,17 @@ class Time:
         If you have a time added with the `time` command, your timezone will be assumed. Otherwise, UTC will be used unless you specify a timezone like `at 12:30PM EST`.
         Example usage: `event create game in two minutes, 6PM`
         """
-        if name.lower() in self.event_config:
-            await ctx.send(
-                embed=make_embed(
-                    title="Error",
-                    description="That event already exists.",
-                    color=colors.EMBED_ERROR
-                )
-            )
-            return
-        event = Event(name, [], [])
+        if name.lower() in event_config:
+            await show_error(ctx, "That event already exists.")
+
+        event = Event(name, [], [], ctx.author.id, [])
         await self.parse_times(ctx, event, times)
 
-        self.event_config[name.lower()] = event
+        event_config[name.lower()] = event
         with open(paths.CONFIG_FOLDER + "/" + paths.EVENT_SAVES, "w") as f:
             saving = {}
-            for event in self.event_config:
-                saving[event] = list(self.event_config[event])
+            for event in event_config:
+                saving[event] = list(event_config[event])
             json.dump(saving, f)
         await ctx.send(
             embed=make_embed(
@@ -252,22 +246,15 @@ class Time:
         )
 
     @event.command()
-    async def remove(self, ctx, name):
+    async def remove(self, ctx, event: Event):
         """Remove an event."""
-        if name.lower() not in self.event_config:
-            await ctx.send(
-                embed=make_embed(
-                    title="Error",
-                    description="That event doesn't exist.",
-                    color=colors.EMBED_ERROR
-                )
-            )
-            return
-        self.event_config.pop(name.lower())
+        if ctx.author.id != event.owner:
+            await show_error("You are not the owner of this event.")
+        event_config.pop(event.name.lower())
         with open(paths.CONFIG_FOLDER + "/" + paths.EVENT_SAVES, "w") as f:
             saving = {}
-            for event in self.event_config:
-                saving[event] = list(self.event_config[event])
+            for event in event_config:
+                saving[event] = list(event_config[event])
             json.dump(saving, f)
         await ctx.send(
             embed=make_embed(
@@ -278,59 +265,41 @@ class Time:
         )
 
     @event.command()
-    async def schedule(self, ctx, name, *, times):
+    async def schedule(self, ctx, event: Event, *, times):
         """Add more scheduled times to an existing event."""
-        if name.lower() not in self.event_config:
-            await ctx.send(
-                embed=make_embed(
-                    title="Error",
-                    description="That event doesn't exist.",
-                    color=colors.EMBED_ERROR
-                )
-            )
-            return
-        await self.parse_times(ctx, self.event_config[name.lower()], times)
+        if ctx.author.id not in event.managers and ctx.author.id != event.owner:
+            await show_error(ctx, "You're not a manager of this event.")
+
+        await self.parse_times(ctx, event, times)
         await ctx.send(
             embed=make_embed(
                 title="Scheduled time",
                 description="Successfully added a new scheduled time to that event.",
-                color=colors.EMBED_ERROR
+                color=colors.EMBED_SUCCESS
             )
         )
 
     @event.command()
-    async def trigger(self, ctx, name, *, message=None):
+    async def trigger(self, ctx, event: Event, *, message=None):
         """Trigger an event manually."""
-        await self.trigger_event(name.lower(), message)
+        if ctx.author.id not in event.managers and ctx.author.id != event.owner:
+            await show_error(ctx, "You're not a manager of this event.")
+
+        await self.trigger_event(event, message)
 
     @event.command(
-        aliases=["sub"]
+        aliases=["sub", "join", "unleave"]
     )
-    async def subscribe(self, ctx, name):
+    async def subscribe(self, ctx, event: Event):
         """Subscribe to an event."""
-        if name.lower() not in self.event_config:
-            await ctx.send(
-                embed=make_embed(
-                    title="Error",
-                    description="That event doesn't exist.",
-                    color=colors.EMBED_ERROR
-                )
-            )
-            return
-        if str(ctx.author.id) in self.event_config[name.lower()].members:
-            await ctx.send(
-                embed=make_embed(
-                    title="Error",
-                    description="You're already subscribed to that event.",
-                    color=colors.EMBED_ERROR
-                )
-            )
-            return
-        self.event_config[name.lower()].members.append(str(ctx.author.id))
+        if str(ctx.author.id) in event.members:
+            await show_error(ctx, "You're already subscribed to that event.")
+
+        event.members.append(ctx.author.id)
         with open(paths.CONFIG_FOLDER + "/" + paths.EVENT_SAVES, "w") as f:
             saving = {}
-            for event in self.event_config:
-                saving[event] = list(self.event_config[event])
+            for event in event_config:
+                saving[event] = list(event_config[event])
             json.dump(saving, f)
         await ctx.send(
             embed=make_embed(
@@ -343,33 +312,18 @@ class Time:
         )
 
     @event.command(
-        aliases=["unsub"]
+        aliases=["unsub", "leave", "unjoin"]
     )
-    async def unsubscribe(self, ctx, name):
+    async def unsubscribe(self, ctx, event: Event):
         """Unsubscribe to an event."""
-        if name.lower() not in self.event_config:
-            await ctx.send(
-                embed=make_embed(
-                    title="Error",
-                    description="That event doesn't exist.",
-                    color=colors.EMBED_ERROR
-                )
-            )
-            return
-        if str(ctx.author.id) not in self.event_config[name.lower()].members:
-            await ctx.send(
-                embed=make_embed(
-                    title="Error",
-                    description="You're not subscribed to that event.",
-                    color=colors.EMBED_ERROR
-                )
-            )
-            return
-        self.event_config[name.lower()].members.remove(str(ctx.author.id))
+        if str(ctx.author.id) not in event.members:
+            await show_error(ctx, "You're not subscribed to that event.")
+
+        event.members.remove(ctx.author.id)
         with open(paths.CONFIG_FOLDER + "/" + paths.EVENT_SAVES, "w") as f:
             saving = {}
-            for event in self.event_config:
-                saving[event] = list(self.event_config[event])
+            for event in event_config:
+                saving[event] = list(event_config[event])
             json.dump(saving, f)
         await ctx.send(
             embed=make_embed(
@@ -379,10 +333,57 @@ class Time:
             )
         )
 
-    async def trigger_event(self, name, message=None):
-        event = self.event_config[name]
+    @event.group(
+        aliases=["managers"]
+    )
+    async def manager(self, ctx):
+        """Commands related to managers for events; that is, people who are allowed to trigger the event besides the owner."""
+
+    @manager.command()
+    async def add(self, ctx, event: Event, member: discord.Member):
+        if ctx.author.id != event.owner:
+            await show_error("You are not the owner of this event.")
+        if member.id in event.managers:
+            await show_error("That member is already a manager of this event.")
+
+        event.managers.append(member.id)
+        await ctx.send(
+            embed=make_embed(
+                title="Added manager",
+                description="Successfully added a manager to that event.",
+                color=colors.EMBED_SUCCESS
+            )
+        )
+
+    @manager.command()
+    async def remove(self, ctx, event: Event, member: discord.Member):
+        if ctx.author.id != event.owner:
+            await show_error("You are not the owner of this event.")
+        if member.id not in event.managers:
+            await show_error("That member isn't a manager of this event.")
+
+        event.managers.remove(member.id)
+        await ctx.send(
+            embed=make_embed(
+                title="Removed manager",
+                description="Successfully removed a manager from that event.",
+                color=colors.EMBED_SUCCESS
+            )
+        )
+
+    @manager.command()
+    async def list(self, ctx, event: Event):
+        await ctx.send(
+            embed=make_embed(
+                title="Managers",
+                description="\n".join([self.bot.get_user(x).mention for x in event.managers]),
+                color=colors.EMBED_SUCCESS
+            )
+        )
+
+    async def trigger_event(self, event, message=None):
         for id in event.members:
-            user = self.bot.get_user(int(id))
+            user = self.bot.get_user(id)
             if not user:
                 continue
             await user.send(
@@ -394,30 +395,28 @@ class Time:
 
     async def parse_times(self, ctx, event, times):
         for t in times.split(","):
-            parsed = dateparser.parse(t.strip(), settings={"TIMEZONE": "UTC", "TO_TIMEZONE": "UTC"})
-            print(parsed)
+            parsed = dateparser.parse(t.strip(), settings={"TIMEZONE": self.time_config[str(ctx.author.id)], "TO_TIMEZONE": "UTC"})
             if parsed:
-                if not parsed.tzinfo and not parsed.microsecond and not str(ctx.author.id) in self.time_config:
-                    parsed = parsed.replace(tzinfo=datetime.timezone.utc).astimezone(pytz.timezone(self.time_config[str(ctx.member.id)]))
-                if parsed < datetime.datetime.utcnow():
-                    await ctx.send("Timestamp is in the past. Try looking your times over; maybe you missed an 'in' or 'later'?")
-                    continue
-                event.times.append(time.mktime(parsed.timetuple()))
+                parsed_number = calendar.timegm(parsed.timetuple())
+                print(parsed_number, time.time())
+                while parsed_number < time.time():
+                    parsed_number += (24 * 60 * 60)
+                event.times.append(parsed_number)
         event.times.sort()
 
     async def event_loop(self):
         await self.bot.wait_until_ready()
         while True:
             while not self.bot.is_closed():
-                for event in self.event_config:
-                    if self.event_config[event].times and time.time() >= self.event_config[event].times[0]:
-                        self.event_config[event].times.pop(0)
+                for event in event_config:
+                    if event_config[event].times and time.time() >= event_config[event].times[0]:
+                        event_config[event].times.pop(0)
                         with open(paths.CONFIG_FOLDER + "/" + paths.EVENT_SAVES, "w") as f:
                             saving = {}
-                            for event in self.event_config:
-                                saving[event] = list(self.event_config[event])
+                            for event in event_config:
+                                saving[event] = list(event_config[event])
                             json.dump(saving, f)
-                        await self.trigger_event(event)
+                        await self.trigger_event(event_config[event])
                 await asyncio.sleep(1)
 
 
