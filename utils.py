@@ -1,9 +1,10 @@
 import asyncio
 import discord
+import json
 import logging
 import traceback
 
-from constants import colors, emoji
+from constants import colors, emoji, paths
 
 l = logging.getLogger('bot')
 
@@ -99,3 +100,11 @@ async def show_error(ctx, message, title="Error"):
         )
     )
     raise ShowErrorException()
+
+def load_json(name):
+    with open(paths.CONFIG_FOLDER + "/" + name) as f:
+        return json.load(f)
+
+def save_json(name, data):
+    with open(paths.CONFIG_FOLDER + "/" + name, "w+") as f:
+        json.dump(data, f)

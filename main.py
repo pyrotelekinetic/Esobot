@@ -33,7 +33,7 @@ if not os.path.exists(paths.CONFIG_FOLDER):
 for file in paths.SAVE_FILES:
     if not os.path.exists(paths.CONFIG_FOLDER + "/" + file):
         with open(paths.CONFIG_FOLDER + "/" + file, "w") as f:
-            f.write("{}")
+            f.write(paths.SAVE_FILES[file])
 
 
 if info.DEV:

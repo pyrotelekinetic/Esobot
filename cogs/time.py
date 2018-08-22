@@ -11,7 +11,7 @@ import itertools
 from constants import colors, channels, paths
 from collections import namedtuple
 from discord.ext import commands
-from utils import make_embed, clean, show_error
+from utils import make_embed, clean, show_error, load_json, save_json
 
 
 class Event(commands.Converter):
@@ -29,11 +29,10 @@ class Event(commands.Converter):
     async def convert(self, ctx, argument):
         return event_config[argument.lower()]
 
-with open(paths.CONFIG_FOLDER + "/" + paths.EVENT_SAVES) as f:
-    event_config = {}
-    save = json.load(f)
-    for event in save:
-        event_config[event] = Event(*save[event])
+save = load_json(paths.EVENT_SAVES)
+event_config = {}
+for event in save:
+    event_config[event] = Event(*save[event])
 
 
 class Time:
@@ -41,8 +40,7 @@ class Time:
 
     def __init__(self, bot):
         self.bot = bot
-        with open(paths.CONFIG_FOLDER + "/" + paths.TIME_SAVES) as f:
-            self.time_config = json.load(f)
+        self.time_config = load_json(paths.TIME_SAVES)
 
     def get_time(self, timezone_name):
         timezone = pytz.timezone(timezone_name)
@@ -78,8 +76,8 @@ class Time:
             pytz.timezone(timezone)
             self.time_config[str(ctx.author.id)] = timezone
             await self.update_times()
-            with open(paths.CONFIG_FOLDER + "/" + paths.TIME_SAVES, "w") as f:
-                json.dump(self.time_config, f)
+            save_json(paths.TIME_SAVES, self.time_config)
+
             await ctx.send(
                 embed=make_embed(
                     title="Set timezone",
@@ -105,8 +103,7 @@ class Time:
 
         self.time_config.pop(str(ctx.author.id))
         await self.update_times()
-        with open(paths.CONFIG_FOLDER + "/" + paths.TIME_SAVES, "w") as f:
-            json.dump(self.time_config, f)
+        save_json(paths.TIME_SAVES, self.time_config)
 
         await ctx.send(
             embed=make_embed(
@@ -232,11 +229,11 @@ class Time:
         await self.parse_times(ctx, event, times)
 
         event_config[name.lower()] = event
-        with open(paths.CONFIG_FOLDER + "/" + paths.EVENT_SAVES, "w") as f:
-            saving = {}
-            for event in event_config:
-                saving[event] = list(event_config[event])
-            json.dump(saving, f)
+        saving = {}
+        for event in event_config:
+            saving[event] = list(event_config[event])
+        save_json(paths.EVENT_SAVES, saving)
+
         await ctx.send(
             embed=make_embed(
                 title="Added event",
@@ -250,12 +247,13 @@ class Time:
         """Remove an event."""
         if ctx.author.id != event.owner:
             await show_error(ctx, "You are not the owner of this event.")
+
         event_config.pop(event.name.lower())
-        with open(paths.CONFIG_FOLDER + "/" + paths.EVENT_SAVES, "w") as f:
-            saving = {}
-            for event in event_config:
-                saving[event] = list(event_config[event])
-            json.dump(saving, f)
+        saving = {}
+        for event in event_config:
+            saving[event] = list(event_config[event])
+        save_json(paths.EVENT_SAVES, saving)
+
         await ctx.send(
             embed=make_embed(
                 title="Deleted event",
@@ -296,11 +294,11 @@ class Time:
             await show_error(ctx, "You're already subscribed to that event.")
 
         event.members.append(ctx.author.id)
-        with open(paths.CONFIG_FOLDER + "/" + paths.EVENT_SAVES, "w") as f:
-            saving = {}
-            for event in event_config:
-                saving[event] = list(event_config[event])
-            json.dump(saving, f)
+        saving = {}
+        for event in event_config:
+            saving[event] = list(event_config[event])
+        save_json(paths.EVENT_SAVES, saving)
+
         await ctx.send(
             embed=make_embed(
                 title="Subscribed to event",
@@ -320,11 +318,11 @@ class Time:
             await show_error(ctx, "You're not subscribed to that event.")
 
         event.members.remove(ctx.author.id)
-        with open(paths.CONFIG_FOLDER + "/" + paths.EVENT_SAVES, "w") as f:
-            saving = {}
-            for event in event_config:
-                saving[event] = list(event_config[event])
-            json.dump(saving, f)
+        saving = {}
+        for event in event_config:
+            saving[event] = list(event_config[event])
+        save_json(paths.EVENT_SAVES, saving)
+
         await ctx.send(
             embed=make_embed(
                 title="Unsubscribed to event",
@@ -348,6 +346,11 @@ class Time:
             await show_error("That member is already a manager of this event.")
 
         event.managers.append(member.id)
+        saving = {}
+        for event in event_config:
+            saving[event] = list(event_config[event])
+        save_json(paths.EVENT_SAVES, saving)
+
         await ctx.send(
             embed=make_embed(
                 title="Added manager",
@@ -365,6 +368,11 @@ class Time:
             await show_error(ctx, "That member isn't a manager of this event.")
 
         event.managers.remove(member.id)
+        saving = {}
+        for event in event_config:
+            saving[event] = list(event_config[event])
+        save_json(paths.EVENT_SAVES, saving)
+
         await ctx.send(
             embed=make_embed(
                 title="Removed manager",
