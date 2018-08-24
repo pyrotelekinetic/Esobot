@@ -15,15 +15,15 @@ class R9K:
         self.messages = set(load_json(paths.R9K_SAVES))
 
     async def on_message(self, message):
-        if message.author.bot:
+        if message.author.bot or message.channel != channels.R9K_CHANNEL:
             return
 
-        if message.content in messages:
+        if message.content in self.messages:
             await message.delete()
         else:
-            messages.add(message.content)
+            self.messages.add(message.content)
             if random.random() < 0.5:
-                save_json(paths.R9K_SAVES, list(messages))
+                save_json(paths.R9K_SAVES, list(self.messages))
 
 
 def setup(bot):
