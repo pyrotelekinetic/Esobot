@@ -15,7 +15,7 @@ class R9K:
         self.messages = set(load_json(paths.R9K_SAVES))
 
     async def on_message(self, message):
-        if message.author.bot or message.channel != channels.R9K_CHANNEL:
+        if message.author.bot or message.channel != self.channel:
             return
 
         if message.content in self.messages:
