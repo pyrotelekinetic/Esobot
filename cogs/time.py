@@ -22,12 +22,12 @@ class Event(commands.Converter):
         self.owner = owner
         self.managers = managers
 
-
     def __iter__(self):
         return iter([self.name, self.times, self.members, self.owner, self.managers])
 
     async def convert(self, ctx, argument):
         return event_config[argument.lower()]
+
 
 save = load_json(paths.EVENT_SAVES)
 event_config = {}
@@ -47,25 +47,25 @@ class Time:
         now = datetime.datetime.now().astimezone(timezone)
         return now.strftime("**%H:%M** (**%I:%M%p**) on %A (%Z, UTC%z)")
 
-    @commands.group(
-        aliases=["tz", "when", "t"],
-        invoke_without_command=True
-    )
+    @commands.group(aliases=["tz", "when", "t"], invoke_without_command=True)
     async def time(self, ctx, *, user: discord.Member = None):
         """Get a user's time."""
         user = ctx.author if not user else user
         try:
             time = self.get_time(self.time_config[str(user.id)])
         except KeyError:
-            message = ("You don't have a timezone set. You can set one with `time set`." if user == ctx.author
-                  else "That user doesn't have a timezone set.")
+            message = (
+                "You don't have a timezone set. You can set one with `time set`."
+                if user == ctx.author
+                else "That user doesn't have a timezone set."
+            )
             await show_error(ctx, message, "Timezone not set")
         else:
             await ctx.send(
                 embed=make_embed(
                     title=f"{user.name}'s time",
                     description=time,
-                    color=colors.EMBED_SUCCESS
+                    color=colors.EMBED_SUCCESS,
                 )
             )
 
@@ -82,20 +82,18 @@ class Time:
                 embed=make_embed(
                     title="Set timezone",
                     description=f"Your timezone is now {timezone}.",
-                    color=colors.EMBED_SUCCESS
+                    color=colors.EMBED_SUCCESS,
                 )
             )
         except pytz.exceptions.UnknownTimeZoneError:
             url = "https://github.com/sdispater/pytzdata/blob/master/pytzdata/_timezones.py"
             await show_error(
                 message="You either set an invalid timezone or didn't specify one at all. "
-                       f"Read a list of valid timezone names [here]({url}).",
-                title="Invalid timezone"
+                f"Read a list of valid timezone names [here]({url}).",
+                title="Invalid timezone",
             )
 
-    @time.command(
-        aliases=["remove"]
-    )
+    @time.command(aliases=["remove"])
     async def unset(self, ctx):
         """Remove your timezone from the database."""
         if str(ctx.author.id) not in self.time_config:
@@ -109,7 +107,7 @@ class Time:
             embed=make_embed(
                 title="Unset timezone",
                 description=f"Your timezone is now unset.",
-                color=colors.EMBED_SUCCESS
+                color=colors.EMBED_SUCCESS,
             )
         )
 
@@ -131,21 +129,32 @@ class Time:
         await channel.purge()
 
         paginator = commands.Paginator()
-        time_config_members = {channel.guild.get_member(int(id)): timezone 
-                               for id, timezone in self.time_config.items()
-                               if channel.guild.get_member(int(id))}
+        time_config_members = {
+            channel.guild.get_member(int(id)): timezone
+            for id, timezone in self.time_config.items()
+            if channel.guild.get_member(int(id))
+        }
         groups = itertools.groupby(
             sorted(
-                time_config_members.items(), 
+                time_config_members.items(),
                 key=lambda m: (
-                    datetime.datetime.now().astimezone(pytz.timezone(m[1])).replace(tzinfo=None).year,
-                    datetime.datetime.now().astimezone(pytz.timezone(m[1])).replace(tzinfo=None).month,
-                    datetime.datetime.now().astimezone(pytz.timezone(m[1])).replace(tzinfo=None).day,
+                    datetime.datetime.now()
+                    .astimezone(pytz.timezone(m[1]))
+                    .replace(tzinfo=None)
+                    .year,
+                    datetime.datetime.now()
+                    .astimezone(pytz.timezone(m[1]))
+                    .replace(tzinfo=None)
+                    .month,
+                    datetime.datetime.now()
+                    .astimezone(pytz.timezone(m[1]))
+                    .replace(tzinfo=None)
+                    .day,
                     self.get_time(m[1]),
-                    str(m[0])
-                )
+                    str(m[0]),
+                ),
             ),
-            lambda x: self.get_time(x[1])
+            lambda x: self.get_time(x[1]),
         )
         for key, group in groups:
             if not key:
@@ -158,63 +167,65 @@ class Time:
         for page in paginator.pages:
             await channel.send(embed=make_embed(title="Times", description=page[3:-3]))
 
-    @commands.group(
-        aliases=["pw", "pwhen", "pingw"]
-    )
+    @commands.group(aliases=["pw", "pwhen", "pingw"])
     async def pingwhen(self, ctx):
         """Ping someone when a certain criterium is met.
         If the condition does not complete after 48 hours, then the command will terminate.
         """
 
-    @pingwhen.command(
-        aliases=["on"]
-    )
+    @pingwhen.command(aliases=["on"])
     async def online(self, ctx, member: discord.Member, *, message=None):
         """Ping when the user is online."""
-        message = f"{member.mention}, {ctx.author.mention} has sent you a scheduled ping." + (f" A message was attached:\n\n```\n{clean(message)}\n```" if message else "")
+        message = (
+            f"{member.mention}, {ctx.author.mention} has sent you a scheduled ping."
+            + (
+                f" A message was attached:\n\n```\n{clean(message)}\n```"
+                if message
+                else ""
+            )
+        )
         await ctx.send(
             embed=make_embed(
                 title="Ping scheduled",
                 description=f"{member.mention} will be pinged when they go online with the message:\n\n{message}",
-                color=colors.EMBED_SUCCESS
+                color=colors.EMBED_SUCCESS,
             )
         )
         if member.status != discord.Status.online:
             await self.bot.wait_for(
-                "member_update", 
-                check=lambda before, after: after.id == member.id and after.status == discord.Status.online
+                "member_update",
+                check=lambda before, after: after.id == member.id
+                and after.status == discord.Status.online,
             )
         await ctx.send(message)
 
-    @pingwhen.command(
-        aliases=["nogame"]
-    )
+    @pingwhen.command(aliases=["nogame"])
     async def free(self, ctx, member: discord.Member, *, message=None):
         """Ping when the user is not playing a game."""
-        message = f"{member.mention}, {ctx.author.mention} has sent you a scheduled ping." + (f" A message was attached:\n\n```\n{message}\n```" if message else "")
+        message = (
+            f"{member.mention}, {ctx.author.mention} has sent you a scheduled ping."
+            + (f" A message was attached:\n\n```\n{message}\n```" if message else "")
+        )
         await ctx.send(
             embed=make_embed(
                 title="Ping scheduled",
                 description=f"{member.mention} will be pinged when they stop playing a game with the message:\n\n{message}",
-                color=colors.EMBED_SUCCESS
+                color=colors.EMBED_SUCCESS,
             )
         )
         if member.activity:
             await self.bot.wait_for(
-                "member_update", 
-                check=lambda before, after: after.id == member.id and after.activity == None
+                "member_update",
+                check=lambda before, after: after.id == member.id
+                and after.activity == None,
             )
         await ctx.send(message)
 
-    @commands.group(
-        aliases=["ev", "feed"]
-    )
+    @commands.group(aliases=["ev", "feed"])
     async def event(self, ctx):
         """Commands related to events."""
 
-    @event.command(
-        aliases=["add"]
-    )
+    @event.command(aliases=["add"])
     async def create(self, ctx, name, *, times=""):
         """Create an event.
         If no times are given, the event will only be able to be triggered manually.
@@ -238,7 +249,7 @@ class Time:
             embed=make_embed(
                 title="Added event",
                 description="Your event was created successfully.",
-                color=colors.EMBED_SUCCESS
+                color=colors.EMBED_SUCCESS,
             )
         )
 
@@ -258,7 +269,7 @@ class Time:
             embed=make_embed(
                 title="Deleted event",
                 description="Your event was removed successfully.",
-                color=colors.EMBED_SUCCESS
+                color=colors.EMBED_SUCCESS,
             )
         )
 
@@ -273,7 +284,7 @@ class Time:
             embed=make_embed(
                 title="Scheduled time",
                 description="Successfully added a new scheduled time to that event.",
-                color=colors.EMBED_SUCCESS
+                color=colors.EMBED_SUCCESS,
             )
         )
 
@@ -285,9 +296,7 @@ class Time:
 
         await self.trigger_event(event, message)
 
-    @event.command(
-        aliases=["sub", "join", "unleave"]
-    )
+    @event.command(aliases=["sub", "join", "unleave"])
     async def subscribe(self, ctx, event: Event):
         """Subscribe to an event."""
         if str(ctx.author.id) in event.members:
@@ -302,16 +311,16 @@ class Time:
         await ctx.send(
             embed=make_embed(
                 title="Subscribed to event",
-                description=("You were successfully subscribed to that event.\n"
-                "Make sure that the bot is able to DM you, "
-                "i.e. that you haven't blocked it and you have DMs from non-friends enabled on this server."),
-                color=colors.EMBED_SUCCESS
+                description=(
+                    "You were successfully subscribed to that event.\n"
+                    "Make sure that the bot is able to DM you, "
+                    "i.e. that you haven't blocked it and you have DMs from non-friends enabled on this server."
+                ),
+                color=colors.EMBED_SUCCESS,
             )
         )
 
-    @event.command(
-        aliases=["unsub", "leave", "unjoin"]
-    )
+    @event.command(aliases=["unsub", "leave", "unjoin"])
     async def unsubscribe(self, ctx, event: Event):
         """Unsubscribe to an event."""
         if str(ctx.author.id) not in event.members:
@@ -327,13 +336,11 @@ class Time:
             embed=make_embed(
                 title="Unsubscribed to event",
                 description="You were successfully unsubscribed to that event.",
-                color=colors.EMBED_SUCCESS
+                color=colors.EMBED_SUCCESS,
             )
         )
 
-    @event.group(
-        aliases=["managers"]
-    )
+    @event.group(aliases=["managers"])
     async def manager(self, ctx):
         """Commands related to managers for events; that is, people who are allowed to trigger the event besides the owner."""
 
@@ -355,7 +362,7 @@ class Time:
             embed=make_embed(
                 title="Added manager",
                 description="Successfully added a manager to that event.",
-                color=colors.EMBED_SUCCESS
+                color=colors.EMBED_SUCCESS,
             )
         )
 
@@ -377,7 +384,7 @@ class Time:
             embed=make_embed(
                 title="Removed manager",
                 description="Successfully removed a manager from that event.",
-                color=colors.EMBED_SUCCESS
+                color=colors.EMBED_SUCCESS,
             )
         )
 
@@ -386,8 +393,10 @@ class Time:
         await ctx.send(
             embed=make_embed(
                 title="Managers",
-                description="\n".join([self.bot.get_user(x).mention for x in event.managers]),
-                color=colors.EMBED_SUCCESS
+                description="\n".join(
+                    [self.bot.get_user(x).mention for x in event.managers]
+                ),
+                color=colors.EMBED_SUCCESS,
             )
         )
 
@@ -399,18 +408,24 @@ class Time:
             await user.send(
                 embed=make_embed(
                     title=f"{event.name}",
-                    description=message or f"This event has triggered."
+                    description=message or f"This event has triggered.",
                 )
             )
 
     async def parse_times(self, ctx, event, times):
         for t in times.split(","):
-            parsed = dateparser.parse(t.strip(), settings={"TIMEZONE": self.time_config[str(ctx.author.id)], "TO_TIMEZONE": "UTC"})
+            parsed = dateparser.parse(
+                t.strip(),
+                settings={
+                    "TIMEZONE": self.time_config[str(ctx.author.id)],
+                    "TO_TIMEZONE": "UTC",
+                },
+            )
             if parsed:
                 parsed_number = calendar.timegm(parsed.timetuple())
                 print(parsed_number, time.time())
                 while parsed_number < time.time():
-                    parsed_number += (24 * 60 * 60)
+                    parsed_number += 24 * 60 * 60
                 event.times.append(parsed_number)
         event.times.sort()
 
@@ -419,9 +434,14 @@ class Time:
         while True:
             while not self.bot.is_closed():
                 for event in event_config:
-                    if event_config[event].times and time.time() >= event_config[event].times[0]:
+                    if (
+                        event_config[event].times
+                        and time.time() >= event_config[event].times[0]
+                    ):
                         event_config[event].times.pop(0)
-                        with open(paths.CONFIG_FOLDER + "/" + paths.EVENT_SAVES, "w") as f:
+                        with open(
+                            paths.CONFIG_FOLDER + "/" + paths.EVENT_SAVES, "w"
+                        ) as f:
                             saving = {}
                             for event in event_config:
                                 saving[event] = list(event_config[event])

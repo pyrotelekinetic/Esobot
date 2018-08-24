@@ -20,6 +20,7 @@ class R9K:
 
         if message.content in self.messages:
             await message.delete()
+            print("h")
         else:
             self.messages.add(message.content)
             if random.random() < 0.5:

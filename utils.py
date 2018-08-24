@@ -6,7 +6,7 @@ import traceback
 
 from constants import colors, emoji, paths
 
-l = logging.getLogger('bot')
+l = logging.getLogger("bot")
 
 
 def clean(text):
@@ -34,17 +34,18 @@ async def react_yes_no(ctx, m, timeout=30):
     await m.add_reaction(emoji.CANCEL)
     try:
         reaction, _ = await ctx.bot.wait_for(
-            'reaction_add',
+            "reaction_add",
             check=lambda reaction, user: (
                 reaction.emoji in (emoji.CONFIRM, emoji.CANCEL)
-                and reaction.message.id == m.id  # not sure why I need to compare the IDs
+                and reaction.message.id
+                == m.id  # not sure why I need to compare the IDs
                 and user == ctx.message.author
             ),
-            timeout=timeout
+            timeout=timeout,
         )
-        result = 'ny'[reaction.emoji == emoji.CONFIRM]
+        result = "ny"[reaction.emoji == emoji.CONFIRM]
     except asyncio.TimeoutError:
-        result = 't'
+        result = "t"
     await m.remove_reaction(emoji.CONFIRM, ctx.me)
     await m.remove_reaction(emoji.CANCEL, ctx.me)
     return result
@@ -70,40 +71,42 @@ async def report_error(ctx, exc, *args, bot=None, **kwargs):
         ]
     else:
         fields = []
-    tb = clean(''.join(traceback.format_tb(exc.__traceback__)))
+    tb = clean("".join(traceback.format_tb(exc.__traceback__)))
     fields += [
         ("Args", f"```\n{repr(args)}\n```" if args else "None", True),
         ("Keyword Args", f"```\n{repr(kwargs)}\n```" if kwargs else "None", True),
-        ("Traceback", f"```\n{tb}\n```")
+        ("Traceback", f"```\n{tb}\n```"),
     ]
     if not bot:
         bot = ctx.bot
     if not bot.get_user(bot.owner_id):
         return
 
-    await bot.get_user(bot.owner_id).send(embed=make_embed(
-        color=colors.EMBED_ERROR,
-        title="Error",
-        description=f'`{str(exc)}`',
-        fields=fields
-    ))
+    await bot.get_user(bot.owner_id).send(
+        embed=make_embed(
+            color=colors.EMBED_ERROR,
+            title="Error",
+            description=f"`{str(exc)}`",
+            fields=fields,
+        )
+    )
+
 
 class ShowErrorException(Exception):
-    pass  
+    pass
+
 
 async def show_error(ctx, message, title="Error"):
     await ctx.send(
-        embed=make_embed(
-            title=title,
-            description=message,
-            color=colors.EMBED_ERROR
-        )
+        embed=make_embed(title=title, description=message, color=colors.EMBED_ERROR)
     )
     raise ShowErrorException()
+
 
 def load_json(name):
     with open(paths.CONFIG_FOLDER + "/" + name) as f:
         return json.load(f)
+
 
 def save_json(name, data):
     with open(paths.CONFIG_FOLDER + "/" + name, "w+") as f:

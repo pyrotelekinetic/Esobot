@@ -11,7 +11,7 @@ from utils import l, make_embed, report_error, ShowErrorException
 
 LOG_LEVEL_API = logging.WARNING
 LOG_LEVEL_BOT = logging.INFO
-LOG_FMT = '[%(asctime)s] [%(name)s] [%(levelname)s] %(message)s'
+LOG_FMT = "[%(asctime)s] [%(name)s] [%(levelname)s] %(message)s"
 
 
 try:
@@ -22,7 +22,7 @@ except ImportError:
     exit(1)
 
 try:
-    with open('token.txt') as f:
+    with open("token.txt") as f:
         TOKEN = f.read().strip()
 except IOError:
     print("Create a file token.txt and place the bot token in it.")
@@ -39,23 +39,23 @@ for file in paths.SAVE_FILES:
 if info.DEV:
     logging.basicConfig(format=LOG_FMT)
 else:
-    logging.basicConfig(format=LOG_FMT, filename='bot.log')
-logging.getLogger('discord').setLevel(LOG_LEVEL_API)
+    logging.basicConfig(format=LOG_FMT, filename="bot.log")
+logging.getLogger("discord").setLevel(LOG_LEVEL_API)
 l.setLevel(LOG_LEVEL_BOT)
 
 
 try:
-    with open('admin.txt') as f:
+    with open("admin.txt") as f:
         owner_id = int(f.read())
 except IOError:
     owner_id = None
 
-COMMAND_PREFIX = '!'
+COMMAND_PREFIX = "!"
 
 bot = commands.Bot(
     command_prefix=commands.when_mentioned_or(COMMAND_PREFIX),
     case_insensitive=True,
-    owner_id=owner_id
+    owner_id=owner_id,
 )
 
 
@@ -71,11 +71,15 @@ async def on_resume():
 
 @bot.event
 async def on_command_error(ctx, exc, *args, **kwargs):
-    if isinstance(exc, commands.CommandInvokeError) and isinstance(exc.original, ShowErrorException):
+    if isinstance(exc, commands.CommandInvokeError) and isinstance(
+        exc.original, ShowErrorException
+    ):
         return
 
-    command_name = ctx.command.name if ctx.command else 'unknown command'
-    l.error(f"'{str(exc)}' encountered while executing '{command_name}' (args: {args}; kwargs: {kwargs})")
+    command_name = ctx.command.name if ctx.command else "unknown command"
+    l.error(
+        f"'{str(exc)}' encountered while executing '{command_name}' (args: {args}; kwargs: {kwargs})"
+    )
     if isinstance(exc, commands.UserInputError):
         if isinstance(exc, commands.MissingRequiredArgument):
             description = f"Missing required argument `{exc.param.name}`."
@@ -92,12 +96,14 @@ async def on_command_error(ctx, exc, *args, **kwargs):
     elif isinstance(exc, commands.CheckFailure):
         if isinstance(exc, commands.NoPrivateMessage):
             description = "Cannot be run in a private message channel."
-        elif isinstance(exc, commands.MissingPermissions) or isinstance(exc, commands.BotMissingPermissions):
+        elif isinstance(exc, commands.MissingPermissions) or isinstance(
+            exc, commands.BotMissingPermissions
+        ):
             if isinstance(exc, commands.MissingPermissions):
                 description = "You don't have permission to do that."
             elif isinstance(exc, commands.BotMissingPermissions):
                 description = "I don't have permission to do that."
-            missing_perms = '\n'.join(exc.missing_perms)
+            missing_perms = "\n".join(exc.missing_perms)
             description += f" Missing:\n```\n{missing_perms}\n```"
         else:
             description = "Command check failed."
@@ -108,28 +114,34 @@ async def on_command_error(ctx, exc, *args, **kwargs):
     else:
         description = "Sorry, something went wrong.\n\nA team of highly trained monkeys has been dispatched to deal with the situation."
         await report_error(ctx, exc.original, *args, **kwargs)
-    await ctx.send(embed=make_embed(
-        color=colors.EMBED_ERROR,
-        title="Error",
-        description=description
-    ))
+    await ctx.send(
+        embed=make_embed(
+            color=colors.EMBED_ERROR, title="Error", description=description
+        )
+    )
 
 
 @bot.event
 async def on_error(event_method, *args, **kwargs):
     _, exc, _ = sys.exc_info()
-    l.error(f"'{str(exc)}' encountered during '{event_method}' (args: {args}; kwargs: {kwargs})")
+    l.error(
+        f"'{str(exc)}' encountered during '{event_method}' (args: {args}; kwargs: {kwargs})"
+    )
     await report_error(None, exc, *args, bot=bot, event_method=event_method, **kwargs)
 
 
 @bot.listen()
 async def on_message(message):
     ch = message.channel
-    is_private = isinstance(ch, discord.DMChannel) or isinstance(ch, discord.GroupChannel)
-    l.info(f"[#{ch.id if is_private else ch.name}] {message.author.display_name}: {message.content}")
+    is_private = isinstance(ch, discord.DMChannel) or isinstance(
+        ch, discord.GroupChannel
+    )
+    l.info(
+        f"[#{ch.id if is_private else ch.name}] {message.author.display_name}: {message.content}"
+    )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     for extension in get_extensions():
-        bot.load_extension('cogs.' + extension)
+        bot.load_extension("cogs." + extension)
     bot.run(TOKEN)

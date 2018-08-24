@@ -4,6 +4,7 @@ import random
 display_name = "Slashes (///)"
 hello_world = "Hello, World!"
 
+
 async def interpret(program, _, __, stdout):
     while program:
         await asyncio.sleep(0)

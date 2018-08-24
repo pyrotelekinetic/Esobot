@@ -4,6 +4,7 @@ import random
 display_name = "BF"
 hello_world = "+[-[<<[+[--->]-[<<<]]]>>>-]>-.---.>..>.<<<<-.<+.>>>>>.>.<<.<-."
 
+
 async def interpret(program, _, stdin, stdout):
     # make sure brackets match
     count = 0
@@ -14,7 +15,7 @@ async def interpret(program, _, stdin, stdout):
             count -= 1
         if count < 0:
             return await stdout.write("unmatched brackets")
-    if count != 0: 
+    if count != 0:
         return await stdout.write("unmatched brackets")
     cells = [0]
     pointer = 0
@@ -33,14 +34,14 @@ async def interpret(program, _, stdin, stdout):
                 cells.insert(0, 0)
         elif char == ">":
             try:
-                cells[pointer+1]
+                cells[pointer + 1]
             except IndexError:
                 cells.append(0)
             pointer += 1
         elif char == "[":
             if cells[pointer] == 0:
                 extra = 0
-                for pos, char in enumerate(program[idx+1:]):
+                for pos, char in enumerate(program[idx + 1 :]):
                     if char == "[":
                         extra += 1
                     elif char == "]":

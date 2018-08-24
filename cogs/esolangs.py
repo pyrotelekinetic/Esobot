@@ -27,10 +27,14 @@ class DiscordInput:
         response = []
         for _ in range(amount):
             if not self.buffer:
+
                 def check(message):
-                    return (message.channel == self.ctx.channel and
-                            message.author != self.ctx.bot.user and
-                            message.author == self.ctx.author)
+                    return (
+                        message.channel == self.ctx.channel
+                        and message.author != self.ctx.bot.user
+                        and message.author == self.ctx.author
+                    )
+
                 message = await self.ctx.bot.wait_for("message", check=check)
                 self.buffer = message.content + "\n"
 
@@ -64,49 +68,54 @@ class Esolangs:
 
     def __init__(self, bot):
         self.bot = bot
-        if not hasattr(bot, 'session'):
-            bot.session = aiohttp.ClientSession(loop=bot.loop, headers={"User-Agent": info.NAME})
+        if not hasattr(bot, "session"):
+            bot.session = aiohttp.ClientSession(
+                loop=bot.loop, headers={"User-Agent": info.NAME}
+            )
 
-    @commands.command(
-        aliases=["ew", "w", "wiki"]
-    )
+    @commands.command(aliases=["ew", "w", "wiki"])
     async def esowiki(self, ctx, *, esolang_name):
         """Link to the Esolang Wiki page for an esoteric programming language."""
         url = f"https://esolangs.org/wiki/{parse.quote(esolang_name)}"
         # npr = network path reference (https://stackoverflow.com/a/4978266/4958484)
         npr = f"//esolangs.org/wiki/{parse.quote(esolang_name.replace(' ', '_'))}"
         async with ctx.typing():
-            async with ctx.bot.session.get('http:' + npr) as response:
+            async with ctx.bot.session.get("http:" + npr) as response:
                 if response.status == 200:
-                    await ctx.send('https:' + npr)
+                    await ctx.send("https:" + npr)
                 else:
-                    await ctx.send(embed=make_embed(
-                        color=colors.EMBED_ERROR,
-                        title="Error",
-                        description=f"**{esolang_name.capitalize()}** is not on the Esolangs wiki. Make sure the capitalization is correct."
-                    ))
+                    await ctx.send(
+                        embed=make_embed(
+                            color=colors.EMBED_ERROR,
+                            title="Error",
+                            description=f"**{esolang_name.capitalize()}** is not on the Esolangs wiki. Make sure the capitalization is correct.",
+                        )
+                    )
 
-    @commands.group(
-        aliases=["run", "exe", "execute"],
-        invoke_without_command=True
-    )
+    @commands.group(aliases=["run", "exe", "execute"], invoke_without_command=True)
     async def interpret(self, ctx, language, *, flags=""):
         """Interpret a program in an esoteric programming language."""
         try:
             interpreter = importlib.import_module(f"languages.{language.lower()}")
         except ImportError:
-            await ctx.send(embed=make_embed(
-                color=colors.EMBED_ERROR,
-                title="Error",
-                description=f"**{language}** has no interpreter at this point in time. Consider sending a pull request to add an interpreter."
-            ))
+            await ctx.send(
+                embed=make_embed(
+                    color=colors.EMBED_ERROR,
+                    title="Error",
+                    description=f"**{language}** has no interpreter at this point in time. Consider sending a pull request to add an interpreter.",
+                )
+            )
             return
 
         await ctx.send("Enter a program as a message or an attachment.")
+
         def check(message):
-            return (message.channel == ctx.channel and
-                   (message.content or message.attachments) and
-                    message.author == ctx.author)
+            return (
+                message.channel == ctx.channel
+                and (message.content or message.attachments)
+                and message.author == ctx.author
+            )
+
         program_msg = await self.bot.wait_for("message", check=check)
         if program_msg.attachments:
             string = io.StringIO()
@@ -119,18 +128,15 @@ class Esolangs:
         try:
             await asyncio.wait_for(
                 interpreter.interpret(
-                    program, 
-                    flags, 
-                    DiscordInput(ctx), 
-                    DiscordOutput(console)
+                    program, flags, DiscordInput(ctx), DiscordOutput(console)
                 ),
-                TIMEOUT
+                TIMEOUT,
             )
         except asyncio.TimeoutError:
             await console.edit(
                 embed=make_embed(
-                    title="Timeout", 
-                    description=f"Execution timed out after {TIMEOUT} seconds."
+                    title="Timeout",
+                    description=f"Execution timed out after {TIMEOUT} seconds.",
                 )
             )
 
@@ -140,7 +146,9 @@ class Esolangs:
         await ctx.send(
             embed=make_embed(
                 title="Languages",
-                description="\n\n".join(format_language(x) for x in os.listdir("languages") if "__" not in x)
+                description="\n\n".join(
+                    format_language(x) for x in os.listdir("languages") if "__" not in x
+                ),
             )
         )
 
