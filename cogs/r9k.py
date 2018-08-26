@@ -11,11 +11,10 @@ class R9K:
 
     def __init__(self, bot):
         self.bot = bot
-        self.channel = bot.get_channel(channels.R9K_CHANNEL)
         self.messages = set(load_json(paths.R9K_SAVES))
 
     async def on_message(self, message):
-        if message.author.bot or message.channel != self.channel:
+        if message.author.bot or message.channel != self.bot.get_channel(channels.R9K_CHANNEL):
             return
 
         if message.content in self.messages:
