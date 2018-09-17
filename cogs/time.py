@@ -88,6 +88,7 @@ class Time:
         except pytz.exceptions.UnknownTimeZoneError:
             url = "https://github.com/sdispater/pytzdata/blob/master/pytzdata/_timezones.py"
             await show_error(
+                ctx,
                 message="You either set an invalid timezone or didn't specify one at all. "
                 f"Read a list of valid timezone names [here]({url}).",
                 title="Invalid timezone",
