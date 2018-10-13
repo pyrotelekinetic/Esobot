@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import asyncio
 import logging
 import sys
 import os
@@ -58,24 +59,28 @@ bot = commands.Bot(
     owner_id=owner_id,
     status=discord.Status.dnd
 )
+bot.needed_extensions = set(get_extensions())
+bot.loaded_extensions = set()
 
 
 @bot.event
 async def on_ready():
-    await bot.change_presence(status=discord.Status.online)
     l.info(f"Ready")
+    await wait_until_loaded()
+    await bot.change_presence(status=discord.Status.online)
 
 
 @bot.event
 async def on_connect():
-    for extension in get_extensions():
-        bot.load_extension("cogs." + extension)
+    l.info(f"Connected as {bot.user}")
+    await wait_until_loaded()
     await bot.change_presence(status=discord.Status.idle)
-    l.info(f"Connected as {bot.user} and loaded all extensions")
 
 
 @bot.event
-async def on_resume():
+async def on_resumed():
+    await wait_until_loaded()
+    await bot.change_presence(status=discord.Status.online)
     l.info("Resumed session")
 
 
@@ -151,5 +156,19 @@ async def on_message(message):
     )
 
 
+async def load_extensions(extensions):
+    for extension in extensions:
+        await asyncio.sleep(0)
+        bot.load_extension("cogs." + extension)
+        bot.loaded_extensions.add(extension)
+    l.info("Loaded all extensions")
+
+
+async def wait_until_loaded():
+    while bot.needed_extensions < bot.loaded_extensions:
+        await asyncio.sleep(0)
+
+
 if __name__ == "__main__":
+    bot.loop.create_task(load_extensions(bot.needed_extensions))
     bot.run(TOKEN)

@@ -1,5 +1,6 @@
 import asyncio
 import discord
+import time
 
 from discord.ext import commands
 from utils import l, make_embed
@@ -212,7 +213,7 @@ class General:
             await quote_message.send(embed=embed)
         else:
             await quote_message.edit(embed=embed)
-
+async def wait(n): await asyncio.sleep(n)
 
 def setup(bot):
     bot.add_cog(General(bot))
