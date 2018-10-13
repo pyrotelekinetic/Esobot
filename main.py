@@ -56,12 +56,22 @@ bot = commands.Bot(
     command_prefix=commands.when_mentioned_or(COMMAND_PREFIX),
     case_insensitive=True,
     owner_id=owner_id,
+    status=discord.Status.dnd
 )
 
 
 @bot.event
 async def on_ready():
-    l.info(f"Logged in as {bot.user.name}#{bot.user.discriminator}")
+    await bot.change_presence(status=discord.Status.online)
+    l.info(f"Ready")
+
+
+@bot.event
+async def on_connect():
+    for extension in get_extensions():
+        bot.load_extension("cogs." + extension)
+    await bot.change_presence(status=discord.Status.idle)
+    l.info(f"Connected as {bot.user} and loaded all extensions")
 
 
 @bot.event
@@ -142,6 +152,4 @@ async def on_message(message):
 
 
 if __name__ == "__main__":
-    for extension in get_extensions():
-        bot.load_extension("cogs." + extension)
     bot.run(TOKEN)
