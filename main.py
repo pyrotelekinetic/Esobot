@@ -159,7 +159,10 @@ async def on_message(message):
 async def load_extensions(extensions):
     for extension in extensions:
         await asyncio.sleep(0)
-        bot.load_extension("cogs." + extension)
+        try:
+            bot.load_extension("cogs." + extension)
+        except Exception:
+            continue
         bot.loaded_extensions.add(extension)
     l.info("Loaded all extensions")
 
