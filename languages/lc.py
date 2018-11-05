@@ -133,4 +133,4 @@ async def interpret(program, _, __, stdout):
 		await stdout.write(pretty(simplified))
 		await stdout.flush()
 	except Exception as err:
-		return await stdout.write(err)
+		return await stdout.write(type(err).__name__ + ": " + str(err))
