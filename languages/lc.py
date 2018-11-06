@@ -100,9 +100,12 @@ def replace_arg(ast, name, arg):
 			}
 
 def simplify(ast):
+	return remove_dead_args(eval_inside(ast))
+
+def eval_inside(ast):
 	if ast["type"] == LC_Expr.apply:
-		func = simplify(ast["func"])
-		arg = simplify(ast["arg"])
+		func = eval_inside(ast["func"])
+		arg = eval_inside(ast["arg"])
 		if (
 			(ast["func"]["type"] == LC_Expr.func) &
 			(ast["arg"]["type"] == LC_Expr.var)
@@ -110,9 +113,36 @@ def simplify(ast):
 			return replace_arg(func["body"], func["arg"], arg)
 		return {"type": LC_Expr.apply, "func": func, "arg": arg}
 	elif ast["type"] == LC_Expr.func:
-		return {"type": LC_Expr.func, "arg": ast["arg"], "body": simplify(ast["body"])}
+		return {"type": LC_Expr.func, "arg": ast["arg"], "body": eval_inside(ast["body"])}
 	else:
 		return ast
+
+def remove_dead_args(ast):
+	if ast["type"] == LC_Expr.apply:
+		func = remove_dead_args(ast["func"])
+		arg = remove_dead_args(ast["func"])
+		if func["type"] == LC_Expr.func:
+			if is_var_dead(func["body"], func["arg"]):
+				return func["body"]
+		return {"type": LC_Expr.apply, "func": func, "arg": arg}
+	elif ast["type"] == LC_Expr.func:
+		return {"type": LC_Expr.func, "arg": ast["arg"], "body": remove_dead_args(ast["body"])}
+	else:
+		return ast
+
+def is_var_dead(ast, arg):
+	if ast["type"] == LC_Expr.func:
+		if ast["arg"] == arg:
+			return True
+		else:
+			return is_var_dead(ast["body"], arg)
+	elif ast["type"] == LC_Expr.apply:
+		return is_var_dead(ast["func"], arg) & is_var_dead(ast["arg"], arg)
+	else:
+		if ast != arg:
+			return True
+		else:
+			return False
 
 def pretty(ast):
 	if ast["type"] == LC_Expr.var:
