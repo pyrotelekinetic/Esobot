@@ -120,7 +120,7 @@ def eval_inside(ast):
 def remove_dead_args(ast):
 	if ast["type"] == LC_Expr.apply:
 		func = remove_dead_args(ast["func"])
-		arg = remove_dead_args(ast["func"])
+		arg = remove_dead_args(ast["arg"])
 		if func["type"] == LC_Expr.func:
 			if is_var_dead(func["body"], func["arg"]):
 				return func["body"]
@@ -139,7 +139,7 @@ def is_var_dead(ast, arg):
 	elif ast["type"] == LC_Expr.apply:
 		return is_var_dead(ast["func"], arg) & is_var_dead(ast["arg"], arg)
 	else:
-		if ast != arg:
+		if ast["name"] != arg:
 			return True
 		else:
 			return False
