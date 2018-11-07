@@ -74,8 +74,22 @@ class Esolangs:
     @commands.command(aliases=["ew", "w", "wiki"])
     async def esowiki(self, ctx, *, esolang_name):
         """Link to the Esolang Wiki page for an esoteric programming language."""
-        url = f"https://esolangs.org/wiki/{parse.quote(esolang_name)}"
-        await ctx.send(url)
+        async with ctx.typing():
+            async with self.bot.session.get("http://esolangs.org/w/api.php",
+                                       params={"action": "query",
+                                               "list": "search",
+                                               "srsearch": parse.quote(esolang_name),
+                                               "format": "json"}) as resp:
+                data = await resp.json()
+        if not data["query"]["search"]:
+            return await ctx.send(
+                embed=make_embed(
+                    color=colors.EMBED_ERROR,
+                    title="Error",
+                    description=f"**{esolang_name.capitalize()}** wasn't found on the Esolangs wiki.",
+                )
+            )
+        await ctx.send(f"https://esolangs.org/wiki/{data['query']['search'][0]['title']}")
 
     @commands.group(aliases=["run", "exe", "execute"], invoke_without_command=True)
     async def interpret(self, ctx, language, *, flags=""):
