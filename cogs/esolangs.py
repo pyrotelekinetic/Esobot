@@ -69,28 +69,13 @@ class Esolangs:
     def __init__(self, bot):
         self.bot = bot
         if not hasattr(bot, "session"):
-            bot.session = aiohttp.ClientSession(
-                loop=bot.loop, headers={"User-Agent": info.NAME}
-            )
+            bot.session = aiohttp.ClientSession(loop=bot.loop, headers={"User-Agent": info.NAME})
 
     @commands.command(aliases=["ew", "w", "wiki"])
     async def esowiki(self, ctx, *, esolang_name):
         """Link to the Esolang Wiki page for an esoteric programming language."""
         url = f"https://esolangs.org/wiki/{parse.quote(esolang_name)}"
-        # npr = network path reference (https://stackoverflow.com/a/4978266/4958484)
-        npr = f"//esolangs.org/wiki/{parse.quote(esolang_name.replace(' ', '_'))}"
-        async with ctx.typing():
-            async with ctx.bot.session.get("http:" + npr) as response:
-                if response.status == 200:
-                    await ctx.send("https:" + npr)
-                else:
-                    await ctx.send(
-                        embed=make_embed(
-                            color=colors.EMBED_ERROR,
-                            title="Error",
-                            description=f"**{esolang_name.capitalize()}** is not on the Esolangs wiki. Make sure the capitalization is correct.",
-                        )
-                    )
+        await ctx.send(url)
 
     @commands.group(aliases=["run", "exe", "execute"], invoke_without_command=True)
     async def interpret(self, ctx, language, *, flags=""):
@@ -125,13 +110,11 @@ class Esolangs:
             program = program_msg.content
 
         console = await ctx.send("```\n```")
+        stdout = DiscordOutput(console)
         try:
-            await asyncio.wait_for(
-                interpreter.interpret(
-                    program, flags, DiscordInput(ctx), DiscordOutput(console)
-                ),
-                TIMEOUT,
-            )
+            await asyncio.wait_for(interpreter.interpret(program, flags, DiscordInput(ctx), output),
+                                   TIMEOUT)
+            await stdout.flush()
         except asyncio.TimeoutError:
             await console.edit(
                 embed=make_embed(
