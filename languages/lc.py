@@ -14,11 +14,9 @@ async def interpret(program, _, __, stdout):
 		elif i == ")":
 			depth -= 1
 		if depth < 0:
-			await stdout.write("Unexpected ).")
-			return await stdout.flush()
+			return await stdout.write("Unexpected ).")
 	if depth > 0:
-		await stdout.write("Unclosed (.")
-		return await stdout.flush()
+		return await stdout.write("Unclosed (.")
 	
 	try:
 		parsed = parse("".join(program.split()))
@@ -30,8 +28,7 @@ async def interpret(program, _, __, stdout):
 		await stdout.write(pretty(simplified))
 		await stdout.flush()
 	except Exception as err:
-		await stdout.write(type(err).__name__ + ": " + str(err))
-		await stdout.flush()
+		return await stdout.write(type(err).__name__ + ": " + str(err))
 
 class LC_Expr(Enum):
 	var = 0
