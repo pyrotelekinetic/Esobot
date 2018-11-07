@@ -112,7 +112,7 @@ class Esolangs:
         console = await ctx.send("```\n```")
         stdout = DiscordOutput(console)
         try:
-            await asyncio.wait_for(interpreter.interpret(program, flags, DiscordInput(ctx), output),
+            await asyncio.wait_for(interpreter.interpret(program, flags, DiscordInput(ctx), stdout),
                                    TIMEOUT)
             await stdout.flush()
         except asyncio.TimeoutError:
