@@ -14,9 +14,11 @@ async def interpret(program, _, stdin, stdout):
         elif i == "]":
             count -= 1
         if count < 0:
-            return await stdout.write("unmatched brackets")
+            await stdout.write("unmatched brackets")
+			return await stdout.flush()
     if count != 0:
-        return await stdout.write("unmatched brackets")
+        await stdout.write("unmatched brackets")
+		return await stdout.flush()
     cells = [0]
     pointer = 0
     idx = 0
