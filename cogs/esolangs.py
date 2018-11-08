@@ -43,10 +43,10 @@ class DiscordInput:
         return "".join(response)
 
     async def readline(self):
-        result = ""
+        result = []
         while result[-1] != "\n":
             result.append(self.read(1))
-        return result
+        return "".join(result)
 
 
 class DiscordOutput:
