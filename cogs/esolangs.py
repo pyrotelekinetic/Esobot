@@ -45,7 +45,7 @@ class DiscordInput:
     async def readline(self):
         result = []
         while result[-1] != "\n":
-            result.append(self.read(1))
+            result.append(await self.read(1))
         return "".join(result)
 
 
