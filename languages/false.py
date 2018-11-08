@@ -183,6 +183,31 @@ async def bit_not(stack, vars, _, __):
 	x = stack[-1][1]
 	return (stack[:-1] + [(Cmd.num, ~x)], vars)
 
+#####
+# Comparison
+#####
+
+async def gt(stack, vars, _, __):
+	x, y = stack[-2][1], stack[-1][1]
+	return (stack[:-2] + [(Cmd.num, x > y)], vars)
+
+async def eq(stack, vars, _, __):
+	x, y = stack[-2][1], stack[-1][1]
+	return (stack[:-2] + [(Cmd.num, x == y)], vars)
+
+#####
+# Flow control
+#####
+
+async def exe(stack, vars, stdin, stdout):
+	return await run(stack[-1][1], stack[:-1], vars, stdin, stdout)
+
+async def cond(stack, vars, stdin, stdout):
+	pred, if_true = stack[-2][1], stack[-1][1]
+	if pred:
+		return await run(stack[-1][1], stack[:-2], vars, stdin, stdout)
+	return (stack[:-2], vars)
+
 # \xDF -> ß
 built_ins = {
 	# Stack
@@ -200,5 +225,13 @@ built_ins = {
 	"_": (neg, 1, [Cmd.num], "_ (negate)"),
 	"&": (bit_and, 2, [Cmd.num, Cmd.num], "& (and)"),
 	"|": (bit_or, 2, [Cmd.num, Cmd.num], "| (or)"),
-	"~": (bit_not, 1, [Cmd.num], "~ (not)")
+	"~": (bit_not, 1, [Cmd.num], "~ (not)"),
+	
+	# Comparison
+	">": (gt, 2, [Cmd.num, Cmd.num], "> (greater than)"),
+	"=": (eq, 2, [Cmd.num, Cmd.num], "= (equal)"),
+	
+	# Flow control
+	"!": (exe, 1, [Cmd.block], "! (execute)"),
+	"?": (cond, 2, [Cmd.num, Cmd.block], "? (conditional execute)")
 }
