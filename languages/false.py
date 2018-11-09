@@ -1,22 +1,23 @@
 import asyncio
 from enum import Enum
 import re
+from itertools import chain
 
-display_name = "False"
-hello_world = '"Hello, world!\n"'
+display_name = "FALSE"
+hello_world = '"Hello, world!"'
 
 
 async def interpret(program, _, stdin, stdout):
-	#try:
+	try:
 		stack = []
-		vars = []
+		vars = {}
 		ast = parse(program)
 		if type(ast) is tuple:
 			(__, pos) = ast
 			raise Exception(f"Unmatched ] at char {pos}.")
 		return await run(ast, stack, vars, stdin, stdout)
-	#except Exception as err:
-	#	await stdout.write(type(err).__name__ + ": " + str(err))
+	except Exception as err:
+		await stdout.write(type(err).__name__ + ": " + str(err))
 
 class Cmd(Enum):
 	num = 0
@@ -165,7 +166,7 @@ async def mul(stack, vars, _, __):
 
 async def div(stack, vars, _, __):
 	x, y = stack[-2][1], stack[-1][1]
-	return (stack[:-2] + [(Cmd.num, x / y)], vars)
+	return (stack[:-2] + [(Cmd.num, x // y)], vars)
 
 async def neg(stack, vars, _, __):
 	x = stack[-1][1]
@@ -184,7 +185,7 @@ async def bit_not(stack, vars, _, __):
 	return (stack[:-1] + [(Cmd.num, ~x)], vars)
 
 #####
-# Comparison
+# COMPARISON
 #####
 
 async def gt(stack, vars, _, __):
@@ -193,10 +194,10 @@ async def gt(stack, vars, _, __):
 
 async def eq(stack, vars, _, __):
 	x, y = stack[-2][1], stack[-1][1]
-	return (stack[:-2] + [(Cmd.num, x == y)], vars)
+	return (stack[:-2] + [(Cmd.num, -1 if x == y else 0)], vars)
 
 #####
-# Flow control
+# FLOW CONTROL
 #####
 
 async def exe(stack, vars, stdin, stdout):
@@ -208,7 +209,62 @@ async def cond(stack, vars, stdin, stdout):
 		return await run(stack[-1][1], stack[:-2], vars, stdin, stdout)
 	return (stack[:-2], vars)
 
+async def loop(stack, vars, stdin, stdout):
+	pred, body = stack[-2][1], stack[-1][1]
+	(stack, vars) = await run(pred, stack[:-2], vars, stdin, stdout)
+	assert_min_depth(stack, 1, "In a # (while loop), the condition returned an empty stack.")
+	assert_args(stack, [Cmd.num], f"In a # (while loop), the condition returned a {pretty_type(stack[-1][0])} when it should've been a number.")
+	while stack[-1][1]:
+		stack = stack[:-1]
+		(stack, vars) = await run(body, stack, vars, stdin, stdout)
+		(stack, vars) = await run(pred, stack, vars, stdin, stdout)
+		assert_min_depth(stack, 1, "In a # (while loop), the condition returned an empty stack.")
+		assert_args(stack, [Cmd.num], f"In a # (while loop), the condition returned a {pretty_type(stack[-1][0])} when it should've been a number.")
+	return (stack[:-1], vars)
+
+#####
+# VARIABLES
+#####
+
+async def store(stack, vars, _, __):
+	value, name = stack[-2], stack[-1][1]
+	return (stack[:-2], dict(chain(vars.items(), {name: value}.items())))
+
+async def fetch(stack, vars, _, __):
+	name = stack[-1][1]
+	return (stack[:-1] + [vars[name]], vars)
+
+#####
+# I/O
+#####
+
+async def read(stack, vars, stdin, _):
+	return (stack + [(Cmd.num, ord(await stdin.read(1)))], vars)
+
+async def write(stack, vars, _, stdout):
+	await stdout.write(chr(stack[-1][1]))
+	return (stack[:-1], vars)
+
+async def write_num(stack, vars, _, stdout):
+	await stdout.write(str(stack[-1][1]))
+	return (stack[:-1], vars)
+
 # \xDF -> ß
+flush_char = "\xDF"
+
+async def flush(stack, vars, stdin, stdout):
+	await stdout.flush()
+	await stdin.readline()
+	return (stack, vars)
+
+#####
+# OTHER
+#####
+
+async def comp(stack, vars, _, stdout):
+	await stdout.write("` (compile) is not supported.")
+	return (stack, vars)
+
 built_ins = {
 	# Stack
 	"$": (dup, 1, None, "$ (dup)"),
@@ -233,5 +289,19 @@ built_ins = {
 	
 	# Flow control
 	"!": (exe, 1, [Cmd.block], "! (execute)"),
-	"?": (cond, 2, [Cmd.num, Cmd.block], "? (conditional execute)")
+	"?": (cond, 2, [Cmd.num, Cmd.block], "? (conditional execute)"),
+	"#": (loop, 2, [Cmd.block, Cmd.block], "# (while loop)"),
+	
+	# Variables
+	":": (store, 2, [Cmd.var], ": (store)"),
+	";": (fetch, 1, [Cmd.var], "; (fetch)"),
+	
+	# I/O
+	"^": (read, 0, None, "^ (read)"),
+	",": (write, 1, [Cmd.num], ", (write)"),
+	".": (write_num, 1, [Cmd.num], ". (write number)"),
+	flush_char: (flush, 0, None, "{flush_char} (flush)"),
+	
+	# Other
+	"`": (comp, 0, None, "` (compile)")
 }
