@@ -37,7 +37,7 @@ async def interpret(program, _, stdin, stdout):
 	}
 
 	# okay, yes, mostly copied from https://github.com/Rapptz/RoboDanny/blob/f6638d520ea0f559cb2ae28b862c733e1f165970/cogs/lounge.py
-	async with ctx.session.post('http://coliru.stacked-crooked.com/compile', data=data) as resp:
+	async with ctx.session.post('http://coliru.stacked-crooked.com/compile', data=json.dumps(data)) as resp:
 		if resp.status != 200:
 			await stdout.write('Coliru did not respond in time.')
 			return
