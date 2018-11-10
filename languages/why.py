@@ -29,7 +29,7 @@ def compile(contents):
     )
 
 async def interpret(program, _, stdin, stdout):
-	ctx = stdin.bot.ctx # The Esobot interpreter handling is weird...
+	ctx = stdin.ctx.bot # The Esobot interpreter handling is weird...
 
 	data = {
 		"cmd": "gcc -x c main.cpp && ./a.out",
