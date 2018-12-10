@@ -45,7 +45,7 @@ async def interpret(program, _, stdin, stdout):
 		output = await resp.text(encoding='utf-8')
 
 		if len(output) < 1992:
-			await stdout.write(f'```\n{output}\n```')
+			await stdout.write(output)
 			return
 
 		# output is too big so post it in gist
