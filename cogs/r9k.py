@@ -14,6 +14,12 @@ class R9K:
         self.messages = set(load_json(paths.R9K_SAVES))
 
     async def on_message(self, message):
+        await self.check_message(message)
+
+    async def on_message_edit(self, before, after):
+        await self.check_message(after)
+
+    async def check_message(self, message):
         if message.author.bot or message.channel != self.bot.get_channel(channels.R9K_CHANNEL):
             return
 
