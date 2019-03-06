@@ -1,6 +1,6 @@
 import asyncio
 
-display_name = "Deadfish"
+display_name = "DF (Deadfish)"
 hello_world = """iisiiiisiiiiiiiioiiiiiiiiiiiiiiiiiiiiiiiiiiiiioiiiiiiiooiiio
 dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddo
 dddddddddddddddddddddsddoddddddddoiiioddddddoddddddddo"""
