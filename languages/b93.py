@@ -3,12 +3,14 @@ from enum import Enum, auto
 import random
 
 display_name = "B93 (Befunge-93)"
-hello_world = '"!dlroW ,olleH">:#,_@'
+hello_world = '"!dlroW ,olleH">:#,_@ (Put this in a code block.)'
 
 
 async def interpret(program, _, stdin, stdout):
     try:
         program = program.splitlines()
+        if program[0] == "```":
+            program = program[1:-1]
         longest_line = max(list(map(len, program)))
         program = list(map(
             lambda l: l.ljust(longest_line), # Make all lines the same length.
@@ -19,6 +21,7 @@ async def interpret(program, _, stdin, stdout):
         ip = Ip(0, 0, Dir.right)
         stack = []
         while True:
+            await asyncio.sleep(0)
             instr = program[ip.y][ip.x]
             if instr == "@":
                 break
