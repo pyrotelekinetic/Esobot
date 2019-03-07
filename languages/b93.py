@@ -19,6 +19,7 @@ async def interpret(program, _, stdin, stdout):
         ip = Ip(0, 0, Dir.right)
         stack = []
         while True:
+            await asyncio.sleep(0)
             instr = program[ip.y][ip.x]
             if instr == "@":
                 break

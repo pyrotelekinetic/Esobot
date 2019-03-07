@@ -80,6 +80,7 @@ def parse(expr):
 
 async def run(ast, stack, vars, stdin, stdout):
     for cmd in ast:
+        await asyncio.sleep(0)
         if cmd[0] == Cmd.str:
             await stdout.write(cmd[1])
         elif cmd[0] != Cmd.call:
