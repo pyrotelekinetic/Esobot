@@ -3,7 +3,7 @@ from enum import Enum, auto
 import random
 
 display_name = "B93 (Befunge-93)"
-hello_world = '"!dlroW ,olleH">:#,_@'
+hello_world = '"!dlroW ,olleH">:#,_@ (Put this in a code block.)'
 
 
 async def interpret(program, _, stdin, stdout):
