@@ -9,6 +9,8 @@ hello_world = '"!dlroW ,olleH">:#,_@'
 async def interpret(program, _, stdin, stdout):
     try:
         program = program.splitlines()
+        if program[0] == "```":
+            program = program[1:-1]
         longest_line = max(list(map(len, program)))
         program = list(map(
             lambda l: l.ljust(longest_line), # Make all lines the same length.
