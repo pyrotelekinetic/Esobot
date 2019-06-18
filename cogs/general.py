@@ -45,7 +45,7 @@ async def get_message_guild(guild, id, priority_channel=None):
             pass
 
 
-class General:
+class General(commands.Cog):
     """General-purpose commands."""
 
     def __init__(self, bot):
@@ -53,15 +53,13 @@ class General:
         bot.original_help = bot.get_command("help")
         bot.remove_command("help")
 
-    def __unload(self):
+    def cog_unload(self):
         self.bot.add_command(self.bot.original_help)
 
     @commands.command(aliases=["h", "man"])
     async def help(self, ctx, *, command_name: str = None):
         """Display a list of all commands or display information about a specific command."""
-        prefix = await self.bot.get_prefix(ctx.message)
-        if isinstance(prefix, list):
-            prefix = prefix[0]
+        prefixes = await self.bot.get_prefix(ctx.message)
         if command_name:
             command = self.bot.get_command(command_name)
             if command is None:
@@ -124,7 +122,7 @@ class General:
             for cog_name in sorted(cog_names):
                 lines = []
                 for command in sorted(
-                    self.bot.get_cog_commands(cog_name), key=lambda cmd: cmd.name
+                    self.bot.get_cog(cog_name).get_commands(), key=lambda cmd: cmd.name
                 ):
                     if not command.hidden and (await command.can_run(ctx)):
                         line = f"\N{BULLET} **`{get_command_signature(command)}`**"
@@ -133,12 +131,11 @@ class General:
                         lines.append(line)
                 if lines:
                     fields.append((cog_name, "\n".join(lines)))
-            mention = ctx.me.mention
             await ctx.send(
                 embed=make_embed(
                     color=colors.EMBED_HELP,
                     title="Command list",
-                    description=f"Invoke a command by prefixing it with `{prefix}` or {mention}. Use `{prefix}{ctx.command.name} [command]` to get help on a specific command.",
+                    description=f"Invoke a command by prefixing it with {','.join(prefixes[:-1])} or {prefixes[-1]}. Use `{ctx.command.name} [command]` to get help on a specific command.",
                     fields=fields,
                 )
             )
@@ -213,7 +210,6 @@ class General:
             await quote_message.send(embed=embed)
         else:
             await quote_message.edit(embed=embed)
-async def wait(n): await asyncio.sleep(n)
 
 def setup(bot):
     bot.add_cog(General(bot))

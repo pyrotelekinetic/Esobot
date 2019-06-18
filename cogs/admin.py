@@ -11,7 +11,7 @@ from constants import colors, emoji, info
 from utils import l, make_embed, react_yes_no, report_error
 
 
-class Admin:
+class Admin(commands.Cog):
     """Admin-only commands."""
 
     def __init__(self, bot):
@@ -115,7 +115,10 @@ class Admin:
         if "*" in extensions:
             extensions = get_extensions()
         for extension in extensions:
-            self.bot.unload_extension("cogs." + extension)
+            try:
+                self.bot.unload_extension("cogs." + extension)
+            except commands.ExtensionNotLoaded:
+                pass
             try:
                 self.bot.load_extension("cogs." + extension)
                 description += f"Successfully loaded `{extension}`.\n"

@@ -35,7 +35,7 @@ for event in save:
     event_config[event] = Event(*save[event])
 
 
-class Time:
+class Time(commands.Cog):
     """Commands related to time and delaying messages."""
 
     def __init__(self, bot):
@@ -443,7 +443,7 @@ class Time:
                         with open(
                             paths.CONFIG_FOLDER + "/" + paths.EVENT_SAVES, "w"
                         ) as f:
-                            saving = {}
+                            saving = { }
                             for event in event_config:
                                 saving[event] = list(event_config[event])
                             json.dump(saving, f)
@@ -452,7 +452,7 @@ class Time:
 
 
 def setup(bot):
-    time = Time(bot)
-    bot.loop.create_task(time.time_loop())
-    bot.loop.create_task(time.event_loop())
-    bot.add_cog(time)
+    t = Time(bot)
+    bot.loop.create_task(t .time_loop())
+    bot.loop.create_task(t.event_loop())
+    bot.add_cog(t)

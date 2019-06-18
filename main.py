@@ -65,6 +65,7 @@ bot.loaded_extensions = set()
 
 @bot.event
 async def on_ready():
+    bot.owner_id = (await bot.application_info()).owner.id
     l.info(f"Ready")
     await wait_until_loaded()
     await bot.change_presence(status=discord.Status.online)
@@ -161,7 +162,8 @@ async def load_extensions(extensions):
         await asyncio.sleep(0)
         try:
             bot.load_extension("cogs." + extension)
-        except Exception:
+        except Exception as e:
+            print(f"Failed to load {extension}: {type(e).__name__}: {e}")
             continue
         bot.loaded_extensions.add(extension)
     l.info("Loaded all extensions")

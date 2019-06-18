@@ -63,7 +63,7 @@ class DiscordOutput:
         await self.message.edit(content="```\n" + clean(self.output) + "\n```")
 
 
-class Esolangs:
+class Esolangs(commands.Cog):
     """Commands related to esoteric programming languages."""
 
     def __init__(self, bot):

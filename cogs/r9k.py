@@ -6,16 +6,18 @@ from constants import colors, info, paths, channels
 from utils import make_embed, load_json, save_json
 
 
-class R9K:
+class R9K(commands.Cog):
     """Manage the R9K channel."""
 
     def __init__(self, bot):
         self.bot = bot
         self.messages = set(load_json(paths.R9K_SAVES))
 
+    @commands.Cog.listener()
     async def on_message(self, message):
         await self.check_message(message)
 
+    @commands.Cog.listener()
     async def on_message_edit(self, before, after):
         await self.check_message(after)
 

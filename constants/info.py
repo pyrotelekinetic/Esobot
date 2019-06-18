@@ -1,6 +1,6 @@
 import os
 
-DEV = "ESOBOT_DEV" in os.environ
+DEV = True
 
 NAME = "Esobot"
 VERSION = "1.5.4" + ("-dev" * DEV)
