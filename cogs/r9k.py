@@ -1,8 +1,10 @@
 import copy
+import string
 
 from discord.ext import commands
 from constants import colors, info, paths, channels
 from utils import make_embed, load_json, save_json
+from unidecode import unidecode
 
 
 class R9K(commands.Cog):
@@ -24,10 +26,12 @@ class R9K(commands.Cog):
         if message.author.bot or message.channel != self.bot.get_channel(channels.R9K_CHANNEL):
             return
 
-        if message.content.strip().lower() in self.messages:
+        stripped_content = "".join([x for x in unidecode(message.content.strip().casefold()) if x in string.ascii_letters])
+
+        if stripped_content in self.messages:
             await message.delete()
         else:
-            self.messages.add(message.content)
+            self.messages.add(stripped_content)
             save_json(paths.R9K_SAVES, list(self.messages))
 
 
