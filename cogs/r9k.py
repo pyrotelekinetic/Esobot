@@ -26,7 +26,7 @@ class R9K(commands.Cog):
         if message.author.bot or message.channel != self.bot.get_channel(channels.R9K_CHANNEL):
             return
 
-        stripped_content = "".join([x for x in unidecode(message.content.strip().casefold()) if x in string.ascii_letters])
+        stripped_content = "".join([x for x in unidecode(message.content.strip().casefold()) if x in string.ascii_letters + string.digits])
 
         if stripped_content in self.messages:
             await message.delete()
