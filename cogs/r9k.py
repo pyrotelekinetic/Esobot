@@ -1,5 +1,4 @@
 import copy
-import random
 
 from discord.ext import commands
 from constants import colors, info, paths, channels
@@ -23,15 +22,14 @@ class R9K(commands.Cog):
 
     async def check_message(self, message):
         if message.author.bot or message.channel != self.bot.get_channel(channels.R9K_CHANNEL):
+            print("we cowards bois")
             return
 
         if message.content in self.messages:
             await message.delete()
-            print("h")
         else:
             self.messages.add(message.content)
-            if random.random() < 0.5:
-                save_json(paths.R9K_SAVES, list(self.messages))
+            save_json(paths.R9K_SAVES, list(self.messages))
 
 
 def setup(bot):
