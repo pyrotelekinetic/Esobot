@@ -22,10 +22,9 @@ class R9K(commands.Cog):
 
     async def check_message(self, message):
         if message.author.bot or message.channel != self.bot.get_channel(channels.R9K_CHANNEL):
-            print("we cowards bois")
             return
 
-        if message.content in self.messages:
+        if message.content.strip().lower() in self.messages:
             await message.delete()
         else:
             self.messages.add(message.content)
