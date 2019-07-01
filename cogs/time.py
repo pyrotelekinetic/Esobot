@@ -10,7 +10,7 @@ import itertools
 
 from constants import colors, channels, paths
 from collections import namedtuple
-from discord.ext import commands
+from discord.ext import commands, tasks
 from utils import make_embed, clean, show_error, load_json, save_json
 
 
@@ -112,19 +112,11 @@ class Time(commands.Cog):
             )
         )
 
-    async def time_loop(self):
-        while True:
-            await self.bot.wait_until_ready()
+    @update_times.before_loop
+    async def before_times(self):
+        await self.bot.wait_until_ready()
 
-            while True:
-                if int(time.time()) % 60 == 0:
-                    break
-                await asyncio.sleep(0)
-
-            while not self.bot.is_closed():
-                await self.update_times()
-                await asyncio.sleep(60)
-
+    @tasks.loop(minutes=1)
     async def update_times(self):
         channel = self.bot.get_channel(channels.TIME_CHANNEL)
         await channel.purge()
@@ -430,29 +422,28 @@ class Time(commands.Cog):
                 event.times.append(parsed_number)
         event.times.sort()
 
-    async def event_loop(self):
+    @event_loop.before_loop
+    async def before_event(self):
         await self.bot.wait_until_ready()
-        while True:
-            while not self.bot.is_closed():
-                for event in event_config:
-                    if (
-                        event_config[event].times
-                        and time.time() >= event_config[event].times[0]
-                    ):
-                        event_config[event].times.pop(0)
-                        with open(
-                            paths.CONFIG_FOLDER + "/" + paths.EVENT_SAVES, "w"
-                        ) as f:
-                            saving = { }
-                            for event in event_config:
-                                saving[event] = list(event_config[event])
-                            json.dump(saving, f)
-                        await self.trigger_event(event_config[event])
-                await asyncio.sleep(1)
+
+    @tasks.loop(minutes=1)
+    async def event_loop(self):
+        for event in event_config:
+            if (
+                event_config[event].times
+                and time.time() >= event_config[event].times[0]
+            ):
+                event_config[event].times.pop(0)
+                with open(
+                    paths.CONFIG_FOLDER + "/" + paths.EVENT_SAVES, "w"
+                ) as f:
+                    saving = { }
+                    for event in event_config:
+                        saving[event] = list(event_config[event])
+                    json.dump(saving, f)
+                await self.trigger_event(event_config[event])
 
 
 def setup(bot):
     t = Time(bot)
-    bot.loop.create_task(t .time_loop())
-    bot.loop.create_task(t.event_loop())
     bot.add_cog(t)
