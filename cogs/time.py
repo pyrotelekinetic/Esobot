@@ -41,11 +41,11 @@ class Time(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.time_config = load_json(paths.TIME_SAVES)
-        self.update_times.start()
+        self.time_loop.start()
         self.event_loop.start()
 
     def cog_unload(self):
-        self.update_times.cancel()
+        self.time_loop.cancel()
         self.event_loop.cancel()
 
     def get_time(self, timezone_name):
@@ -118,7 +118,6 @@ class Time(commands.Cog):
             )
         )
 
-    @tasks.loop(minutes=1)
     async def update_times(self):
         channel = self.bot.get_channel(channels.TIME_CHANNEL)
         await channel.purge()
@@ -162,8 +161,10 @@ class Time(commands.Cog):
         for page in paginator.pages:
             await channel.send(embed=make_embed(title="Times", description=page[3:-3]))
 
-    @update_times.before_loop
-    async def before_times(self):
+    time_loop = tasks.loop(minutes=1)(update_times)
+
+    @time_loop.before_loop
+    async def before_time(self):
         await self.bot.wait_until_ready()
 
     @commands.group(aliases=["pw", "pwhen", "pingw"])
@@ -447,7 +448,7 @@ class Time(commands.Cog):
 
     @event_loop.before_loop
     async def before_event(self):
-        await self.bot.wait_until_ready()
+        await self.wait_until_ready()
 
 
 def setup(bot):
