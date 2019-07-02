@@ -41,6 +41,12 @@ class Time(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.time_config = load_json(paths.TIME_SAVES)
+        self.update_times.start()
+        self.event_loop.start()
+
+    def cog_unload(self):
+        self.update_times.cancel()
+        self.event_loop.cancel()
 
     def get_time(self, timezone_name):
         timezone = pytz.timezone(timezone_name)
@@ -112,10 +118,6 @@ class Time(commands.Cog):
             )
         )
 
-    @update_times.before_loop
-    async def before_times(self):
-        await self.bot.wait_until_ready()
-
     @tasks.loop(minutes=1)
     async def update_times(self):
         channel = self.bot.get_channel(channels.TIME_CHANNEL)
@@ -159,6 +161,10 @@ class Time(commands.Cog):
 
         for page in paginator.pages:
             await channel.send(embed=make_embed(title="Times", description=page[3:-3]))
+
+    @update_times.before_loop
+    async def before_times(self):
+        await self.bot.wait_until_ready()
 
     @commands.group(aliases=["pw", "pwhen", "pingw"])
     async def pingwhen(self, ctx):
@@ -422,10 +428,6 @@ class Time(commands.Cog):
                 event.times.append(parsed_number)
         event.times.sort()
 
-    @event_loop.before_loop
-    async def before_event(self):
-        await self.bot.wait_until_ready()
-
     @tasks.loop(minutes=1)
     async def event_loop(self):
         for event in event_config:
@@ -442,6 +444,10 @@ class Time(commands.Cog):
                         saving[event] = list(event_config[event])
                     json.dump(saving, f)
                 await self.trigger_event(event_config[event])
+
+    @event_loop.before_loop
+    async def before_event(self):
+        await self.bot.wait_until_ready()
 
 
 def setup(bot):
