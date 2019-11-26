@@ -56,9 +56,9 @@ COMMAND_PREFIX = "!"
 bot = commands.Bot(
     command_prefix=commands.when_mentioned_or(COMMAND_PREFIX),
     case_insensitive=True,
-    owner_id=owner_id,
     status=discord.Status.dnd
 )
+bot.owner_id = owner_id
 bot.needed_extensions = set(get_extensions())
 bot.loaded_extensions = set()
 
