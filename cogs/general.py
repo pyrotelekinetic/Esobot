@@ -1,10 +1,12 @@
 import asyncio
 import discord
 import time
+import subprocess
 
 from discord.ext import commands
 from utils import l, make_embed
 from constants import colors, info, emoji
+from typing import Optional
 
 
 def get_command_signature(command):
@@ -35,12 +37,12 @@ async def get_message_guild(guild, id, priority_channel=None):
     if priority_channel:
         channels.remove(priority_channel)
         try:
-            return await priority_channel.get_message(id)
+            return await priority_channel.fetch_message(id)
         except discord.NotFound:
             pass
     for channel in channels:
         try:
-            return await channel.get_message(id)
+            return await channel.fetch_message(id)
         except discord.NotFound:
             pass
 
@@ -180,9 +182,9 @@ class General(commands.Cog):
                 )
                 return
 
-            message = await get_message_guild(ctx.guild, payload.message_id)
+            message = await get_message_guild(ctx.guild, payload.message_id, ctx.channel)
         else:
-            message = await get_message_guild(ctx.guild, message_id)
+            message = await get_message_guild(ctx.guild, message_id, ctx.channel)
             if not message:
                 await ctx.send(
                     embed=make_embed(
@@ -190,7 +192,6 @@ class General(commands.Cog):
                     )
                 )
             quote_message = ctx.channel
-
         embed = make_embed(
             description=message.content,
             timestamp=message.edited_at or message.created_at,
