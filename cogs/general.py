@@ -171,7 +171,7 @@ class General(commands.Cog):
             try:
                 payload = await self.bot.wait_for(
                     "raw_reaction_add",
-                    check=lambda m: m.emoji.name == emoji.QUOTE,
+                    check=lambda m: m.guild_id == ctx.guild.id and m.emoji == emoji.QUOTE,
                     timeout=60,
                 )
             except asyncio.TimeoutError:
@@ -182,7 +182,8 @@ class General(commands.Cog):
                 )
                 return
 
-            message = await get_message_guild(ctx.guild, payload.message_id, ctx.channel)
+            channel = ctx.guild.get_channel(payload.channel_id)
+            message = await channel.fetch_message(payload.message_id)
         else:
             message = await get_message_guild(ctx.guild, message_id, ctx.channel)
             if not message:
