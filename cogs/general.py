@@ -164,7 +164,7 @@ class General(commands.Cog):
             return await ctx.send("Please choose a member that is not a bot or yourself.")
         await ctx.send("Hai!")
         while not self.bot.is_closed():
-            _, __ = await bot.wait_for("member_update", check=lambda b, a: b.status == discord.Status.offline and a.status != discord.Status.offline)
+            _, __ = await self.bot.wait_for("member_update", check=lambda b, a: b.status == discord.Status.offline and a.status != discord.Status.offline)
             await ctx.author.send(f"{member.name} is online!")
 
     @commands.command()
