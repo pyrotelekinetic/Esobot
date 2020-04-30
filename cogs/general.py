@@ -2,6 +2,7 @@ import asyncio
 import discord
 import time
 import subprocess
+import romkan
 
 from discord.ext import commands
 from utils import l, make_embed
@@ -157,15 +158,21 @@ class General(commands.Cog):
             )
         )
 
-    @commands.command(aliases=["tw"])
-    async def tutturu(self, ctx, member: discord.Member):
-        """Schedule a reminder to tutturu someone as soon as they come online."""
-        if member.bot or member == ctx.author:
-            return await ctx.send("Please choose a member that is not a bot or yourself.")
-        await ctx.send("Hai!")
-        while not self.bot.is_closed():
-            _, __ = await self.bot.wait_for("member_update", check=lambda b, a: b.id == member.id and b.status == discord.Status.offline and a.status != discord.Status.offline)
-            await ctx.author.send(f"{member.name} is online!")
+    @commands.command(aliases=["hg", "kk", "ro"])
+    async def romkan(self, ctx, *, text: commands.clean_content):
+        """Convert romaji into hiragana or katakana, or vice-versa."""
+        if text[:3] in ["hg ", "kk ", "ro "]:
+            tp, text = text[:2], text[3:]
+        else:
+            tp = ctx.invoked_with
+            if tp == "romkan":
+                return await ctx.send("Please either use `!hg`, `!kk` or `!ro` (for hiragana, katakana and romaji respectively), or pass the type as an argument: `!romkan hg LyricLy wa baka desu yo`")
+        if tp == "hg":
+            await ctx.send(romkan.to_hiragana(text))
+        elif tp == "kk":
+            await ctx.send(romkan.to_katakana(text))
+        elif tp == "ro":
+            await ctx.send(romkan.to_hepburn(text))
 
     @commands.command()
     async def quote(self, ctx, message_id: int = None):
