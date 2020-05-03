@@ -6,7 +6,7 @@ hello_world = "(Hello, world!)S"
 
 async def interpret(program, _, __, stdout):
     try:
-        await run(program, [], [[""]], stdout)
+        await stdout.write((await run(program, [], [[""]], stdout))[0][0])
     except Exception as err:
         await stdout.write(type(err).__name__ + ": " + str(err))
 
@@ -27,7 +27,7 @@ async def run(prog, stack, output, stdout):
                 stack.pop()
             elif char == "^":
                 assert_stack_size(stack, 1, "^")
-                run(stack.pop(), stack, output, stdout)
+                await run(stack.pop(), stack, output, stdout)
             elif char == "~":
                 assert_stack_size(stack, 2, "~")
                 a = stack.pop()
@@ -75,3 +75,4 @@ async def run(prog, stack, output, stdout):
                 raise Exception("Unmatched ).")
     if depth > 0:
         raise Exception("Unmatched (.")
+    return output
