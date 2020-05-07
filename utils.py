@@ -55,7 +55,7 @@ async def report_error(ctx, exc, *args, bot=None, **kwargs):
     if ctx:
         if isinstance(ctx.channel, discord.DMChannel):
             guild_name = "N/A"
-            channel_name = f"DM"
+            channel_name = "DM"
         elif isinstance(ctx.channel, discord.GroupChannel):
             guild_name = "N/A"
             channel_name = f"Group with {len(ctx.channel.recipients)} members (id={ctx.channel.id})"
@@ -71,7 +71,7 @@ async def report_error(ctx, exc, *args, bot=None, **kwargs):
         ]
     else:
         fields = []
-    tb = clean("".join(traceback.format_tb(exc.__traceback__)))
+    tb = clean("".join(traceback.format_tb(exc.__traceback__, limit=5)))
     fields += [
         ("Args", f"```\n{repr(args)}\n```" if args else "None", True),
         ("Keyword Args", f"```\n{repr(kwargs)}\n```" if kwargs else "None", True),

@@ -2,7 +2,6 @@ import asyncio
 import discord
 import time
 import subprocess
-import romkan
 
 from discord.ext import commands
 from utils import l, make_embed
@@ -157,22 +156,6 @@ class General(commands.Cog):
                 footer_text=f"{info.NAME} v{info.VERSION}",
             )
         )
-
-    @commands.command(aliases=["hg", "kk", "ro"])
-    async def romkan(self, ctx, *, text: commands.clean_content):
-        """Convert romaji into hiragana or katakana, or vice-versa."""
-        if text[:3] in ["hg ", "kk ", "ro "]:
-            tp, text = text[:2], text[3:]
-        else:
-            tp = ctx.invoked_with
-            if tp == "romkan":
-                return await ctx.send("Please either use `!hg`, `!kk` or `!ro` (for hiragana, katakana and romaji respectively), or pass the type as an argument: `!romkan hg LyricLy wa baka desu yo`")
-        if tp == "hg":
-            await ctx.send(romkan.to_hiragana(text))
-        elif tp == "kk":
-            await ctx.send(romkan.to_katakana(text))
-        elif tp == "ro":
-            await ctx.send(romkan.to_hepburn(text))
 
     @commands.command()
     async def quote(self, ctx, message_id: int = None):
