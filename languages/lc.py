@@ -2,8 +2,8 @@ import asyncio
 from enum import Enum, auto
 from functools import reduce
 
-display_name = "λ - Lambda Calculus"
-hello_world = "(\\nm.\\fx.n f (m f x)) (\\fx.f x) (\\fx.f (f x))"
+display_name = "LC (Lambda Calculus)"
+hello_world = "(\\n m.\\f x.n f (m f x)) (\\f x.f x) (\\f x.f (f x))"
 
 
 async def interpret(program, _, __, stdout):
