@@ -83,6 +83,7 @@ class Apply(Expr):
         new = self
 
         while not old.eq(new):
+            asyncio.sleep(0)
             if new.type == Expr_Type.apply:
                 if new.func.type == Expr_Type.func:
                     old = new
