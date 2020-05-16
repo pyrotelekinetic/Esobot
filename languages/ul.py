@@ -27,6 +27,7 @@ async def run(prog, stack, stdout):
                 stack.pop()
             elif char == "^":
                 assert_stack_size(stack, 1, "^")
+                await asyncio.sleep(0)
                 await run(stack.pop(), stack, stdout)
             elif char == "~":
                 assert_stack_size(stack, 2, "~")

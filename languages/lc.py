@@ -2,15 +2,18 @@ import asyncio
 from enum import Enum, auto
 from functools import reduce
 
-display_name = "λ - Lambda Calculus"
-hello_world = "(\\nm.\\fx.n f (m f x)) (\\fx.f x) (\\fx.f (f x))"
+display_name = "LC (Lambda Calculus)"
+hello_world = "(\\n m.\\f x.n f (m f x)) (\\f x.f x) (\\f x.f (f x))"
 
 
 async def interpret(program, _, __, stdout):
     try:
-        await stdout.write(parse(lex(program), []).simpl().pretty([]))
-    except RecursionError as err:
-        await stdout.write(parse(lex(program), []).pretty([]))
+        ast = parse(lex(program), [])
+        try:
+            result = await ast.simpl()
+            await stdout.write(result.pretty([]))
+        except RecursionError as err:
+            await stdout.write(ast.pretty([]))
     except Exception as err:
         await stdout.write(f"{type(err).__name__}: {str(err)}")
 
@@ -23,7 +26,7 @@ class Expr_Type(Enum):
 
 
 class Expr:
-    def simpl(self):
+    async def simpl(self):
         pass
 
     def eq(self, other):
@@ -45,7 +48,7 @@ class Var(Expr):
         self.type = Expr_Type.var
         self.num = num
 
-    def simpl(self):
+    async def simpl(self):
         return self
 
     def eq(self, other):
@@ -78,21 +81,22 @@ class Apply(Expr):
         self.func = func
         self.arg = arg
 
-    def simpl(self):
+    async def simpl(self):
         old = Var(0)
         new = self
 
         while not old.eq(new):
+            await asyncio.sleep(0)
             if new.type == Expr_Type.apply:
                 if new.func.type == Expr_Type.func:
                     old = new
                     new = new.func.apply(new.arg)
                 else:
                     old = new
-                    new = Apply(new.func.simpl(), new.arg.simpl())
+                    new = Apply(await new.func.simpl(), await new.arg.simpl())
             else:
                 old = new
-                new = new.simpl()
+                new = await new.simpl()
 
         return new
 
@@ -128,8 +132,8 @@ class Func(Expr):
         self.arg = arg  # For turning back into text.
         self.body = body
 
-    def simpl(self):
-        return Func(self.arg, self.body.simpl())
+    async def simpl(self):
+        return Func(self.arg, await self.body.simpl())
 
     def eq(self, other):
         return other.type == Expr_Type.func and self.body.eq(other.body)
@@ -162,7 +166,7 @@ class Symbol(Expr):
         self.type = Expr_Type.symbol
         self.name = name
 
-    def simpl(self):
+    async def simpl(self):
         return self
 
     def eq(self, other):
