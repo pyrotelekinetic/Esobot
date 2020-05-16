@@ -26,7 +26,7 @@ class DictSource(menus.ListPageSource):
                 name = ", ".join(sense["parts_of_speech"]) if sense["parts_of_speech"] else "\u200b",
                 value = " | ".join(
                     [f"{i}. " + "; ".join(sense["english_definitions"])] +
-                    [tags := ", ".join(f"*{x}*" for x in sense["tags"] + sense["info"])] * b
+                    [tags := ", ".join(f"*{x}*" for x in sense["tags"] + sense["info"])] * bool(tags)
                 ),
                 inline=False
             )
