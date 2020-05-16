@@ -3,6 +3,7 @@ import asyncio
 import importlib
 import os
 import io
+import socket
 
 from discord.ext import commands
 from urllib import parse
@@ -69,19 +70,23 @@ class Esolangs(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         if not hasattr(bot, "session"):
-            bot.session = aiohttp.ClientSession(loop=bot.loop, headers={"User-Agent": info.NAME})
+            bot.session = aiohttp.ClientSession(loop=bot.loop, headers={"User-Agent": info.NAME}, connector=aiohttp.TCPConnector(family=socket.AF_INET))
 
     @commands.command(aliases=["ew", "w", "wiki"])
     async def esowiki(self, ctx, *, esolang_name):
         """Link to the Esolang Wiki page for an esoteric programming language."""
         async with ctx.typing():
-            async with self.bot.session.get("http://esolangs.org/w/api.php",
-                                       params={"action": "query",
-                                               "list": "search",
-                                               "srsearch": parse.quote(esolang_name),
-                                               "format": "json"}) as resp:
+            print("doing")
+            async with self.bot.session.get(
+                "http://esolangs.org/w/api.php",
+                params = {
+                    "action": "opensearch",
+                    "search": parse.quote(esolang_name)
+                }
+            ) as resp:
+                print("returned")
                 data = await resp.json()
-        if not data["query"]["search"]:
+        if not data[0]:
             return await ctx.send(
                 embed=make_embed(
                     color=colors.EMBED_ERROR,
@@ -89,7 +94,7 @@ class Esolangs(commands.Cog):
                     description=f"**{esolang_name.capitalize()}** wasn't found on the Esolangs wiki.",
                 )
             )
-        await ctx.send(f"https://esolangs.org/wiki/{data['query']['search'][0]['title']}")
+        await ctx.send(data[3][0])
 
     @commands.group(aliases=["run", "exe", "execute"], invoke_without_command=True)
     async def interpret(self, ctx, language, *, flags=""):
