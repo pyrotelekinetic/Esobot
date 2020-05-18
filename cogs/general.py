@@ -158,6 +158,7 @@ class General(commands.Cog):
         )
 
     @commands.command()
+    @commands.guild_only()
     async def quote(self, ctx, message_id: int = None):
         """Quote a previous message."""
         if not message_id:
@@ -171,7 +172,7 @@ class General(commands.Cog):
             try:
                 payload = await self.bot.wait_for(
                     "raw_reaction_add",
-                    check=lambda m: m.guild_id == ctx.guild.id and m.emoji == emoji.QUOTE,
+                    check=lambda m: m.guild_id == ctx.guild.id and m.emoji.name == emoji.QUOTE,
                     timeout=60,
                 )
             except asyncio.TimeoutError:
@@ -192,6 +193,7 @@ class General(commands.Cog):
                         title="No message", description="Bad message ID given."
                     )
                 )
+                return
             quote_message = ctx.channel
         embed = make_embed(
             description=message.content,
