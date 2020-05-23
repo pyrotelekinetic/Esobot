@@ -1,5 +1,5 @@
 import aiohttp
-import romkan
+import pykakasi
 import discord
 from utils import show_error
 from discord.ext import commands, menus
@@ -39,22 +39,17 @@ class Japanese(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
+        kakasi = pykakasi.kakasi()
+        kakasi.setMode("H", "a")
+        kakasi.setMode("K", "a")
+        kakasi.setMode("J", "a")
+        kakasi.setMode("s", True)
+        self.conv = kakasi.getConverter()
 
-    @commands.command(aliases=["hg", "kk", "ro"])
-    async def romkan(self, ctx, *, text: commands.clean_content):
-        """Convert romaji into hiragana or katakana, or vice-versa."""
-        if text[:3] in ["hg ", "kk ", "ro "]:
-            tp, text = text[:2], text[3:]
-        else:
-            tp = ctx.invoked_with
-            if tp == "romkan":
-                return await ctx.send("Please either use `!hg`, `!kk` or `!ro` (for hiragana, katakana and romaji respectively), or pass the type as an argument: `!romkan hg LyricLy wa baka desu yo`")
-        if tp == "hg":
-            await ctx.send(romkan.to_hiragana(text))
-        elif tp == "kk":
-            await ctx.send(romkan.to_katakana(text))
-        elif tp == "ro":
-            await ctx.send(romkan.to_hepburn(text))
+    @commands.command(aliases=["ro", "roman", "romanize", "romanise"])
+    async def romaji(self, ctx, *, text: commands.clean_content):
+        """Romanize Japanese text."""
+        await ctx.send(self.conv.do(text))
 
     @commands.command(aliases=["jp", "jsh"])
     async def jisho(self, ctx, *, query):
