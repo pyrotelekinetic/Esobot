@@ -172,7 +172,7 @@ class General(commands.Cog):
             try:
                 payload = await self.bot.wait_for(
                     "raw_reaction_add",
-                    check=lambda m: m.guild_id == ctx.guild.id and m.emoji.name == emoji.QUOTE,
+                    check=lambda m: m.guild_id == ctx.guild.id and m.emoji.name == emoji.QUOTE and m.user_id == ctx.author.id,
                     timeout=60,
                 )
             except asyncio.TimeoutError:

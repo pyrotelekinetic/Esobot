@@ -86,7 +86,7 @@ class Esolangs(commands.Cog):
             ) as resp:
                 print("returned")
                 data = await resp.json()
-        if not data[0]:
+        if not data[1]:
             return await ctx.send(
                 embed=make_embed(
                     color=colors.EMBED_ERROR,
