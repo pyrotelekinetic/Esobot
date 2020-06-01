@@ -16,11 +16,13 @@ class DictSource(menus.ListPageSource):
         super().__init__(data, per_page=1)
 
     async def format_page(self, menu, entry):
-        entry_jlpt = entry["jlpt"]
-        jlpt = ["JLPT " + max(x.partition("-")[2] for x in entry_jlpt)] * bool(entry_jlpt)
-        common = ["{'un' * (not (is_common := entry.get('is_common')))}common"] * bool(is_common)
+        jlpt = ["JLPT " + max(x.partition("-")[2] for x in entry_jlpt)] if entry_jlpt := entry["jlpt"] else []
+        try:
+            common = ["{'un' * (not entry['is_common']}common"]
+        except KeyError:
+            common = []
         e = discord.Embed(
-            title = f"Result #{menu.current_page + 1} (', '.join(common, jlpt))",
+            title = f"Result #{menu.current_page + 1} (', '.join(common + jlpt))",
             description = format_jp_entry(entry['japanese'][0])
         )
         for i, sense in enumerate(entry["senses"], start=1):
