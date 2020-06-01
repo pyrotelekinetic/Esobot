@@ -122,9 +122,9 @@ class Esolangs(commands.Cog):
 
         program_msg = await self.bot.wait_for("message", check=check)
         if program_msg.attachments:
-            string = io.StringIO()
+            string = io.BytesIO()
             await program_msg.attachments[0].save(string)
-            program = string.read()
+            program = string.read().decode()
         else:
             program = program_msg.content
 
