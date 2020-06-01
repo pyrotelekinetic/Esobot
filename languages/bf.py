@@ -69,4 +69,3 @@ async def interpret(program, _, stdin, stdout):
         elif char == ".":
             await stdout.write(chr(cells[pointer]))
         idx += 1
-    await stdout.flush()

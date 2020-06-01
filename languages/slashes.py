@@ -17,7 +17,7 @@ async def interpret(program, _, __, stdout):
                 try:
                     first = program[0]
                 except IndexError:
-                    return await stdout.flush()
+                    return
                 program = program[1:]
                 if first == "/":
                     break
@@ -34,7 +34,7 @@ async def interpret(program, _, __, stdout):
                 try:
                     first = program[0]
                 except IndexError:
-                    return await stdout.flush()
+                    return
                 program = program[1:]
                 if first == "/":
                     break
@@ -56,4 +56,3 @@ async def interpret(program, _, __, stdout):
             program = program[1:]
         else:
             await stdout.write(first)
-    await stdout.flush()
