@@ -16,7 +16,8 @@ class DictSource(menus.ListPageSource):
         super().__init__(data, per_page=1)
 
     async def format_page(self, menu, entry):
-        jlpt = ["JLPT " + max(x.partition("-")[2] for x in (entry_jlpt := entry["jlpt"]))] * bool(entry_jlpt)
+        entry_jlpt = entry["jlpt"]
+        jlpt = ["JLPT " + max(x.partition("-")[2] for x in entry_jlpt)] * bool(entry_jlpt)
         common = ["{'un' * (not (is_common := entry.get('is_common')))}common"] * bool(is_common)
         e = discord.Embed(
             title = f"Result #{menu.current_page + 1} (', '.join(common, jlpt))",
