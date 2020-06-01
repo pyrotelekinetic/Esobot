@@ -14,7 +14,10 @@ async def interpret(program, _, __, stdout):
             trigger = []
             while True:
                 await asyncio.sleep(0)
-                first = program[0]
+                try:
+                    first = program[0]
+                except IndexError:
+                    return await stdout.flush()
                 program = program[1:]
                 if first == "/":
                     break
@@ -28,7 +31,10 @@ async def interpret(program, _, __, stdout):
             replacement = []
             while True:
                 await asyncio.sleep(0)
-                first = program[0]
+                try:
+                    first = program[0]
+                except IndexError:
+                    return await stdout.flush()
                 program = program[1:]
                 if first == "/":
                     break
@@ -43,7 +49,10 @@ async def interpret(program, _, __, stdout):
                 await asyncio.sleep(0)
                 program = program.replace(trigger, replacement)
         elif first == "\\":
-            await stdout.write(program[0])
+            try:
+                await stdout.write(program[0])
+            except IndexError:
+                pass
             program = program[1:]
         else:
             await stdout.write(first)
