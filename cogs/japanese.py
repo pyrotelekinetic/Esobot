@@ -18,7 +18,7 @@ class DictSource(menus.ListPageSource):
     async def format_page(self, menu, entry):
         jlpt = ["JLPT " + max(x.partition("-")[2] for x in entry_jlpt)] if (entry_jlpt := entry["jlpt"]) else []
         try:
-            common = [f"{'un' * (not entry['is_common']}common"]
+            common = [f"{'un' * not entry['is_common']}common"]
         except KeyError:
             common = []
         e = discord.Embed(
