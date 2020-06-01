@@ -1,6 +1,8 @@
 import asyncio
 import discord
+import random
 import time
+import datetime
 import subprocess
 
 from discord.ext import commands
@@ -54,6 +56,7 @@ class General(commands.Cog):
         self.bot = bot
         bot.original_help = bot.get_command("help")
         bot.remove_command("help")
+        self.words = None
 
     def cog_unload(self):
         self.bot.add_command(self.bot.original_help)
@@ -214,6 +217,46 @@ class General(commands.Cog):
             await quote_message.send(embed=embed)
         else:
             await quote_message.edit(embed=embed)
+
+    @commands.command(aliases=["tr", "type", "race"])
+    @commands.guild_only()
+    async def typerace(self, ctx, words: int = 15):
+        if not 1 <= words <= 50:
+            return await ctx.send("Use between 1 and 50 words.")
+        if not self.words:
+            async with self.bot.session.get("https://raw.githubusercontent.com/dwyl/english-words/master/words_alpha.txt") as resp:
+                self.words = (await resp.text()).splitlines()
+        await ctx.send("Type race begins in 10 seconds. Get ready!")
+        await asyncio.sleep(10)
+        prompt = " ".join(random.choices(self.words, k=words))
+        zwsp = "\u200b"
+        start = await ctx.send(zwsp.join(list(prompt.translate(str.maketrans({
+            "a": "а",
+            "c": "с",
+            "e": "е",
+            "s": "ѕ",
+            "i": "і",
+            "j": "ј",
+            "o": "о",
+            "p": "р",
+            "y": "у",
+            "x": "х"
+        })))))
+        winners = {}
+        running = [True]
+        timeout = False
+        while running[0]:
+            msg = await self.bot.wait_for("message", check=lambda m: m.channel == ctx.channel and m.content == prompt and not m.author.bot and m.author not in winners)
+            await msg.delete()
+            winners[msg.author] = (msg.created_at - start.created_at).total_seconds()
+            if not timeout:
+                timeout = True
+                async def ender():
+                    await asyncio.sleep(10)
+                    running[0] = False
+                await ctx.send(f"{msg.author.name.replace('@', '@' + zwsp)} wins. Other participants have 10 seconds to finish.")
+                await self.bot.loop.create_task(ender())
+        await ctx.send("\n".join(f"{i + 1}. {u.name.replace('@', '@' + zwsp)} - {t:.4f} seconds ({len(prompt) / t * 12:.2f}WPM)" for i, (u, t) in enumerate(winners.items())))
 
 def setup(bot):
     bot.add_cog(General(bot))
