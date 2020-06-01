@@ -221,8 +221,8 @@ class General(commands.Cog):
     @commands.command(aliases=["tr", "type", "race"])
     @commands.guild_only()
     async def typerace(self, ctx, words: int = 15):
-        if not 1 <= words <= 50:
-            return await ctx.send("Use between 1 and 50 words.")
+        if not 1 <= words <= 10:
+            return await ctx.send("Use between 1 and 10 words.")
         if not self.words:
             async with self.bot.session.get("https://raw.githubusercontent.com/dwyl/english-words/master/words_alpha.txt") as resp:
                 self.words = (await resp.text()).splitlines()
@@ -255,7 +255,7 @@ class General(commands.Cog):
                     await asyncio.sleep(10)
                     running[0] = False
                 await ctx.send(f"{msg.author.name.replace('@', '@' + zwsp)} wins. Other participants have 10 seconds to finish.")
-                await self.bot.loop.create_task(ender())
+                self.bot.loop.create_task(ender())
         await ctx.send("\n".join(f"{i + 1}. {u.name.replace('@', '@' + zwsp)} - {t:.4f} seconds ({len(prompt) / t * 12:.2f}WPM)" for i, (u, t) in enumerate(winners.items())))
 
 def setup(bot):
