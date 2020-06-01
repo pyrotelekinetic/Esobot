@@ -22,7 +22,7 @@ class DictSource(menus.ListPageSource):
         except KeyError:
             common = []
         e = discord.Embed(
-            title = f"Result #{menu.current_page + 1} (', '.join(common + jlpt))",
+            title = f"Result #{menu.current_page + 1} ({', '.join(common + jlpt)})",
             description = format_jp_entry(entry['japanese'][0])
         )
         for i, sense in enumerate(entry["senses"], start=1):
