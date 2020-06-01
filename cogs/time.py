@@ -26,7 +26,10 @@ class Event(commands.Converter):
         return iter([self.name, self.times, self.members, self.owner, self.managers])
 
     async def convert(self, ctx, argument):
-        return event_config[argument.lower()]
+        try:
+            return event_config[argument.lower()]
+        except KeyError:
+            raise commands.BadArgument("That event doesn't exist.")
 
 
 save = load_json(paths.EVENT_SAVES)
