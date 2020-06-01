@@ -65,6 +65,7 @@ async def interpret(program, _, stdin, stdout):
                             idx = pos
                             break
         elif char == ",":
+            await stdout.flush()
             cells[pointer] = ord(await stdin.read(1))
         elif char == ".":
             await stdout.write(chr(cells[pointer]))
