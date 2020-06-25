@@ -55,7 +55,7 @@ class Japanese(commands.Cog):
         """Romanize Japanese text."""
         await ctx.send(self.conv.do(text))
 
-    @commands.command(aliases=["jp", "jsh"])
+    @commands.command(aliases=["jp", "jsh", "dictionary", "dict"])
     async def jisho(self, ctx, *, query):
         """Look things up in the Jisho dictionary."""
         async with self.bot.session.get("https://jisho.org/api/v1/search/words", params={"keyword": query}) as resp:
