@@ -225,7 +225,7 @@ class General(commands.Cog):
         if not 1 <= words <= 10:
             return await ctx.send("Use between 1 and 10 words.")
         if not self.words:
-            async with self.bot.session.get("https://raw.githubusercontent.com/dwyl/english-words/master/words_alpha.txt") as resp:
+            async with self.bot.session.get("https://raw.githubusercontent.com/first20hours/google-10000-english/master/google-10000-english-usa-no-swears-medium.txt") as resp:
                 self.words = (await resp.text()).splitlines()
         await ctx.send("Type race begins in 10 seconds. Get ready!")
         await asyncio.sleep(10)
