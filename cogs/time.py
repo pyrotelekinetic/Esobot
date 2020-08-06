@@ -122,6 +122,7 @@ class Time(commands.Cog):
         )
 
     async def update_times(self):
+        channel = self.bot.get_channel(channels.TIME_CHANNEL)
         paginator = commands.Paginator()
         time_config_members = {
             channel.guild.get_member(int(id)): timezone
@@ -159,7 +160,6 @@ class Time(commands.Cog):
             paginator.add_line("\n    ".join(group_message))
         
         # Get the bot's own messages in the channel
-        channel = self.bot.get_channel(channels.TIME_CHANNEL)
         own_messages = await channel.history().flatten()
         
         # Delete extra ones
