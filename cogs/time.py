@@ -122,9 +122,6 @@ class Time(commands.Cog):
         )
 
     async def update_times(self):
-        channel = self.bot.get_channel(channels.TIME_CHANNEL)
-        await channel.purge()
-
         paginator = commands.Paginator()
         time_config_members = {
             channel.guild.get_member(int(id)): timezone
@@ -160,9 +157,21 @@ class Time(commands.Cog):
             for member, _ in group:
                 group_message.append(member.mention)
             paginator.add_line("\n    ".join(group_message))
-
-        for page in paginator.pages:
-            await channel.send(embed=make_embed(title="Times", description=page[3:-3]))
+        
+        # Get the bot's own messages in the channel
+        channel = self.bot.get_channel(channels.TIME_CHANNEL)
+        own_messages = await channel.history().flatten()
+        
+        # Delete extra ones
+        if len(own_messages) > len(paginator.pages):
+            await channel.purge(limit=len(own_messages) - len(paginator.pages))
+        
+        # Edit messages
+        for i, page in enumerate(paginator.pages):
+            try:
+                await own_messages[i].edit(embed=make_embed(title="Times", description=page[3:-3]))
+            except IndexError:
+                await channel.send(embed=make_embed(title="Times", description=page[3:-3]))
 
     time_loop = tasks.loop(minutes=1)(update_times)
 
