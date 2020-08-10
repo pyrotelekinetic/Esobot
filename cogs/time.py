@@ -173,7 +173,9 @@ class Time(commands.Cog):
             except IndexError:
                 await channel.send(embed=make_embed(title="Times", description=page[3:-3]))
 
-    time_loop = tasks.loop(minutes=1)(update_times)
+    @tasks.loop(minutes=1)
+    async def time_loop(self):
+        await self.update_times()
 
     @time_loop.before_loop
     async def before_time(self):
