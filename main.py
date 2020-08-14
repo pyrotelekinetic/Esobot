@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import asyncio
+import discord
 import logging
 import sys
 import os
@@ -56,7 +57,8 @@ COMMAND_PREFIX = "!"
 bot = commands.Bot(
     command_prefix=commands.when_mentioned_or(COMMAND_PREFIX),
     case_insensitive=True,
-    status=discord.Status.dnd
+    status=discord.Status.dnd,
+    allowed_mentions=discord.AllowedMentions(everyone=False)
 )
 bot.owner_id = owner_id
 bot.needed_extensions = set(get_extensions())
