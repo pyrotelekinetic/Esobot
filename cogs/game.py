@@ -39,7 +39,8 @@ class Games(commands.Cog):
 
         # this doesn't uniformly pick a random message: it strongly prefers messages sent after longer pauses, however this is a trade-off for an incredibly cheap getting oper-
         # ation which doesn't require spamming calls or storing data
-        t = channel.created_at + datetime.timedelta(milliseconds=random.randint(0, int((datetime.datetime.utcnow() - channel.created_at).total_seconds() * 1000)))
+        base = datetime.datetime(year=2020, month=1, day=1)
+        t = base + datetime.timedelta(milliseconds=random.randint(0, int((datetime.datetime.utcnow() - base).total_seconds() * 1000)))
 
         while True:
             try:
@@ -47,7 +48,8 @@ class Games(commands.Cog):
             except IndexError:
                 pass
             else:
-                break
+                if not message.content or message.content > 25:
+                    break
 
         embed = make_embed(
             description=message.content,
@@ -66,7 +68,7 @@ class Games(commands.Cog):
             try:
                 member = await commands.MemberConverter().convert(ctx, r.content)
             except commands.BadArgument:
-                await ctx.send("Couldn't find that user. Try again?")
+                pass
             else:
                 break
 
@@ -134,3 +136,4 @@ class Games(commands.Cog):
 
 def setup(bot):
     bot.add_cog(Games(bot))
+[2;5~]
