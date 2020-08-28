@@ -40,9 +40,8 @@ class Games(commands.Cog):
         # this doesn't uniformly pick a random message: it strongly prefers messages sent after longer pauses, however this is a trade-off for an incredibly cheap getting oper-
         # ation which doesn't require spamming calls or storing data
         base = datetime.datetime(year=2020, month=1, day=1)
-        t = base + datetime.timedelta(milliseconds=random.randint(0, int((datetime.datetime.utcnow() - base).total_seconds() * 1000)))
-
         while True:
+            t = base + datetime.timedelta(milliseconds=random.randint(0, int((datetime.datetime.utcnow() - base).total_seconds() * 1000)))
             try:
                 message = (await channel.history(after=t, limit=1).flatten())[0]
             except IndexError:
