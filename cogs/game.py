@@ -47,14 +47,14 @@ class Games(commands.Cog):
             except IndexError:
                 pass
             else:
-                if not message.content or len(message.content) > 25:
+                if (not message.content or len(message.content) > 25) and message.author in ctx.guild.members:
                     break
 
         embed = make_embed(
             description=message.content,
-            footer_text="#??? • ??? at ??:??",
+            footer_text="#??? • ??/??/????",
         )
-        embed.set_author(name="❓ ???")
+        embed.set_author(name="❓  ???")
         if message.attachments:
             filename = message.attachments[0].filename
             if filename.endswith(".png") or filename.endswith(".jpg") or filename.endswith(".jpeg"):
