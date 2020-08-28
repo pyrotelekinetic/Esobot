@@ -48,7 +48,7 @@ class Games(commands.Cog):
             except IndexError:
                 pass
             else:
-                if not message.content or message.content > 25:
+                if not message.content or len(message.content) > 25:
                     break
 
         embed = make_embed(
