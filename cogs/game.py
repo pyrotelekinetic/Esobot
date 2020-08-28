@@ -136,4 +136,3 @@ class Games(commands.Cog):
 
 def setup(bot):
     bot.add_cog(Games(bot))
-[2;5~]
