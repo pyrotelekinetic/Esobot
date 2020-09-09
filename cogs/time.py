@@ -133,21 +133,8 @@ class Time(commands.Cog):
             sorted(
                 time_config_members.items(),
                 key=lambda m: (
-                    datetime.datetime.now()
-                    .astimezone(pytz.timezone(m[1]))
-                    .replace(tzinfo=None)
-                    .year,
-                    datetime.datetime.now()
-                    .astimezone(pytz.timezone(m[1]))
-                    .replace(tzinfo=None)
-                    .month,
-                    datetime.datetime.now()
-                    .astimezone(pytz.timezone(m[1]))
-                    .replace(tzinfo=None)
-                    .day,
-                    self.get_time(m[1]),
-                    str(m[0]),
-                ),
+                    n := datetime.datetime.now().astimezone(pytz.timezone(m[1])).replace(tzinfo=None)
+                ) and (n.year, n.month, n.day, self.get_time(m[1]), str(m[0])),
             ),
             lambda x: self.get_time(x[1]),
         )
@@ -158,14 +145,14 @@ class Time(commands.Cog):
             for member, _ in group:
                 group_message.append(member.mention)
             paginator.add_line("\n    ".join(group_message))
-        
+
         # Get the bot's own messages in the channel
         own_messages = await channel.history().flatten()
-        
+
         # Delete extra ones
         if len(own_messages) > len(paginator.pages):
             await channel.purge(limit=len(own_messages) - len(paginator.pages))
-        
+
         # Edit messages
         for i, page in enumerate(paginator.pages):
             try:
@@ -227,11 +214,11 @@ class Time(commands.Cog):
                 color=colors.EMBED_SUCCESS,
             )
         )
-        if member.activity:
+        if member.activity and member.activity.type != discord.ActivityType.custom:
             await self.bot.wait_for(
                 "member_update",
                 check=lambda before, after: after.id == member.id
-                and after.activity == None,
+                and after.activity is None or after.activity.type == discord.ActivityType.custom,
             )
         await ctx.send(message)
 
@@ -454,7 +441,7 @@ class Time(commands.Cog):
                 with open(
                     paths.CONFIG_FOLDER + "/" + paths.EVENT_SAVES, "w"
                 ) as f:
-                    saving = { }
+                    saving = {}
                     for event in event_config:
                         saving[event] = list(event_config[event])
                     json.dump(saving, f)
@@ -462,7 +449,7 @@ class Time(commands.Cog):
 
     @event_loop.before_loop
     async def before_event(self):
-        await self.wait_until_ready()
+        await self.bot.wait_until_ready()
 
 
 def setup(bot):

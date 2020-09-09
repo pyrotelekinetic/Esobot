@@ -4,6 +4,7 @@ import asyncio
 import discord
 import logging
 import sys
+import traceback
 import os
 
 from cogs import get_extensions
@@ -60,6 +61,7 @@ bot = commands.Bot(
     status=discord.Status.dnd,
     allowed_mentions=discord.AllowedMentions(everyone=False)
 )
+bot.load_extension("jishaku")
 bot.owner_id = owner_id
 bot.needed_extensions = set(get_extensions())
 bot.loaded_extensions = set()
@@ -88,25 +90,20 @@ async def on_resumed():
 
 
 @bot.event
-async def on_command_error(ctx, exc, *args, **kwargs):
+async def on_command_error(ctx, exc):
     if isinstance(exc, commands.CommandInvokeError) and isinstance(
         exc.original, ShowErrorException
     ):
         return
 
     command_name = ctx.command.name if ctx.command else "unknown command"
-    l.error(
-        f"'{str(exc)}' encountered while executing '{command_name}' (args: {args}; kwargs: {kwargs})"
-    )
     if isinstance(exc, commands.UserInputError):
         if isinstance(exc, commands.MissingRequiredArgument):
             description = f"Missing required argument `{exc.param.name}`."
-        elif isinstance(exc, commands.TooManyArguments):
-            description = "Too many arguments."
         elif isinstance(exc, commands.BadArgument):
-            description = f"Bad argument:\n```\n{str(exc)}\n```"
+            description = f"Invalid argument. {str(exc)}"
         else:
-            description = f"Bad user input."
+            description = f"Unknown user input exception."
         description += f"\n\nRun `{COMMAND_PREFIX}help {command_name}` to view the required arguments."
     elif isinstance(exc, commands.CommandNotFound):
         # description = f"Could not find command `{ctx.invoked_with.split()[0]}`."
@@ -114,24 +111,25 @@ async def on_command_error(ctx, exc, *args, **kwargs):
     elif isinstance(exc, commands.CheckFailure):
         if isinstance(exc, commands.NoPrivateMessage):
             description = "Cannot be run in a private message channel."
-        elif isinstance(exc, commands.MissingPermissions) or isinstance(
-            exc, commands.BotMissingPermissions
-        ):
-            if isinstance(exc, commands.MissingPermissions):
-                description = "You don't have permission to do that."
-            elif isinstance(exc, commands.BotMissingPermissions):
-                description = "I don't have permission to do that."
-            missing_perms = "\n".join(exc.missing_perms)
-            description += f" Missing:\n```\n{missing_perms}\n```"
+        elif isinstance(exc, commands.MissingPermissions):
+            description = "You don't have permission to do that. "
+            missing_perms = ", ".join(exc.missing_perms)
+            description += f"Missing {missing_perms}"
+        elif isinstance(exc, commands.NotOwner):
+            description = "You have to be the bot owner to do that."
         else:
             description = "Command check failed."
     elif isinstance(exc, commands.DisabledCommand):
         description = "That command is disabled."
     elif isinstance(exc, commands.CommandOnCooldown):
-        description = "That command is on cooldown."
+        description = f"That command is on cooldown. Try again in {exc.retry_after:.1f} seconds."
+    elif isinstance(exc, commands.MaxConcurrencyReached):
+        description = "This command is currently already in use. Please try again later."
     else:
-        description = "Sorry, something went wrong.\n\nA team of highly trained monkeys has been dispatched to deal with the situation."
-        await report_error(ctx, exc.original, *args, **kwargs)
+        description = "Sorry, something went wrong."
+        l.error(
+            f"Unknown error encountered while executing '{command_name}'\n" + "".join(traceback.format_exception(type(exc), exc, exc.__traceback__))
+        )
     await ctx.send(
         embed=make_embed(
             color=colors.EMBED_ERROR, title="Error", description=description
@@ -141,21 +139,8 @@ async def on_command_error(ctx, exc, *args, **kwargs):
 
 @bot.event
 async def on_error(event_method, *args, **kwargs):
-    _, exc, _ = sys.exc_info()
     l.error(
-        f"'{str(exc)}' encountered during '{event_method}' (args: {args}; kwargs: {kwargs})"
-    )
-    await report_error(None, exc, *args, bot=bot, event_method=event_method, **kwargs)
-
-
-@bot.listen()
-async def on_message(message):
-    ch = message.channel
-    is_private = isinstance(ch, discord.DMChannel) or isinstance(
-        ch, discord.GroupChannel
-    )
-    l.info(
-        f"[#{ch.id if is_private else ch.name}] {message.author.display_name}: {message.content}"
+        f"Error encountered during '{event_method}' (args: {args}; kwargs: {kwargs})\n" + traceback.format_exc()
     )
 
 

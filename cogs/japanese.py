@@ -1,17 +1,30 @@
 import aiohttp
+import asyncio
 import pykakasi
 import discord
 import asyncio
 import random
+
+from googletrans import Translator
+
 from utils import show_error
 from discord.ext import commands, menus
 
+
+def _translate(text):
+    return Translator().translate(text, src="ja", dest="en").text
 
 def format_jp_entry(entry):
     try:
         return f"{entry['word']}【{entry['reading']}】"
     except KeyError:
-        return entry["reading"]
+        try:
+            return entry["reading"]
+        except KeyError:
+            try:
+                return entry["word"]
+            except KeyError:
+                return "???"
 
 class DictSource(menus.ListPageSource):
     def __init__(self, data):
@@ -19,14 +32,14 @@ class DictSource(menus.ListPageSource):
 
     async def format_page(self, menu, entry):
         jlpt = ["JLPT " + max(x.partition("-")[2] for x in entry_jlpt)] if (entry_jlpt := entry["jlpt"]) else []
-        try:
-            common = [f"{'un' * (not entry['is_common'])}common"]
-        except KeyError:
-            common = []
+        common = ["common"] if "is_common" in entry and entry["is_common"] else []
+
         e = discord.Embed(
-            title = f"Result #{menu.current_page + 1} ({', '.join(common + jlpt)})",
+            title = f"Result #{menu.current_page + 1}",
             description = format_jp_entry(entry['japanese'][0])
         )
+        if common or jlpt:
+            title += " {', '.join(common + jlpt)})"
         for i, sense in enumerate(entry["senses"], start=1):
             e.add_field(
                 name = ", ".join(sense["parts_of_speech"]) if sense["parts_of_speech"] else "\u200b",
@@ -70,6 +83,13 @@ class Japanese(commands.Cog):
         pages = menus.MenuPages(source=DictSource(data["data"]), clear_reactions_after=True)
         await pages.start(ctx)
 
+    @commands.command(aliases=["jatrans", "transja", "jtrans", "jptrans", "transjp", "transj", "tj", "jtr", "jpt", "jt",
+                               "whatdidlyricjustsay", "what'dlyricsay", "whtdlysay", "wdls", "wls", "what",
+                               "weebtrans", "weebt", "deweeb", "unweeb", "transweeb", "tweeb", "tw"])
+    async def jatranslate(self, ctx, *, lyric_quote: commands.clean_content):
+        t = await self.bot.loop.run_in_executor(None, _translate, lyric_quote)
+        await ctx.send(t)
+
     @commands.command()
     @commands.guild_only()
     async def kanarace(self, ctx, kana: int = 10):
@@ -80,7 +100,7 @@ class Japanese(commands.Cog):
         await ctx.send("Kana reading/typing race begins in 5 seconds. Get ready!")
         await asyncio.sleep(5)
 
-        k = "あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよらりるれろわを"
+        k = "あいうえおかきくけこがぎぐげごさしすせそざじずぜぞたちつてとだぢづでどなにぬねのはひふへほばびぶべぼぱぴぷぺぽまみむめもやゆよらりるれろわを"
         prompt = "".join(random.choices(k, k=kana))
 
         zwsp = "\u200b"

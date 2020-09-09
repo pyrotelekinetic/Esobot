@@ -71,6 +71,7 @@ class Moderation(commands.Cog):
     @commands.command()
     @commands.has_permissions(ban_members=True)
     async def ban(self, ctx, targets: HackTargets, *, reason=None):
+        """Ban a member."""
         confirmed_targets = await self.confirm(ctx, targets, reason, forbidden_fail=True)
         for target in confirmed_targets:
             try:
@@ -82,6 +83,7 @@ class Moderation(commands.Cog):
     @commands.command()
     @commands.has_permissions(ban_members=True)
     async def unban(self, ctx, targets: HackTargets, *, reason=None):
+        """Unban a user."""
         for target in targets:
             try:
                 await ctx.guild.unban(target, reason=reason)
@@ -92,6 +94,7 @@ class Moderation(commands.Cog):
     @commands.command()
     @commands.has_permissions(kick_members=True)
     async def kick(self, ctx, targets: Targets, *, reason=None):
+        """Kick a user."""
         confirmed_targets = await self.confirm(ctx, targets, reason, forbidden_fail=True)
         for target in confirmed_targets:
             await target.kick(reason=reason)

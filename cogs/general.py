@@ -1,52 +1,43 @@
 import asyncio
 import discord
-import random
-import time
-import datetime
-import subprocess
 
 from discord.ext import commands
-from utils import l, make_embed
+from utils import make_embed
 from constants import colors, info, emoji
-from typing import Optional
 
 
-def get_command_signature(command):
-    # almost entirely copied from within discord.ext.commands, but ignores aliases
-    result = command.qualified_name
-    if command.usage:
-        result += " " + command.usage
-    elif command.clean_params:
-        # l.warning(f"Command {command.name} has parameters but no 'usage'.")
-        result = command.qualified_name
-        params = command.clean_params
-        if params:
-            for name, param in command.clean_params.items():
-                if param.default is not param.empty:
-                    if param.default not in (None, ""):
-                        result += f" [{name}={param.default}]"
-                    else:
-                        result += f" [{name}]"
-                elif param.kind == param.VAR_POSITIONAL:
-                    result += f" [{name}\N{HORIZONTAL ELLIPSIS}]"
-                else:
-                    result += f" <{name}>"
-    return result
+class EsobotHelp(commands.MinimalHelpCommand):
+    def add_bot_commands_formatting(self, commands, heading):
+        if commands:
+            self.paginator.add_line(f"**{heading}**")
+            self.paginator.add_line("\n".join(f"• ``{c.name}``{' — ' + c.short_doc if c.short_doc else ''}" for c in commands))
 
+    async def send_pages(self):
+        dest = self.get_destination()
+        for page in self.paginator.pages:
+            await dest.send(embed=discord.Embed(title="Help", description=page, color=colors.EMBED_HELP))
 
-async def get_message_guild(guild, id, priority_channel=None):
-    channels = guild.text_channels
-    if priority_channel:
-        channels.remove(priority_channel)
-        try:
-            return await priority_channel.fetch_message(id)
-        except discord.NotFound:
-            pass
-    for channel in channels:
-        try:
-            return await channel.fetch_message(id)
-        except discord.NotFound:
-            pass
+    def add_aliases_formatting(self, aliases):
+        self.paginator.add_line(f"**Aliases:** ``{'``, ``'.join(aliases)}``", empty=True)
+
+    def add_command_formatting(self, command):
+        if command.description:
+            self.paginator.add_line(command.description, empty=True)
+
+        signature = self.get_command_signature(command)
+        if command.aliases:
+            self.paginator.add_line(f"``{signature}``")
+            self.add_aliases_formatting(command.aliases)
+        else:
+            self.paginator.add_line(f"``{signature}``", empty=True)
+
+        if command.help:
+            try:
+                self.paginator.add_line(command.help, empty=True)
+            except RuntimeError:
+                for line in command.help.splitlines():
+                    self.paginator.add_line(line)
+                self.paginator.add_line()
 
 
 class General(commands.Cog):
@@ -54,95 +45,12 @@ class General(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
-        bot.original_help = bot.get_command("help")
-        bot.remove_command("help")
+        bot.original_help = bot.help_command
+        bot.help_command = EsobotHelp()
+        bot.help_command.cog = self
 
     def cog_unload(self):
-        self.bot.add_command(self.bot.original_help)
-
-    @commands.command(aliases=["h", "man"])
-    async def help(self, ctx, *, command_name: str = None):
-        """Display a list of all commands or display information about a specific command."""
-        prefixes = await self.bot.get_prefix(ctx.message)
-        if command_name:
-            command = self.bot.get_command(command_name)
-            if command is None:
-                await ctx.send(
-                    embed=make_embed(
-                        color=colors.EMBED_ERROR,
-                        title="Command help",
-                        description=f"Could not find command `{command_name}`.",
-                    )
-                )
-            elif await command.can_run(ctx):
-                fields = []
-                if command.usage or command.clean_params:
-                    fields.append(
-                        ("Synopsis", f"`{get_command_signature(command)}`", True)
-                    )
-                if command.aliases:
-                    aliases = ", ".join(f"`{alias}`" for alias in command.aliases)
-                    fields.append(("Aliases", aliases, True))
-                if command.help:
-                    fields.append(("Description", command.help))
-                if hasattr(command, "commands"):
-                    subcommands = [
-                        f"`{get_command_signature(x)}`" + f" \N{EM DASH} {x.short_doc}"
-                        if x.short_doc
-                        else ""
-                        for x in command.commands
-                    ]
-                    fields.append(("Subcommands", "\n".join(subcommands)))
-                misc = ""
-                if not command.enabled:
-                    misc += "This command is currently disabled.\n"
-                if command.hidden:
-                    misc += "This command is usually hidden.\n"
-                if misc:
-                    fields.append(("Miscellaneous", misc))
-                await ctx.send(
-                    embed=make_embed(
-                        color=colors.EMBED_HELP,
-                        title="Command help",
-                        description=f"`{command.name}`",
-                        fields=fields,
-                    )
-                )
-            else:
-                await ctx.send(
-                    embed=make_embed(
-                        color=colors.EMBED_ERROR,
-                        title="Command help",
-                        description=f"You have insufficient permission to access `{command_name}`.",
-                    )
-                )
-        else:
-            cog_names = []
-            ungrouped_commands = []
-            for command in self.bot.commands:
-                if command.cog_name and command.cog_name not in cog_names:
-                    cog_names.append(command.cog_name)
-            fields = []
-            for cog_name in sorted(cog_names):
-                lines = []
-                for command in sorted(
-                    self.bot.get_cog(cog_name).get_commands(), key=lambda cmd: cmd.name
-                ):
-                    if not command.hidden and (await command.can_run(ctx)):
-                        line = f"\N{BULLET} **`{get_command_signature(command)}`**"
-                        if command.short_doc:
-                            line += f" \N{EM DASH} {command.short_doc}"
-                        lines.append(line)
-                if lines:
-                    fields.append((cog_name, "\n".join(lines)))
-            await ctx.send(
-                embed=make_embed(
-                    color=colors.EMBED_HELP,
-                    title="Command list",
-                    description=f"Invoke a command by prefixing it with {','.join(prefixes[:-1])} or {prefixes[-1]}. Use `{ctx.command.name} [command]` to get help on a specific command.",
-                    fields=fields,
-                )
-            )
+        self.bot.help_command = self.original_help
 
     @commands.command(aliases=["i", "info"])
     async def about(self, ctx):
@@ -161,42 +69,8 @@ class General(commands.Cog):
 
     @commands.command()
     @commands.guild_only()
-    async def quote(self, ctx, message_id: int = None):
+    async def quote(self, ctx, message: discord.Message):
         """Quote a previous message."""
-        if not message_id:
-            quote_message = await ctx.send(
-                embed=make_embed(
-                    title="No message",
-                    description=f"React to a message with {emoji.QUOTE}.",
-                )
-            )
-
-            try:
-                payload = await self.bot.wait_for(
-                    "raw_reaction_add",
-                    check=lambda m: m.guild_id == ctx.guild.id and m.emoji.name == emoji.QUOTE and m.user_id == ctx.author.id,
-                    timeout=60,
-                )
-            except asyncio.TimeoutError:
-                await quote_message.edit(
-                    embed=make_embed(
-                        title="No message", description=f"No reaction given."
-                    )
-                )
-                return
-
-            channel = ctx.guild.get_channel(payload.channel_id)
-            message = await channel.fetch_message(payload.message_id)
-        else:
-            message = await get_message_guild(ctx.guild, message_id, ctx.channel)
-            if not message:
-                await ctx.send(
-                    embed=make_embed(
-                        title="No message", description="Bad message ID given."
-                    )
-                )
-                return
-            quote_message = ctx.channel
         embed = make_embed(
             description=message.content,
             timestamp=message.edited_at or message.created_at,
@@ -211,11 +85,7 @@ class General(commands.Cog):
                 or filename.endswith(".jpeg")
             ):
                 embed.set_image(url=message.attachments[0].url)
-
-        if hasattr(quote_message, "send"):
-            await quote_message.send(embed=embed)
-        else:
-            await quote_message.edit(embed=embed)
+        await ctx.send(embed=embed)
 
 
 def setup(bot):

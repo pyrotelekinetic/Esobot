@@ -3,12 +3,12 @@ import os
 DEV = False
 
 NAME = "Esobot"
-VERSION = "1.5.4" + ("-dev" * DEV)
+VERSION = "1.6.0" + ("-dev" * DEV)
 
 ABOUT_TEXT = f"""\
 {NAME} is an open source Discord bot created using \
 [discord.py](https://github.com/Rapptz/discord.py) for the \
-[Esolang Discord Server](https://discord.gg/vwsaeee).
+[Esolang Discord Server](https://discord.gg/3UXSK5p).
 """
 
 AUTHOR = "LyricLy"
