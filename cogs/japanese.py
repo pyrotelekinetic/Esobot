@@ -39,7 +39,7 @@ class DictSource(menus.ListPageSource):
             description = format_jp_entry(entry['japanese'][0])
         )
         if common or jlpt:
-            title += " {', '.join(common + jlpt)})"
+            e.title += " {', '.join(common + jlpt)})"
         for i, sense in enumerate(entry["senses"], start=1):
             e.add_field(
                 name = ", ".join(sense["parts_of_speech"]) if sense["parts_of_speech"] else "\u200b",
