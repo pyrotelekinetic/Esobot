@@ -83,6 +83,10 @@ class Games(commands.Cog):
             await ctx.send("Too bad. Good luck with the next time!")
 
 
+    async def screen_abr(self, ctx):
+        m = await self.bot.wait_for("message", check=lambda m: m.channel == ctx.channel and m.author.id == 509849474647064576, timeout=1)
+        await m.delete()
+
     @commands.command(aliases=["tr", "type", "race"])
     @commands.guild_only()
     async def typerace(self, ctx, words: int = 10):
@@ -92,10 +96,14 @@ class Games(commands.Cog):
         if not self.words:
             async with self.bot.session.get("https://raw.githubusercontent.com/first20hours/google-10000-english/master/google-10000-english-usa-no-swears-medium.txt") as resp:
                 self.words = (await resp.text()).splitlines()
+
         await ctx.send("Type race begins in 10 seconds. Get ready!")
         await asyncio.sleep(10)
+
         prompt = " ".join(random.choices(self.words, k=words))
         zwsp = "\u200b"
+
+        self.bot.loop.create_task(self.screen_abr(ctx))
         start = await ctx.send(zwsp.join(list(prompt.translate(str.maketrans({
             "a": "а",
             "c": "с",
@@ -108,6 +116,7 @@ class Games(commands.Cog):
             "y": "у",
             "x": "х"
         })))))
+
         winners = {}
         is_ended = asyncio.Event()
         timeout = False
