@@ -67,8 +67,7 @@ bot = commands.Bot(
     case_insensitive=True,
     status=discord.Status.dnd,
     allowed_mentions=discord.AllowedMentions(everyone=False),
-    intents=intents,
-    member_cache_flags=discord.MemberCacheFlags.from_intents(intents)
+    intents=intents
 )
 bot.load_extension("jishaku")
 bot.owner_id = owner_id
