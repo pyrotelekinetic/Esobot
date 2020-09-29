@@ -55,11 +55,20 @@ except IOError:
 
 COMMAND_PREFIX = "!"
 
+intents = discord.Intents(
+    guilds=True,
+    members=True,
+    messages=True,
+    reactions=True
+)
+
 bot = commands.Bot(
     command_prefix=commands.when_mentioned_or(COMMAND_PREFIX),
     case_insensitive=True,
     status=discord.Status.dnd,
-    allowed_mentions=discord.AllowedMentions(everyone=False)
+    allowed_mentions=discord.AllowedMentions(everyone=False),
+    intents=intents,
+    member_cache_flags=discord.MemberCacheFlags.from_intents(intents)
 )
 bot.load_extension("jishaku")
 bot.owner_id = owner_id
