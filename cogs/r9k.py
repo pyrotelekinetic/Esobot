@@ -1,11 +1,13 @@
-import copy
 import string
 
 from discord.ext import commands
-from constants import colors, info, paths, channels
-from utils import make_embed, load_json, save_json
+from constants import paths, channels
+from utils import load_json, save_json
 from unidecode import unidecode
 
+
+def strip_content(s):
+    return "".join([x for x in unidecode(s.strip().casefold()) if x in string.ascii_letters + string.digits])
 
 class R9K(commands.Cog):
     """Manage the R9K channel."""
@@ -20,13 +22,14 @@ class R9K(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message_edit(self, before, after):
-        await self.check_message(after)
+        if strip_content(before.content) != strip_content(after.content):
+            await self.check_message(after)
 
     async def check_message(self, message):
         if message.author.bot or message.channel != self.bot.get_channel(channels.R9K_CHANNEL):
             return
 
-        stripped_content = "".join([x for x in unidecode(message.content.strip().casefold()) if x in string.ascii_letters + string.digits])
+        stripped_content = strip_content(message.content)
 
         if stripped_content in self.messages:
             await message.delete()
