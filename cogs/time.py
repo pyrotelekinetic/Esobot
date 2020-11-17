@@ -170,7 +170,7 @@ class Time(commands.Cog):
 
     @commands.group(aliases=["pw", "pwhen", "pingw"])
     async def pingwhen(self, ctx):
-        """Ping someone when a certain criterium is met.
+        """Ping someone when a certain criterion is met.
         If the condition does not complete after 48 hours, then the command will terminate.
         """
 
