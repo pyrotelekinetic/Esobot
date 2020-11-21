@@ -6,6 +6,7 @@ import discord
 import json
 import pytz
 import time
+import traceback
 import itertools
 
 from constants import colors, channels, paths
@@ -163,6 +164,11 @@ class Time(commands.Cog):
     @tasks.loop(minutes=1)
     async def time_loop(self):
         await self.update_times()
+
+    @time_loop.error
+    async def time_error(self, error):
+        print("found the time loop error lol")
+        traceback.print_exception(type(error), error, error.__traceback__)
 
     @time_loop.before_loop
     async def before_time(self):
