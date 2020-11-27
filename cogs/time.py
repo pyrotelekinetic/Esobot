@@ -128,7 +128,7 @@ class Time(commands.Cog):
         time_config_members = {
             channel.guild.get_member(int(id)): timezone
             for id, timezone in self.time_config.items()
-            if channel.guild.get_member(int(id)) or (self.time_config.pop(int(id)) and False)
+            if channel.guild.get_member(int(id))
         }
         now = datetime.datetime.now()
         groups = itertools.groupby(
