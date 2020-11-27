@@ -128,13 +128,14 @@ class Time(commands.Cog):
         time_config_members = {
             channel.guild.get_member(int(id)): timezone
             for id, timezone in self.time_config.items()
-            if channel.guild.get_member(int(id))
+            if channel.guild.get_member(int(id)) or (self.time_config.pop(int(id)) and False)
         }
+        now = datetime.datetime.now()
         groups = itertools.groupby(
             sorted(
                 time_config_members.items(),
                 key=lambda m: (
-                    n := datetime.datetime.now().astimezone(pytz.timezone(m[1])).replace(tzinfo=None)
+                    n := now.astimezone(pytz.timezone(m[1])).replace(tzinfo=None)
                 ) and (n.year, n.month, n.day, self.get_time(m[1]), str(m[0])),
             ),
             lambda x: self.get_time(x[1]),
@@ -147,14 +148,11 @@ class Time(commands.Cog):
                 group_message.append(member.mention)
             paginator.add_line("\n    ".join(group_message))
 
-        # Get the bot's own messages in the channel
         own_messages = await channel.history().flatten()
 
-        # Delete extra ones
         if len(own_messages) > len(paginator.pages):
             await channel.purge(limit=len(own_messages) - len(paginator.pages))
 
-        # Edit messages
         for i, page in enumerate(paginator.pages):
             try:
                 await own_messages[i].edit(embed=make_embed(title="Times", description=page[3:-3]))
@@ -173,6 +171,10 @@ class Time(commands.Cog):
     @time_loop.before_loop
     async def before_time(self):
         await self.bot.wait_until_ready()
+
+    @time_loop.after_loop
+    async def after_time(self):
+        print("a")
 
     @commands.group(aliases=["pw", "pwhen", "pingw"])
     async def pingwhen(self, ctx):
