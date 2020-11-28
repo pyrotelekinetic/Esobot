@@ -1,4 +1,3 @@
-import asyncio
 import calendar
 import datetime
 import dateparser
@@ -10,7 +9,6 @@ import traceback
 import itertools
 
 from constants import colors, channels, paths
-from collections import namedtuple
 from discord.ext import commands, tasks
 from utils import make_embed, clean, show_error, load_json, save_json
 
@@ -117,7 +115,7 @@ class Time(commands.Cog):
         await ctx.send(
             embed=make_embed(
                 title="Unset timezone",
-                description=f"Your timezone is now unset.",
+                description="Your timezone is now unset.",
                 color=colors.EMBED_SUCCESS,
             )
         )
@@ -148,7 +146,7 @@ class Time(commands.Cog):
                 group_message.append(member.mention)
             paginator.add_line("\n    ".join(group_message))
 
-        own_messages = await channel.history().flatten()
+        own_messages = await channel.history(oldest_first=True).flatten()
 
         if len(own_messages) > len(paginator.pages):
             await channel.purge(limit=len(own_messages) - len(paginator.pages))
@@ -417,7 +415,7 @@ class Time(commands.Cog):
             await user.send(
                 embed=make_embed(
                     title=f"{event.name}",
-                    description=message or f"This event has triggered.",
+                    description=message or "This event has triggered.",
                 )
             )
 
