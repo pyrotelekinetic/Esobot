@@ -144,7 +144,7 @@ class Time(commands.Cog):
             group_message = [key]
             for member, _ in group:
                 group_message.append(member.mention)
-            paginator.add_line("\n    ".join(group_message))
+            paginator.add_line("\n\u200b    ".join(group_message))
 
         own_messages = await channel.history(oldest_first=True).flatten()
 
