@@ -45,7 +45,7 @@ class General(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
-        bot.original_help = bot.help_command
+        self.original_help = bot.help_command
         bot.help_command = EsobotHelp()
         bot.help_command.cog = self
 
