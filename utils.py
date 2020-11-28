@@ -14,6 +14,53 @@ def clean(text):
     return text.replace("```", "`\u200b``")
 
 
+class EmbedPaginator:
+    def __init__(self):
+        self.current_page = []
+        self.count = 0
+        self._embeds = []
+        self.current_embed = discord.Embed()
+
+    @property
+    def _max_size(self):
+        if not self.current_embed.description:
+            return 2048
+        return 1024
+
+    def close_page(self):
+        if len(self.current_embed) + self.count > 6000 or len(self.current_embed.fields) == 25:
+            self.close_embed()
+
+        if not self.current_embed.description:
+            self.current_embed.description = "\n".join(self.current_page)
+        else:
+            self.current_embed.add_field(name="\u200b", value="\n".join(self.current_page))
+
+        self.current_page.clear()
+        self.count = 0
+
+    def close_embed(self):
+        self._embeds.append(self.current_embed)
+        self.current_embed = discord.Embed()
+
+    def add_line(self, line):
+        if len(line) > self._max_size:
+            raise RuntimeError(f"Line exceeds maximum page size {self._max_size}")
+
+        if self.count + len(line) + 1 > self._max_size:
+            self.close_page()
+        self.count += len(line) + 1
+        self.current_page.append(line)
+
+    @property
+    def embeds(self):
+        if self.current_page:
+            self.close_page()
+        if self.current_embed.description:
+            self.close_embed()
+        return self._embeds
+
+
 def make_embed(*, fields=[], footer_text=None, **kwargs):
     embed = discord.Embed(**kwargs)
     for field in fields:

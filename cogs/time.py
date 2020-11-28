@@ -10,7 +10,7 @@ import itertools
 
 from constants import colors, channels, paths
 from discord.ext import commands, tasks
-from utils import make_embed, clean, show_error, load_json, save_json
+from utils import EmbedPaginator, make_embed, clean, show_error, load_json, save_json
 
 
 class Event(commands.Converter):
@@ -122,7 +122,7 @@ class Time(commands.Cog):
 
     async def update_times(self):
         channel = self.bot.get_channel(channels.TIME_CHANNEL)
-        paginator = commands.Paginator()
+        paginator = EmbedPaginator()
         time_config_members = {
             channel.guild.get_member(int(id)): timezone
             for id, timezone in self.time_config.items()
@@ -148,14 +148,17 @@ class Time(commands.Cog):
 
         own_messages = await channel.history(oldest_first=True).flatten()
 
-        if len(own_messages) > len(paginator.pages):
-            await channel.purge(limit=len(own_messages) - len(paginator.pages))
+        if len(own_messages) > len(paginator.embeds):
+            await channel.purge(limit=len(own_messages) - len(paginator.embeds))
 
-        for i, page in enumerate(paginator.pages):
+        paginator.embeds[0].title = "Times"
+        paginator.embeds[-1].set_footer(text="The timezones and current times for every user on the server who has opted in, in order of UTC offset.")
+
+        for i, e in enumerate(paginator.embeds):
             try:
-                await own_messages[i].edit(embed=make_embed(title="Times", description=page[3:-3]))
+                await own_messages[i].edit(embed=e)
             except IndexError:
-                await channel.send(embed=make_embed(title="Times", description=page[3:-3]))
+                await channel.send(embed=e)
 
     @tasks.loop(minutes=1)
     async def time_loop(self):
