@@ -144,17 +144,21 @@ class Time(commands.Cog):
             group_message = [key]
             for member, _ in group:
                 group_message.append(member.mention)
-            paginator.add_line("\n￭  ".join(group_message))
-
-        own_messages = await channel.history(oldest_first=True).flatten()
-
-        if len(own_messages) > len(paginator.embeds):
-            await channel.purge(limit=len(own_messages) - len(paginator.embeds))
+            paginator.add_line("\n￭ ".join(group_message))
 
         paginator.embeds[0].title = "Times"
         paginator.embeds[-1].set_footer(text="The timezones and current times for every user on the server who has opted in, in order of UTC offset.")
+        to_send = paginator.embeds
 
-        for i, e in enumerate(paginator.embeds):
+        own_messages = await channel.history(oldest_first=True).flatten()
+        if len(own_messages) > len(to_send):
+            await channel.purge(limit=len(own_messages) - len(to_send))
+        if len(to_send) > len(own_messages) and (on_messages[-1].created_at - datetime.datetime.utcnow()).total_seconds() > 7 * 60:
+            # there's going to be a break in the messages so we have to delete the old ones
+            await channel.purge(limit=len(own_messages))
+            own_messages.clear()
+
+        for i, e in enumerate(to_send):
             try:
                 await own_messages[i].edit(embed=e)
             except IndexError:
