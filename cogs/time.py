@@ -172,7 +172,7 @@ class Time(commands.Cog):
     async def before_time(self):
         await self.bot.wait_until_ready()
         now = datetime.datetime.utcnow()
-        await asyncio.sleep(60 - (now.second + t.microsecond/1_000_000))
+        await asyncio.sleep(60 - (now.second + now.microsecond/1_000_000))
 
     @commands.group(aliases=["pw", "pwhen", "pingw"])
     async def pingwhen(self, ctx):
