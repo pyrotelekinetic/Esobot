@@ -168,18 +168,11 @@ class Time(commands.Cog):
     async def time_loop(self):
         await self.update_times()
 
-    @time_loop.error
-    async def time_error(self, error):
-        print("found the time loop error lol")
-        traceback.print_exception(type(error), error, error.__traceback__)
-
     @time_loop.before_loop
     async def before_time(self):
         await self.bot.wait_until_ready()
-
-    @time_loop.after_loop
-    async def after_time(self):
-        print("a")
+        now = datetime.datetime.utcnow()
+        await asyncio.sleep(60 - (now.second + t.microsecond/1_000_000))
 
     @commands.group(aliases=["pw", "pwhen", "pingw"])
     async def pingwhen(self, ctx):
