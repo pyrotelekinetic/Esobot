@@ -12,12 +12,7 @@ from discord.ext import commands, menus
 
 
 def _translate(text):
-    print("a")
-    t = Translator()
-    print("b")
-    r = t.translate(text, src="ja", dest="en").text
-    print("c")
-    return r
+    return Translator().translate(text, src="ja", dest="en").text
 
 def format_jp_entry(entry):
     try:
