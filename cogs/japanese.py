@@ -12,7 +12,12 @@ from discord.ext import commands, menus
 
 
 def _translate(text):
-    return Translator().translate(text, src="ja", dest="en").text
+    print("a")
+    t = Translator()
+    print("b")
+    r = t.translate(text, src="ja", dest="en").text
+    print("c")
+    return r
 
 def format_jp_entry(entry):
     try:
@@ -83,11 +88,19 @@ class Japanese(commands.Cog):
         pages = menus.MenuPages(source=DictSource(data["data"]), clear_reactions_after=True)
         await pages.start(ctx)
 
+    @commands.Cog.listener()
+    async def on_message(self, message):
+        if message.author.id == 319753218592866315:  # LyricLy
+            self.last_lyric_msg = message.content
+
     @commands.command(aliases=["jatrans", "transja", "jtrans", "jptrans", "transjp", "transj", "tj", "jtr", "jpt", "jt",
                                "whatdidlyricjustsay", "what'dlyricsay", "whtdlysay", "wdls", "wls", "what",
-                               "weebtrans", "weebt", "deweeb", "unweeb", "transweeb", "tweeb", "tw"])
-    async def jatranslate(self, ctx, *, lyric_quote: commands.clean_content):
-        t = await self.bot.loop.run_in_executor(None, _translate, lyric_quote)
+                               "weebtrans", "weebt", "deweeb", "unweeb", "transweeb", "tweeb", "tw",
+                               "lyricisnottrans", "forumbra", "inadequateweeb", "inadqweeb", "otherlanguagesscareme",
+                               "otherlangsscareme", "that'snotenglish", "notenglish", "noen", "日本語から",
+                               "ifyouhaveajapaneseimewhyareyouusingashittygoogletranslatecommand", "ifuhvajpimeyruusingshitgtcmd"])
+    async def jatranslate(self, ctx, *, lyric_quote: commands.clean_content = None):
+        t = await self.bot.loop.run_in_executor(None, _translate, lyric_quote or self.last_lyric_msg)
         await ctx.send(t)
 
     @commands.command()
