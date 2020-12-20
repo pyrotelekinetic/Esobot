@@ -66,9 +66,9 @@ class Japanese(commands.Cog):
         self.conv = kakasi.getConverter()
 
     @commands.command(aliases=["ro", "roman", "romanize", "romanise"])
-    async def romaji(self, ctx, *, text: commands.clean_content):
+    async def romaji(self, ctx, *, text: commands.clean_content = None):
         """Romanize Japanese text."""
-        await ctx.send(self.conv.do(text))
+        await ctx.send(self.conv.do(text or self.last_lyric_msg))
 
     @commands.command(aliases=["jp", "jsh", "dictionary", "dict"])
     async def jisho(self, ctx, *, query):
