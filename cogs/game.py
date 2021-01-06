@@ -122,7 +122,7 @@ class Games(commands.Cog):
         timeout = False
         while not is_ended.is_set():
             done, pending = await asyncio.wait([
-                self.bot.wait_for("message", check=lambda m: m.channel == ctx.channel and m.content == prompt and not m.author.bot and m.author not in winners),
+                self.bot.wait_for("message", check=lambda m: m.channel == ctx.channel and m.content.lower() == prompt.lower() and not m.author.bot and m.author not in winners),
                 is_ended.wait()
             ], return_when=asyncio.FIRST_COMPLETED); [*map(asyncio.Task.cancel, pending)]
             r = done.pop().result()
