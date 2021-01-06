@@ -101,7 +101,7 @@ class Games(commands.Cog):
         await asyncio.sleep(10)
 
         prompt = " ".join(random.choices(self.words, k=words))
-        zwsp = "\uFEFF"
+        zwsp = "\u2060"
 
         self.bot.loop.create_task(self.screen_abr(ctx))
         start = await ctx.send(zwsp.join(list(prompt.translate(str.maketrans({
