@@ -91,14 +91,15 @@ class Games(commands.Cog):
     @commands.guild_only()
     async def typerace(self, ctx, words: int = 10):
         """Race typing speeds!"""
-        if not 1 <= words <= 10:
-            return await ctx.send("Use between 1 and 10 words.")
+        if not 5 <= words <= 50:
+            return await ctx.send("Use between 5 and 50 words.")
         if not self.words:
             async with self.bot.session.get("https://raw.githubusercontent.com/first20hours/google-10000-english/master/google-10000-english-usa-no-swears-medium.txt") as resp:
                 self.words = (await resp.text()).splitlines()
 
-        await ctx.send("Type race begins in 10 seconds. Get ready!")
-        await asyncio.sleep(10)
+        WAIT_SECONDS = 5
+        await ctx.send(f"Type race begins in {WAIT_SECONDS} seconds. Get ready!")
+        await asyncio.sleep(WAIT_SECONDS)
 
         prompt = " ".join(random.choices(self.words, k=words))
         zwsp = "\u2060"
