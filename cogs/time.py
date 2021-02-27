@@ -168,6 +168,7 @@ class Time(commands.Cog):
     @tasks.loop(minutes=1)
     async def time_loop(self):
         await self.update_times()
+    time_loop.add_exception_type(discord.HTTPException)
 
     @time_loop.before_loop
     async def before_time(self):
