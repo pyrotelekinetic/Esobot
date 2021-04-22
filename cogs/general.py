@@ -1,4 +1,6 @@
 import asyncio
+import shlex
+import random
 import discord
 
 from discord.ext import commands
@@ -87,6 +89,11 @@ class General(commands.Cog):
                 embed.set_image(url=message.attachments[0].url)
         await ctx.send(embed=embed)
 
+    @commands.Cog.listener()
+    async def on_message(self, message):
+        if message.guild.id == 800373244162867231 and message.author.id == 319753218592866315 and message.content.startswith("?choose"):
+            await message.channel.send(random.choice(shlex.split(message.content.removeprefix("?choose"))))
+            
 
 def setup(bot):
     bot.add_cog(General(bot))
