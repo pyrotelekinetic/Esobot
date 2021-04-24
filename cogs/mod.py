@@ -86,6 +86,7 @@ class Moderation(commands.Cog):
                 message.append(f"{verb} {', '.join(successful[:-1])}, and {successful[-1]}.")
             else:
                 message.append(f"{verb} {len(successful)} users.")
+        await ctx.send("\n".join(message))
 
     @commands.command()
     @commands.has_permissions(ban_members=True)
