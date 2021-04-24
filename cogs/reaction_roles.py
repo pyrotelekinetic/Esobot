@@ -79,6 +79,7 @@ class ReactionRoles(commands.Cog):
             return None
 
     @commands.command()
+    @commands.has_permissions(manage_roles=True)
     async def rolewatch(self, ctx, *, msg: discord.Message):
         m = await self.scan(msg.id, msg.content, ctx.guild, channel_id=ctx.channel.id)
 
