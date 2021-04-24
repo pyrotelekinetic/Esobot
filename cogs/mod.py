@@ -76,11 +76,14 @@ class Moderation(commands.Cog):
         for target in confirmed_targets:
             if ctx.author.top_role <= target.top_role:
                 await ctx.send(f"Your rank isn't higher than {target}'s.")
+                break
             try:
                 await ctx.guild.ban(target, reason=reason)
             except discord.HTTPException:
                 await ctx.send(f"Couldn't ban {target}.")
-        await say_count(ctx, "Banned", confirmed_targets)
+                break
+        else:
+            await say_count(ctx, "Banned", confirmed_targets)
 
     @commands.command()
     @commands.has_permissions(ban_members=True)
@@ -89,9 +92,12 @@ class Moderation(commands.Cog):
         for target in targets:
             try:
                 await ctx.guild.unban(target, reason=reason)
+                break
             except discord.HTTPException:
                 await ctx.send(f"Couldn't unban {target}.")
-        await say_count(ctx, "Unbanned", targets)
+                break
+        else:
+            await say_count(ctx, "Unbanned", targets)
 
     @commands.command()
     @commands.has_permissions(kick_members=True)
@@ -101,11 +107,14 @@ class Moderation(commands.Cog):
         for target in confirmed_targets:
             if ctx.author.top_role <= target.top_role:
                 await ctx.send(f"Your rank isn't higher than {target}'s.")
+                break
             try:
                 await target.kick(reason=reason)
             except discord.HTTPException:
                 await ctx.send(f"Couldn't kick {target}.")
-        await say_count(ctx, "Kicked", confirmed_targets)
+                break
+        else:
+            await say_count(ctx, "Kicked", confirmed_targets)
 
 
 def setup(bot):
