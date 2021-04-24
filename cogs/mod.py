@@ -74,6 +74,8 @@ class Moderation(commands.Cog):
         """Ban a member."""
         confirmed_targets = await self.confirm(ctx, targets, reason, forbidden_fail=True)
         for target in confirmed_targets:
+            if ctx.author.top_role <= target.top_role:
+                await ctx.send(f"Your rank isn't higher than {target}'s.")
             try:
                 await ctx.guild.ban(target, reason=reason)
             except discord.HTTPException:
@@ -97,7 +99,12 @@ class Moderation(commands.Cog):
         """Kick a user."""
         confirmed_targets = await self.confirm(ctx, targets, reason, forbidden_fail=True)
         for target in confirmed_targets:
-            await target.kick(reason=reason)
+            if ctx.author.top_role <= target.top_role:
+                await ctx.send(f"Your rank isn't higher than {target}'s.")
+            try:
+                await target.kick(reason=reason)
+            except discord.HTTPException:
+                await ctx.send(f"Couldn't kick {target}.")
         await say_count(ctx, "Kicked", confirmed_targets)
 
 
