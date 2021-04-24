@@ -7,13 +7,6 @@ from discord.ext import commands
 Targets = commands.Greedy[discord.Member]
 HackTargets = commands.Greedy[Union[discord.Member, int]]
 
-async def say_count(ctx, verb, l):
-    count = len(l)
-    if count > 1:
-        await ctx.send(f"{verb} {count} users.")
-    elif count == 1:
-        await ctx.send(f"{verb} {l[0]}.")
-
 class Moderation(commands.Cog):
     """Moderation functionality for the server."""
 
@@ -21,7 +14,7 @@ class Moderation(commands.Cog):
         self.bot = bot
         self.mute_role = None
 
-    async def confirm(self, ctx, targets, reason, *, forbidden_fail=False):
+    async def confirm(self, ctx, targets, reason, *, forbidden_fail=True):
         ss = [str(x) if isinstance(x, int) else x.mention for x in targets]
         if len(targets) == 1:
             users = f"the user {ss[0]}"
@@ -68,53 +61,49 @@ class Moderation(commands.Cog):
         else:
             return []
 
+    async def perform(self, ctx, unconfirmed_targets, method, verb, reason, confirm=True):
+        if confirm:
+            targets = await self.confirm(ctx, unconfirmed_targets, reason)
+        else:
+            targets = unconfirmed_targets
+
+        message = []
+        successful = []
+        for target in targets:
+            try:
+                await method(target, reason=reason)
+            except discord.HTTPException as e:
+                message.append(f"Operation failed on {target}: {e}")
+            else:
+                successful.append(target)
+
+        if successful:
+            if len(successful) == 1:
+                message.append(f"{verb} {successful[0]}.")
+            elif len(successful) == 2:
+                message.append(f"{verb} {successful[0]} and {successful[1]}.")
+            elif len(successful) < 5:
+                message.append(f"{verb} {', '.join(successful[:-1])}, and {successful[-1]}.")
+            else:
+                message.append(f"{verb} {len(successful)} users.")
+
     @commands.command()
     @commands.has_permissions(ban_members=True)
     async def ban(self, ctx, targets: HackTargets, *, reason=None):
         """Ban a member."""
-        confirmed_targets = await self.confirm(ctx, targets, reason, forbidden_fail=True)
-        for target in confirmed_targets:
-            if ctx.author.top_role <= target.top_role:
-                await ctx.send(f"Your rank isn't higher than {target}'s.")
-                break
-            try:
-                await ctx.guild.ban(target, reason=reason)
-            except discord.HTTPException:
-                await ctx.send(f"Couldn't ban {target}.")
-                break
-        else:
-            await say_count(ctx, "Banned", confirmed_targets)
+        await self.perform(ctx, targets, ctx.guild.ban, "Banned", reason)
 
     @commands.command()
     @commands.has_permissions(ban_members=True)
     async def unban(self, ctx, targets: HackTargets, *, reason=None):
         """Unban a user."""
-        for target in targets:
-            try:
-                await ctx.guild.unban(target, reason=reason)
-                break
-            except discord.HTTPException:
-                await ctx.send(f"Couldn't unban {target}.")
-                break
-        else:
-            await say_count(ctx, "Unbanned", targets)
+        await self.perform(ctx, targets, ctx.guild.unban, "Unbanned", reason, confirm=False)
 
     @commands.command()
     @commands.has_permissions(kick_members=True)
     async def kick(self, ctx, targets: Targets, *, reason=None):
         """Kick a user."""
-        confirmed_targets = await self.confirm(ctx, targets, reason, forbidden_fail=True)
-        for target in confirmed_targets:
-            if ctx.author.top_role <= target.top_role:
-                await ctx.send(f"Your rank isn't higher than {target}'s.")
-                break
-            try:
-                await target.kick(reason=reason)
-            except discord.HTTPException:
-                await ctx.send(f"Couldn't kick {target}.")
-                break
-        else:
-            await say_count(ctx, "Kicked", confirmed_targets)
+        await self.perform(ctx, targets, ctx.guild.kick, "Kicked", reason)
 
 
 def setup(bot):
