@@ -1,9 +1,14 @@
-from textwrap import dedent
+import datetime
 import io
+import os
+import random
+from textwrap import dedent
 
 import asyncio
 import discord
 from discord.ext import commands
+
+import tasks  # this is the 2.0.0 tasks
 
 
 class Temporary(commands.Cog):
@@ -11,6 +16,39 @@ class Temporary(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
+        #self.pride_loop.start()
+
+    # midnight in UTC
+    @tasks.loop(
+        time=datetime.time(12),
+    )
+    async def pride_loop(self):
+        PATH = "./assets/limes/"
+        l = sorted(os.listdir(PATH))
+        if "index" in l:
+            with open(PATH + "index") as f:
+                i = int(f.read())
+        else:
+            random.shuffle(l)
+            for i, f in enumerate(l):
+                name = f"{i:0>{len(str(len(l)))}}"
+                os.replace(PATH + f, PATH + name)
+                l[i] = name
+            i = 0
+        next_lime = l[i]
+        i += 1
+        if i >= len(l)-1:
+            os.remove(PATH + "index")
+        else:
+            with open(PATH + "index", "w") as f:
+                f.write(str(i))
+        with open(PATH + next_lime, "rb") as f:
+            d = f.read()
+        await self.bot.get_guild(318633320890236930).edit(icon=d)
+
+    @pride_loop.before_loop
+    async def before_pride_loop(self):
+        await self.bot.wait_until_ready()
 
     # def get_members(self, channel, *, excluding=None):
     #     if channel.category.id != 730233425251794983:
