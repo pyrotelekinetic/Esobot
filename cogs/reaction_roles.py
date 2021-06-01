@@ -20,19 +20,19 @@ role = re.compile(r'<@&([0-9]{18,22})>|`(.*?)`|"(.*?)"|\((.*?)\)|\*(.*?)\*|-\s*(
 def get_emoji(s):
     emoji = []
     emoji.extend(unicode.iter(s))
-    emoji.extend((m.end(), m.group(0)) for m in custom.findall(s))
+    emoji.extend((m.end(), m.group(0)) for m in custom.finditer(s))
     emoji.sort(key=lambda x: x[0])
 
     out = []
     for end_pos, text in emoji:
         if m := role.search(s, end_pos):
             if m.group(1):
-                role = int(m.group(1))
+                r = int(m.group(1))
             else:
-                for role in m.group(2, 3, 4, 5, 6):
-                    if role:
+                for r in m.group(2, 3, 4, 5, 6):
+                    if r:
                         break
-            out.append((text, role))
+            out.append((text, r))
 
     return out
 
@@ -47,11 +47,10 @@ class ReactionRoles(commands.Cog):
     def save(self):
         save_json(paths.REACTION_ROLE_SAVES, self.messages)
 
-    async def scan(self, msg=None, *, msg_id=None, content=None, guild=None):
-        if msg:
-            msg_id = msg.id
-            content = msg.content
-            guild = msg.guild
+    async def scan(self, msg, *, content=None, channel_id=None):
+        msg_id = msg.id
+        content = content or msg.content
+        guild = msg.guild
 
         pairs = {}
         errors = []
@@ -72,16 +71,15 @@ class ReactionRoles(commands.Cog):
         if not guild.me.guild_permissions.manage_roles:
             errors.append("I don't have the Manage Roles permission.")
 
-        if msg:
-            if list(pairs) != [str(x.emoji) for x in msg.reactions]:
-                await msg.clear_reactions()
-                for emoji in pairs:
-                    await msg.add_reaction(emoji)
 
         old_data = self.messages.get(str(msg_id))
         if not old_data or pairs != old_data["pairs"]:
-            if msg:
-                self.messages[str(msg_id)] = {"origin": msg.channel.id, "pairs": pairs}
+            await msg.clear_reactions()
+            for emoji in pairs:
+                await msg.add_reaction(emoji)
+
+            if channel_id:
+                self.messages[str(msg_id)] = {"origin": channel_id, "pairs": pairs}
             else:
                 # this errors if there isn't already an entry, but this should never happen as we always pass channel_id when adding a new message
                 self.messages[str(msg_id)]["pairs"] = pairs
@@ -98,7 +96,7 @@ class ReactionRoles(commands.Cog):
     @commands.command()
     @commands.has_permissions(manage_roles=True)
     async def rolewatch(self, ctx, *, msg: discord.Message):
-        m = await self.scan(msg)
+        m = await self.scan(msg, channel_id=ctx.channel.id)
 
         if m:
             await ctx.send(f"Data parsed and committed. I'm watching this message for reactions.\n\n{m}", allowed_mentions=discord.AllowedMentions.none())
@@ -110,7 +108,8 @@ class ReactionRoles(commands.Cog):
         msg_id = payload.message_id
         if data := self.messages.get(str(msg_id)):
             guild = self.bot.get_guild(payload.guild_id)
-            msg = await self.scan(msg_id=msg_id, content=payload.data["content"], guild=guild)
+            p = discord.PartialMessage(id=msg_id, channel=guild.get_channel(payload.channel_id))
+            msg = await self.scan(p, content=payload.data["content"])
             if msg:
                 channel = guild.get_channel(data["origin"])
                 await channel.send(f"Detected changes to <https://discord.com/channels/{payload.guild_id}/{payload.channel_id}/{msg_id}>.\n\n{msg}", allowed_mentions=discord.AllowedMentions.none())

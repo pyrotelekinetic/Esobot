@@ -16,11 +16,11 @@ class Temporary(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
-        #self.pride_loop.start()
+        self.pride_loop.start()
 
-    # midnight in UTC
+    # 6PM UTC
     @tasks.loop(
-        time=datetime.time(12),
+        time=datetime.time(18),
     )
     async def pride_loop(self):
         PATH = "./assets/limes/"
@@ -44,7 +44,7 @@ class Temporary(commands.Cog):
                 f.write(str(i))
         with open(PATH + next_lime, "rb") as f:
             d = f.read()
-        await self.bot.get_guild(318633320890236930).edit(icon=d)
+        await self.bot.get_guild(346530916832903169[1;5A]).edit(icon=d)
 
     @pride_loop.before_loop
     async def before_pride_loop(self):
