@@ -2,6 +2,7 @@ import datetime
 import io
 import os
 import random
+import uuid
 from textwrap import dedent
 
 import asyncio
@@ -31,7 +32,7 @@ class Temporary(commands.Cog):
         else:
             random.shuffle(l)
             for i, f in enumerate(l):
-                name = f"{i:0>{len(str(len(l)))}}"
+                name = f"{i:0>{len(str(len(l)))}}-{uuid.uuid4()}"
                 os.replace(PATH + f, PATH + name)
                 l[i] = name
             i = 0
