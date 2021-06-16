@@ -44,7 +44,7 @@ class Temporary(commands.Cog):
                 f.write(str(i))
         with open(PATH + next_lime, "rb") as f:
             d = f.read()
-        await self.bot.get_guild(346530916832903169[1;5A]).edit(icon=d)
+        await self.bot.get_guild(346530916832903169).edit(icon=d)
 
     @pride_loop.before_loop
     async def before_pride_loop(self):
