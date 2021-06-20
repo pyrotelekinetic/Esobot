@@ -72,6 +72,7 @@ class Moderation(commands.Cog):
         for target in targets:
             if ctx.author.top_role <= target.top_role:
                 message.append(f"You're a lower rank than {target}.")
+                continue
             try:
                 await method(target, reason=reason)
             except discord.HTTPException as e:
