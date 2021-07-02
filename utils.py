@@ -24,7 +24,7 @@ class EmbedPaginator:
     @property
     def _max_size(self):
         if not self.current_embed.description:
-            return 2048
+            return 4096
         return 1024
 
     def close_page(self):
