@@ -66,6 +66,8 @@ class Moderation(commands.Cog):
             targets = await self.confirm(ctx, unconfirmed_targets, reason)
         else:
             targets = unconfirmed_targets
+        if not targets:
+            return await ctx.send("Nothing to do. Stop.")
 
         message = []
         successful = []

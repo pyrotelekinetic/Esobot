@@ -17,7 +17,7 @@ class Temporary(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
-        self.pride_loop.start()
+        #self.pride_loop.start()
 
     # 6PM UTC
     @tasks.loop(
