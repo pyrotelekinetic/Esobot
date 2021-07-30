@@ -95,6 +95,7 @@ class Japanese(commands.Cog):
                                "otherlangsscareme", "that'snotenglish", "notenglish", "noen", "日本語から",
                                "ifyouhaveajapaneseimewhyareyouusingashittygoogletranslatecommand", "ifuhvajpimeyruusingshitgtcmd"])
     async def jatranslate(self, ctx, *, lyric_quote: commands.clean_content = None):
+        """Translate Japanese."""
         t = await self.bot.loop.run_in_executor(None, _translate, lyric_quote or self.last_lyric_msg)
         await ctx.send(t)
 

@@ -37,7 +37,7 @@ def get_emoji(s):
     return out
 
 
-class ReactionRoles(commands.Cog):
+class ReactionRoles(commands.Cog, name="Reaction roles"):
     """A cog for managing Esobot's reaction-based role system."""
 
     def __init__(self, bot):
@@ -96,6 +96,7 @@ class ReactionRoles(commands.Cog):
     @commands.command()
     @commands.has_permissions(manage_roles=True)
     async def rolewatch(self, ctx, *, msg: discord.Message):
+        """Register a message for reaction role management."""
         m = await self.scan(msg, channel_id=ctx.channel.id)
 
         if m:
