@@ -59,7 +59,8 @@ intents = discord.Intents(
     guilds=True,
     members=True,
     messages=True,
-    reactions=True
+    reactions=True,
+    emojis=True,
 )
 
 bot = commands.Bot(

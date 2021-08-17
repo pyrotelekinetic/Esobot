@@ -1,4 +1,6 @@
-from typing import Union
+import asyncio
+import time
+from typing import Union, Optional
 
 import discord
 from discord.ext import commands
@@ -13,8 +15,9 @@ class Moderation(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.mute_role = None
+        self._emoji = {}
 
-    async def confirm(self, ctx, targets, reason, *, forbidden_fail=True):
+    async def confirm(self, ctx, targets, reason, verb, *, forbidden_fail=True):
         ss = [str(x) if isinstance(x, int) else x.mention for x in targets]
         if len(targets) == 1:
             users = f"the user {ss[0]}"
@@ -45,7 +48,7 @@ class Moderation(commands.Cog):
                         good.append(discord.Object(id=target))
                     else:
                         try:
-                            await target.send(f"A {ctx.command.name} is being performed on you for the following reason: {reason}")
+                            await target.send(f"You've been {verb} for the following reason: {reason}")
                         except discord.Forbidden:
                             msg = f"Couldn't DM {target}."
                             if forbidden_fail:
@@ -63,7 +66,7 @@ class Moderation(commands.Cog):
 
     async def perform(self, ctx, unconfirmed_targets, method, verb, reason, confirm=True):
         if confirm:
-            targets = await self.confirm(ctx, unconfirmed_targets, reason)
+            targets = await self.confirm(ctx, unconfirmed_targets, reason, verb.lower())
         else:
             targets = unconfirmed_targets
         if not targets:
@@ -110,6 +113,113 @@ class Moderation(commands.Cog):
     async def kick(self, ctx, targets: Targets, *, reason=None):
         """Kick a user."""
         await self.perform(ctx, targets, ctx.guild.kick, "Kicked", reason)
+
+    async def emoji_for(self, user):
+        emoji_guild = self.bot.get_guild(877165293724631050)
+        if user in self._emoji:
+            return self._emoji[user]
+        for emoji in emoji_guild.emojis:
+            if emoji.name == str(user.id):
+                self._emoji[user] = emoji
+                return emoji
+        if len(emoji_guild.emojis) == 50:
+            await min(emoji_guild.emojis, key=lambda e: e.created_at).delete(reason="Making space")
+        return await emoji_guild.create_custom_emoji(name=str(user.id), image=await user.avatar.read())
+
+    async def move_messages(self, channel, thread, messages):
+        webhooks = await channel.webhooks()
+        webhook = webhooks[0] if webhooks else await channel.create_webhook(name="Esobot Message Mover")
+
+        for message in messages:
+            if message.type not in (discord.MessageType.default, discord.MessageType.reply):
+                continue
+
+            content = message.content
+            if message.reference and message.reference.resolved:
+                reply_content = " ".join(message.reference.resolved.content.splitlines())
+                if len(reply_content) > 80:
+                    reply_content = reply_content[:80] + "..."
+                author = message.reference.resolved.author
+                content = (f"[Reply to {await self.emoji_for(author)} **@{author.display_name}**]({message.reference.jump_url}) "
+                           f" {reply_content}\n" + content)
+
+            await webhook.send(
+                content,
+                username=message.author.display_name,
+                avatar_url=message.author.avatar,
+                files=[await x.to_file() for x in message.attachments],
+                embeds=message.embeds,
+                thread=thread,
+                view=discord.ui.View.from_message(message),
+            )
+
+        b = []
+        minimum_time = int((time.time() - 14 * 24 * 60 * 60) * 1000.0 - 1420070400000) << 22
+        strategy = messages[0].channel.delete_messages
+        for message in messages:
+            if message.id < minimum_time:
+                await strategy(b)
+                b = []
+                strategy = discord.channel._single_delete_strategy
+            b.append(message)
+            if len(b) == 100:
+                await strategy(b)
+                b = []
+        await strategy(b)
+
+    @commands.command(aliases=["rmove"])
+    @commands.has_permissions(manage_messages=True)
+    async def move(self, ctx, msg: Optional[int], where: discord.TextChannel = None):
+        await ctx.message.delete()
+
+        start = discord.Object(((msg >> 22) - 10) << 22) if msg else (ctx.message.reference.resolved if ctx.message.reference else None)
+        if not start:
+            return await ctx.send("I don't know what messages to send.")
+        messages = []
+        async for m in ctx.channel.history(limit=None, after=start, oldest_first=True):
+            if ctx.invoked_with != "rmove" or m.reference and m.reference.resolved in messages:
+                messages.append(m)
+
+        view = discord.ui.View()
+        event = asyncio.Event()
+        view.add_item(StopButton(event, ctx.author))
+        m = await ctx.send(f"Moving {len(messages)} messages.", view=view)
+        await asyncio.sleep(2)
+        if event.is_set():
+            return
+
+        if where is None:
+            channel = ctx.channel
+            try:
+                thread = await messages[0].create_thread(name="Moved messages")
+            except discord.HTTPException:
+                return await ctx.send("That message already has a thread, so I can't make a new one.")
+        else:
+            channel = where
+            thread = None
+
+        done, pending = await asyncio.wait([event.wait(), self.move_messages(channel, thread, messages[bool(thread):])], return_when=asyncio.FIRST_COMPLETED)
+        for future in done:
+            print(future.exception())
+        for future in pending:
+            future.cancel()
+
+        await asyncio.sleep(2)
+        await m.delete()
+
+
+class StopButton(discord.ui.Button):
+    def __init__(self, event, user):
+        self.event = event
+        self.user = user
+        super().__init__(style=discord.ButtonStyle.danger, label="Stop")
+
+    async def callback(self, interaction):
+        if interaction.user != self.user:
+            return
+        self.event.set()
+        self.disabled = True
+        await interaction.response.edit_message(content="Cancelled move.", view=self.view)
 
 
 def setup(bot):
