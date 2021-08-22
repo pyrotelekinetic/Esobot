@@ -78,7 +78,7 @@ class General(commands.Cog):
             timestamp=message.edited_at or message.created_at,
             footer_text="#" + message.channel.name,
         )
-        embed.set_author(name=message.author.name, icon_url=message.author.avatar_url)
+        embed.set_author(name=message.author.name, icon_url=message.author.avatar)
         if message.attachments:
             filename = message.attachments[0].filename
             if (

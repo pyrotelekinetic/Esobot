@@ -33,7 +33,7 @@ class Admin(commands.Cog):
         l.info(
             f"Shutting down at the command of {ctx.message.author.display_name}..."
         )
-        await self.bot.logout()
+        await self.bot.close()
 
     @commands.command()
     async def update(self, ctx):
