@@ -74,7 +74,7 @@ class Games(commands.Cog):
         # reveal info
         embed.set_footer(text="#" + message.channel.name)
         embed.timestamp = message.edited_at or message.created_at
-        embed.set_author(name=message.author.name, icon_url=message.author.avatar)
+        embed.set_author(name=message.author.name, icon_url=message.author.display_avatar)
         await bot_msg.edit(embed=embed)
 
         if member == message.author:
