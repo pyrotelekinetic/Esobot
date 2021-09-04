@@ -83,13 +83,13 @@ class Time(commands.Cog):
         """Set a timezone for you in the database."""
         url = "https://github.com/sdispater/pytzdata/blob/master/pytzdata/_timezones.py"
         if not timezone:
-            return await show_error(ctx, message="You can see a list of valid timezone names [here]{url}.")
+            return await show_error(ctx, message=f"You can see a list of valid timezone names [here]({url}).", title="No timezone passed")
         try:
             pytz.timezone(timezone)
         except pytz.UnknownTimeZoneError:
             await show_error(
                 ctx,
-                message=f"Invalid timezone. Read a list of valid timezone names [here]({url}).",
+                message=f"Read a list of valid timezone names [here]({url}).",
                 title="Invalid timezone",
             )
         else:
