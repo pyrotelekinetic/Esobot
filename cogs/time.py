@@ -79,10 +79,20 @@ class Time(commands.Cog):
             )
 
     @time.command()
-    async def set(self, ctx, timezone="invalid"):
+    async def set(self, ctx, timezone=None):
         """Set a timezone for you in the database."""
+        url = "https://github.com/sdispater/pytzdata/blob/master/pytzdata/_timezones.py"
+        if not timezone:
+            return await show_error(ctx, message="You can see a list of valid timezone names [here]{url}.")
         try:
             pytz.timezone(timezone)
+        except pytz.UnknownTimeZoneError:
+            await show_error(
+                ctx,
+                message=f"Invalid timezone. Read a list of valid timezone names [here]({url}).",
+                title="Invalid timezone",
+            )
+        else:
             self.time_config[str(ctx.author.id)] = timezone
             await self.update_times()
             save_json(paths.TIME_SAVES, self.time_config)
@@ -94,14 +104,7 @@ class Time(commands.Cog):
                     color=colors.EMBED_SUCCESS,
                 )
             )
-        except pytz.exceptions.UnknownTimeZoneError:
-            url = "https://github.com/sdispater/pytzdata/blob/master/pytzdata/_timezones.py"
-            await show_error(
-                ctx,
-                message="You either set an invalid timezone or didn't specify one at all. "
-                f"Read a list of valid timezone names [here]({url}).",
-                title="Invalid timezone",
-            )
+
 
     @time.command(aliases=["remove"])
     async def unset(self, ctx):
