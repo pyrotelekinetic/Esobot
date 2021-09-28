@@ -1,10 +1,14 @@
 import asyncio
 import discord
 import json
+import string
 import logging
 import traceback
 
+from unidecode import unidecode
+
 from constants import colors, emoji, paths
+
 
 l = logging.getLogger("bot")
 
@@ -60,6 +64,37 @@ class EmbedPaginator:
             self.close_embed()
         return self._embeds
 
+
+class PromptOption(discord.ui.Button):
+    async def callback(self, interaction):
+        self.view._response = self.label
+        self.view.event.set()
+        for child in self.view.children:
+            child.disabled = True
+        await interaction.response.edit_message(view=self.view)
+
+class Prompt(discord.ui.View):
+    def __init__(self, user):
+        super().__init__()
+        self.user = user
+        self.event = asyncio.Event()
+        self._response = None
+
+    async def interaction_check(self, interaction):
+        if interaction.user != self.user:
+            await interaction.response.send_message("This isn't your interaction to interact with.")
+            return False
+        return True
+
+    def add_option(self, label, style):
+        self.add_item(PromptOption(label=label, style=style))
+
+    async def response(self):
+        await self.event.wait()
+        return self._response
+
+def aggressive_normalize(s):
+    return "".join([x for x in unidecode(s.casefold()) if x in string.ascii_letters + string.digits])
 
 def make_embed(*, fields=[], footer_text=None, **kwargs):
     embed = discord.Embed(**kwargs)

@@ -1,11 +1,69 @@
 import asyncio
 import datetime
 import random
+import os
+import shutil
+import uuid
+from collections import defaultdict
 
+import requests
+import pygments
+import pygments.lexers
+import pygments.util
 import discord
 from discord.ext import commands
 
-from utils import make_embed
+from utils import make_embed, load_json, save_json, Prompt, aggressive_normalize
+from constants.paths import CODE_GUESSING_SAVES
+
+
+ip = requests.get("https://api.ipify.org").text
+domain = f"http://{ip}:7001"
+
+def filename_of_submission(sub, roundnum):
+    if sub['language']:
+        return f"./config/code_guessing/{roundnum}/{sub['uuid']}.{sub['language']}:{sub['filename']}"
+    else:
+        return f"./config/code_guessing/{roundnum}/{sub['uuid']}:{sub['filename']}"
+
+class OkButton(discord.ui.Button):
+    def __init__(self):
+        super().__init__(style=discord.ButtonStyle.success, label="Approve")
+
+    async def callback(self, interaction):
+        self.view.s["tested"] = True
+        save_json(CODE_GUESSING_SAVES, self.view.cg)
+        await interaction.message.delete()
+
+class ReportProblemButton(discord.ui.Button):
+    def __init__(self):
+        super().__init__(style=discord.ButtonStyle.primary, label="Report problem")
+
+    async def callback(self, interaction):
+        await interaction.response.send_message("Provide a description of the problem to give to the author.", ephemeral=True)
+        msg = await self.view.bot.wait_for("message", check=lambda m: not m.author.bot and m.channel.id == interaction.channel.id)
+        await self.view.bot.get_user(int(self.view.i)).send(f"A problem with your solution was reported:\n\n{msg.content}")
+        await interaction.channel.send("Sent.")
+
+class DismissButton(discord.ui.Button):
+    def __init__(self):
+        super().__init__(style=discord.ButtonStyle.danger, label="Remove")
+
+    async def callback(self, interaction):
+        self.view.cg["round"]["submissions"].pop(self.view.s['id'])
+        save_json(CODE_GUESSING_SAVES, self.view.cg)
+        await interaction.message.delete()
+
+
+class TestView(discord.ui.View):
+    def __init__(self, bot, cg, i, s):
+        super().__init__()
+        self.bot = bot
+        self.cg = cg
+        self.s = s
+        self.add_item(OkButton())
+        self.add_item(ReportProblemButton())
+        self.add_item(DismissButton())
 
 
 class Games(commands.Cog):
@@ -14,6 +72,7 @@ class Games(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.words = None
+        self.cg = load_json(CODE_GUESSING_SAVES)
 
     @commands.group(invoke_without_command=True)
     async def hwdyk(self, ctx):
@@ -23,7 +82,7 @@ class Games(commands.Cog):
     async def message(self, ctx):
         """Pick a random message. If you can guess who sent it, you win!"""
 
-        # hardcoded list of "discussion" channels: esolang*, recreation-room, off-topic, r9k-test, programming, *-games
+        # hardcoded list of "discussion" channels: esolang*, recreation-room, off-topic, programming, *-games
         channel = self.bot.get_channel(random.choice([
             348671457808613388,
             348702485994668033,
@@ -140,6 +199,230 @@ class Games(commands.Cog):
                 await ctx.send(f"{msg.author.name.replace('@', '@' + zwsp)} wins. Other participants have 10 seconds to finish.")
                 self.bot.loop.create_task(ender())
         await ctx.send("\n".join(f"{i + 1}. {u.name.replace('@', '@' + zwsp)} - {t:.4f} seconds ({len(prompt) / t * 12:.2f}WPM)" for i, (u, t) in enumerate(winners.items())))
+
+
+    @commands.group(invoke_without_command=True, aliases=["cg", "codeguessing"])
+    async def codeguess(self, ctx):
+        if "round" not in self.cg:
+            return await ctx.send("There isn't a game of code guessing running here at the moment. Check in later?")
+        d = self.cg["round"]
+
+        to_submit = "To submit an entry, simply DM me your program as an attachment. For the full set of rules, do `!cg rules`."
+        if d["stage"] == 1:
+            await ctx.send("The current round is in stage 1 (writing) right now, meaning anyone can participate. Check <#746231084353847366> for more information on what the challenge is for this round. "
+                           "To submit an entry, just DM me your program as an attachment. Note that the filename **will not** be secret.")
+        elif d["stage"] == 2 and str(ctx.author.id) not in d["submissions"]:
+            await ctx.send("The current round is in stage 2 (guessing) right now, and only people who submitted solutions during stage 1 are able to participate. "
+                           "You didn't do anything last round, so there's nothing I can do for you. Come back next round.")
+        else:
+            assert d["stage"] == 2
+            await ctx.send(embed=discord.Embed(description=f"The current round is in stage 2 (guessing). Look at the list of submissions [here]({domain}/{d['round']}) and try to figure out who wrote what. "
+                                                            "Once you're done, submit your guesses like this (it should be a bijection from entry to user):\n"
+                                                            "```\n#1: lyricly\n#2: christina\n#3: i-have-no-other-names\n```"))
+
+    @commands.has_role("Event Managers")
+    @codeguess.command()
+    async def start(self, ctx, round_num: int):
+        await ctx.message.delete()
+        if "round" in self.cg:
+            return await ctx.send("There's already a game running, though?", delete_after=2)
+        shutil.rmtree(f"./config/code_guessing/{round_num}")
+        self.cg["round"] = {"round": round_num, "stage": 1, "submissions": {}, "guesses": {}}
+        save_json(CODE_GUESSING_SAVES, self.cg)
+        await ctx.send("All right! Keep in mind that to submit your entry, you just have to DM me the program as an attachment (the filename **will not** be secret) and I'll do the rest. "
+                       "For the full rules to the game, do `!cg rules`. Good luck and have fun.")
+
+    async def take_submission(self, message):
+        d = self.cg["round"]
+        attachment = message.attachments[0]
+
+        code = await attachment.read()
+        try:
+            code_str = code.decode("utf-8")
+        except UnicodeDecodeError:
+            code_str = None
+
+        try:
+            guess = pygments.lexers.get_lexer_for_filename(attachment.filename)
+        except pygments.util.ClassNotFound:
+            if code_str:
+                try:
+                    guess = pygments.lexers.guess_lexer(code_str)
+                except pygments.util.ClassNotFound:
+                    guess = None
+            else:
+                guess = None
+
+        choices = ["Python", "C", "Java", "Polyglot"]
+        p = Prompt(message.author)
+        if guess.name in choices:
+            choices.remove(guess.name)
+            p.add_option(guess.name, discord.ButtonStyle.primary)
+        for choice in choices:
+            p.add_option(choice, discord.ButtonStyle.secondary)
+
+        await message.channel.send("What language is this written in?", view=p)
+        lang = await p.response()
+        shortname = {"Python": "python3", "C": "c", "Java": "java", "Polyglot": None}[lang]
+        i = str(message.author.id)
+        sub = {"id": i, "filename": attachment.filename, "tested": False, "language": shortname, "uuid": str(uuid.uuid4())}
+        d["submissions"][i] = sub
+        save_json(CODE_GUESSING_SAVES, self.cg)
+
+        filename = filename_of_submission(sub, d["round"])
+        os.makedirs(os.path.dirname(filename), exist_ok=True)
+        with open(filename, "wb") as f:
+            f.write(code)
+
+        if code_str is None:
+            await message.channel.send("I successfully submitted your entry, but I noticed that the file isn't encoded in valid UTF-8. "
+                                       "That could cause issues or something, so maybe don't do that. Your call, though. I'm just letting you know. "
+                                       "You'll be informed of any problems found while testing. Just resubmit if there are any issues. "
+                                       "If you need to talk anonymously to the event managers, just leave a message in your solution and remove it later. :^)")
+        else:
+            await message.channel.send("Successfully submitted your entry. You'll be informed of any problems found while testing. Just resubmit if there are any issues. "
+                                       "If you need to talk anonymously to the event managers, just put a message in your solution and you can remove it later. :^)")
+
+    async def take_guesses(self, message):
+        d = self.cg["round"]
+        guess = {}
+        guessed_people = set()
+        submission_ids = list(d["submissions"])
+        submission_ids.sort()  # NOTE: this is a lexicographical sort!
+
+        for line in message.content.removeprefix("```").removesuffix("```").splitlines():
+            if not line.strip():
+                continue
+            index_s, user_s = line.split(":")
+
+            try:
+                index = int(index_s.strip().lstrip("#"))
+            except ValueError:
+                return await message.channel.send(f"Invalid index '{index_s}' found while parsing guess. Aborting.")
+
+            user = discord.utils.find(
+                lambda us: aggressive_normalize(user_s) in map(aggressive_normalize, ((u := self.bot.get_guild(346530916832903169).get_member(int(us))).name, u.nick, us)),
+                d["submissions"],
+            )
+            if user is None:
+                return await message.channel.send(f"Unknown user '{user_s}'. Aborting.")
+
+            if index == 0:
+                return await message.channel.send("Index 0 is out of bounds. These are 1-indexed. Aborting.")
+            elif index < 0:
+                return await message.channel.send("Negative indices are inappropriate. Aborting.")
+            elif index > len(d["submissions"]):
+                return await message.channel.send(f"Index {index} is out of bounds as there are only {len(d['submissions'])} submissions. Aborting.")
+
+            submission_id = submission_ids[index-1]
+            if submission_id in guess:
+                return await message.channel.send(f"Duplicate guess for {index} found. Guesses are bijections. This is terrible. Aborting.")
+            if user in guessed_people:
+                return await message.channel.send(f"Duplicate guess for {user_s} found. Guesses are bijections. This is terrible. Aborting.")
+
+            if user == submission_id == str(message.author.id):
+                continue
+            elif str(message.author.id) == user:
+                return await message.channel.send("You guessed yourself for the wrong submission, dummy. Aborting, I guess?")
+            elif str(message.author.id) == submission_id:
+                return await message.channel.send("How did you guess your own solution wrong? Aborting for your own good.")
+
+            guess[submission_id] = user
+            guessed_people.add(user)
+
+        d["guesses"][str(message.author.id)] = guess
+        save_json(CODE_GUESSING_SAVES, self.cg)
+
+        if len(guess) != len(d["submissions"])-1:
+            await message.channel.send(f"I registered your guess, but I noticed that you haven't put in a guess for every entry (you guessed {len(guess)}, but there are {len(d['submissions'])}). "
+                                       "This is allowed, but there's no reason to do it, as there's no penalty for guessing wrong. Consider putting in a few extra random guesses to maybe score "
+                                       "some extra points! Just as with your code submission, you can re-submit your guesses at any time.")
+        else:
+            await message.channel.send("Guess registered. Have a swell day. Just as with your code submission, you can re-submit your guesses at any time.")
+
+    @commands.Cog.listener()
+    async def on_message(self, message):
+        if message.author.bot or message.guild or "round" not in self.cg:
+            return
+        if self.cg["round"]["stage"] == 1 and len(message.attachments) == 1:
+            await self.take_submission(message)
+        elif self.cg["round"]["stage"] == 2 and str(message.author.id) in self.cg["round"]["submissions"] and message.content.startswith("```") and message.content.endswith("```"):
+            await self.take_guesses(message)
+
+    @commands.has_role("Event Managers")
+    @codeguess.command()
+    async def test(self, ctx):
+        if "round" not in self.cg:
+            return await ctx.send("There's no game running.")
+        d = self.cg["round"]
+        if d["stage"] == 2:
+            return await ctx.send("We're already in round 2, though...?")
+        for i, s in d["submissions"].items():
+            if not s["tested"]:
+                await ctx.author.send(file=discord.File(filename_of_submission(s, d["round"]), s["filename"]), view=TestView(self.bot, self.cg, i, s))
+
+    @commands.has_role("Event Managers")
+    @codeguess.command(aliases=["r2", "next"])
+    async def round2(self, ctx):
+        await ctx.message.delete()
+        if "round" not in self.cg:
+            return await ctx.send("There's no game running. Did you mean to do `!cg start`?", delete_after=2)
+        d = self.cg["round"]
+        if d["stage"] == 2:
+            return await ctx.send("We're already in round 2. Did you mean to do `!cg stop`?", delete_after=2)
+        if not all(s["tested"] for s in d["submissions"].values()):
+            return await ctx.send("Easy there. There are untested submissions to attend to. Deal with them using `!cg test` first.", delete_after=2)
+
+        with open(f"./config/code_guessing/{d['round']}/people", "w") as f:
+            f.write("\n".join(self.bot.get_user(int(i)).name.lower() for i in sorted(d["submissions"])))
+
+        d["stage"] = 2
+        save_json(CODE_GUESSING_SAVES, self.cg)
+        await ctx.send(embed=discord.Embed(description=f"You can no longer send submissions, and the guessing phase has begun. The entries to guess are available [here]({domain}/{d['round']}). "
+                                                       "For more on how to guess, do `!cg` in <#457999277311131649>."))
+
+    @commands.has_role("Event Managers")
+    @codeguess.command(aliases=["end"])
+    async def stop(self, ctx):
+        await ctx.message.delete()
+        if "round" not in self.cg:
+            return await ctx.send("Can't stop what isn't running.", delete_after=2)
+        d = self.cg["round"]
+        if d["stage"] == 1:
+            self.cg.pop("round")
+            save_json(CODE_GUESSING_SAVES, self.cg)
+            return await ctx.send("Bit premature to be stopping, no? Well, in any case, I've done as you asked. No results file generated, because the round wasn't done.")
+
+        def format_person(u):
+            return "-".join(self.bot.get_user(int(u)).name.lower().split())
+
+        good = defaultdict(int)
+        bad = defaultdict(int)
+
+        with open(f"./config/code_guessing/{d['round']}/results.txt", "w+") as f:
+            f.write("correct answers:\n")
+            for idx, user in enumerate(sorted(d["submissions"]), start=1):
+                f.write(f"#{idx}: {format_person(user)}\n")
+
+            f.write("\n\npeople's guesses:\n")
+            for user, guess in d["guesses"].items():
+                f.write(f"\n{format_person(user)} guessed:\n")
+                for idx, (actual, guessed) in enumerate(guess.items(), start=1):
+                    if actual == guessed:
+                        f.write(f"[O] #{idx} correctly as {format_person(actual)}\n")
+                        good[user] += 1
+                        bad[actual] += 1
+                    else:
+                        f.write(f"[X] #{idx} incorrectly as {format_person(guessed)} (was {format_person(actual)})\n")
+
+            f.write("\n\nscores this round:\n")
+            for user in d["submissions"]:
+                f.write(f"{format_person(user)} +{good[user]} -{bad[user]} = {good[user] - bad[user]}\n")
+
+            f.seek(0)
+            self.cg.pop("round")
+            save_json(CODE_GUESSING_SAVES, self.cg)
+            await ctx.send("Game's over! Results can be found in the attached file or on the website.", file=discord.File(f, "results.txt"))
 
 
 def setup(bot):

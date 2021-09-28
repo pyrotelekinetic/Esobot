@@ -7,9 +7,7 @@ from textwrap import dedent
 
 import asyncio
 import discord
-from discord.ext import commands
-
-import tasks  # this is the 2.0.0 tasks
+from discord.ext import commands, tasks
 
 
 class Temporary(commands.Cog):
