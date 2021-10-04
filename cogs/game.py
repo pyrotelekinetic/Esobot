@@ -226,7 +226,7 @@ class Games(commands.Cog):
         await ctx.message.delete()
         if "round" in self.cg:
             return await ctx.send("There's already a game running, though?", delete_after=2)
-        shutil.rmtree(f"./config/code_guessing/{round_num}")
+        shutil.rmtree(f"./config/code_guessing/{round_num}", ignore_errors=True)
         self.cg["round"] = {"round": round_num, "stage": 1, "submissions": {}, "guesses": {}}
         save_json(CODE_GUESSING_SAVES, self.cg)
         await ctx.send("All right! Keep in mind that to submit your entry, you just have to DM me the program as an attachment (the filename **will not** be secret) and I'll do the rest. "
