@@ -359,7 +359,7 @@ class Games(commands.Cog):
             return await ctx.send("We're already in round 2, though...?")
         for i, s in d["submissions"].items():
             if not s["tested"]:
-                await ctx.author.send(file=discord.File(filename_of_submission(s, d["round"]), s["filename"]), view=TestView(self.bot, self.cg, i, s))
+                await ctx.author.send(file=discord.File(filename_of_submission(s, d["round"]), s["filename"]), view=TestView(self.bot, self.cg, s))
 
     @commands.has_role("Event Managers")
     @codeguess.command(aliases=["r2", "next"])
