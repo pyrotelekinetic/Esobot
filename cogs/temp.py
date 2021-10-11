@@ -93,6 +93,15 @@ class Temporary(commands.Cog):
     #         await partner.remove_roles(playing)
     #         await self.bot.get_channel(730593893195710525).send(f"{ctx.channel.mention} finished with the following submission: {text}")
 
+    @commands.group(hidden=True, invoke_without_command=True)
+    async def olivia(self, ctx):
+        pass
+
+    @olivia.command(name="time", hidden=True)
+    async def _time(self, ctx):
+        if ctx.guild.id == 346530916832903169:
+            await self.bot.get_command("time")(ctx, user=ctx.guild.get_member(156021301654454272))
+
 
 def setup(bot):
     bot.add_cog(Temporary(bot))

@@ -416,7 +416,7 @@ class Games(commands.Cog):
                         f.write(f"[X] #{idx} incorrectly as {format_person(guessed)} (was {format_person(actual)})\n")
 
             f.write("\n\nscores this round:\n")
-            for user in d["submissions"]:
+            for user in sorted(d["submissions"], key=lambda u: good[u] - bad[u]):
                 f.write(f"{format_person(user)} +{good[user]} -{bad[user]} = {good[user] - bad[user]}\n")
 
             f.seek(0)
