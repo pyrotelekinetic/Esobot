@@ -48,7 +48,9 @@ def show_round(roundnum):
         except ClassNotFound:
             lexer = TextLexer()
         with open(f"./config/code_guessing/{roundnum}/{entry}", encoding="utf-8", errors="replace") as f:
-            entries += highlight(f.read(), lexer, formatter)
+            t = f.read()
+            if len(t) < 10_000:
+                entries += highlight(t, lexer, formatter)
     style = formatter.get_style_defs()
     contents = "<br>".join(f'<a href="#{idx}">entry #{idx}</a>' for idx in range(1, len(l)+1))
     return f"""
