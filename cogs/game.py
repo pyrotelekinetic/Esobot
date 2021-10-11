@@ -244,18 +244,18 @@ class Games(commands.Cog):
 
         try:
             guess = pygments.lexers.get_lexer_for_filename(attachment.filename)
-        except pygments.util.ClassNotFound:
+        except (pygments.util.ClassNotFound, KeyError):
             if code_str:
                 try:
                     guess = pygments.lexers.guess_lexer(code_str)
-                except pygments.util.ClassNotFound:
+                except (pygments.util.ClassNotFound, KeyError):
                     guess = None
             else:
                 guess = None
 
         choices = ["Python", "C", "Java", "Polyglot"]
         p = Prompt(message.author)
-        if guess.name in choices:
+        if guess and guess.name in choices:
             choices.remove(guess.name)
             p.add_option(guess.name, discord.ButtonStyle.primary)
         for choice in choices:
