@@ -2,7 +2,6 @@ import aiohttp
 import socket
 
 from discord.ext import commands
-from urllib import parse
 from constants import colors, info
 from utils import make_embed
 
@@ -18,24 +17,22 @@ class Esolangs(commands.Cog):
     @commands.command(aliases=["ew", "w", "wiki"])
     async def esowiki(self, ctx, *, esolang_name):
         """Link to the Esolang Wiki page for an esoteric programming language."""
-        async with ctx.typing():
-            async with self.bot.session.get(
-                "http://esolangs.org/w/api.php",
-                params = {
-                    "action": "opensearch",
-                    "search": parse.quote(esolang_name)
-                }
-            ) as resp:
-                data = await resp.json()
-        if not data[1]:
-            return await ctx.send(
-                embed=make_embed(
-                    color=colors.EMBED_ERROR,
-                    title="Error",
-                    description=f"**{esolang_name.capitalize()}** wasn't found on the Esolangs wiki.",
+        async with self.bot.session.get(
+            "https://esolangs.org/w/index.php",
+            params = {
+                "search": esolang_name,
+            },
+            allow_redirects=False,
+        ) as resp:
+            if resp.status != 302:
+                return await ctx.send(
+                    embed=make_embed(
+                        color=colors.EMBED_ERROR,
+                        title="Error",
+                        description=f"Page not found.",
+                    )
                 )
-            )
-        await ctx.send(data[3][0])
+            await ctx.send(resp.headers["Location"])
 
 
 def setup(bot):
