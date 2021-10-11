@@ -42,7 +42,7 @@ class ReportProblemButton(discord.ui.Button):
     async def callback(self, interaction):
         await interaction.response.send_message("Provide a description of the problem to give to the author.", ephemeral=True)
         msg = await self.view.bot.wait_for("message", check=lambda m: not m.author.bot and m.channel.id == interaction.channel.id)
-        await self.view.bot.get_user(int(self.view.i)).send(f"A problem with your solution was reported:\n\n{msg.content}")
+        await self.view.bot.get_user(int(self.view.s['id'])).send(f"A problem with your solution was reported:\n\n{msg.content}")
         await interaction.channel.send("Sent.")
 
 class DismissButton(discord.ui.Button):
@@ -56,7 +56,7 @@ class DismissButton(discord.ui.Button):
 
 
 class TestView(discord.ui.View):
-    def __init__(self, bot, cg, i, s):
+    def __init__(self, bot, cg, s):
         super().__init__(timeout=None)
         self.bot = bot
         self.cg = cg
