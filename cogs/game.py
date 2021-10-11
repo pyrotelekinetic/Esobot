@@ -57,7 +57,7 @@ class DismissButton(discord.ui.Button):
 
 class TestView(discord.ui.View):
     def __init__(self, bot, cg, i, s):
-        super().__init__()
+        super().__init__(timeout=None)
         self.bot = bot
         self.cg = cg
         self.s = s
