@@ -102,6 +102,15 @@ class Temporary(commands.Cog):
         if ctx.guild.id == 346530916832903169:
             await self.bot.get_command("time")(ctx, user=ctx.guild.get_member(156021301654454272))
 
+    @commands.group(hidden=True, invoke_without_command=True, aliases=["ky", "kay", "k"])
+    async def kaylynn(self, ctx):
+        pass
+
+    @kaylynn.command(name="time", hidden=True)
+    async def _time2(self, ctx):
+        if ctx.guild.id == 346530916832903169:
+            await self.bot.get_command("time")(ctx, user=ctx.guild.get_member(636797375184240640))
+
 
 def setup(bot):
     bot.add_cog(Temporary(bot))
