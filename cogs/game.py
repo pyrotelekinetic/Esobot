@@ -266,6 +266,8 @@ class Games(commands.Cog):
         shortname = {"Python": "python3", "C": "c", "Java": "java", "Polyglot": None}[lang]
         i = str(message.author.id)
         sub = {"id": i, "filename": attachment.filename, "tested": False, "language": shortname, "uuid": str(uuid.uuid4())}
+        if i in d["submissions"]:
+            os.remove(filename_of_submission(d["submissions"][i], d["round"]))
         d["submissions"][i] = sub
         save_json(CODE_GUESSING_SAVES, self.cg)
 
