@@ -301,7 +301,7 @@ class Games(commands.Cog):
                 return await message.channel.send(f"Invalid index '{index_s}' found while parsing guess. Aborting.")
 
             user = discord.utils.find(
-                lambda us: aggressive_normalize(user_s) in map(aggressive_normalize, ((u := self.bot.get_guild(346530916832903169).get_member(int(us))).name, u.nick, us)),
+                lambda us: aggressive_normalize(user_s) in map(aggressive_normalize, filter(None, ((u := self.bot.get_guild(346530916832903169).get_member(int(us))).name, u.nick, us))),
                 d["submissions"],
             )
             if user is None:
