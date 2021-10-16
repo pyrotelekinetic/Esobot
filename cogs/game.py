@@ -289,8 +289,9 @@ class Games(commands.Cog):
         d = self.cg["round"]
         guess = {}
         guessed_people = set()
-        submission_ids = list(d["submissions"])
-        submission_ids.sort()  # NOTE: this is a lexicographical sort!
+        submissions = list(d["submissions"].values())
+        submissions.sort(key=lambda e: filename_of_submission(e, d["round"]))
+        print(submissions)
 
         for line in message.content.removeprefix("```").removesuffix("```").splitlines():
             if not line.strip():
@@ -316,7 +317,7 @@ class Games(commands.Cog):
             elif index > len(d["submissions"]):
                 return await message.channel.send(f"Index {index} is out of bounds as there are only {len(d['submissions'])} submissions. Aborting.")
 
-            submission_id = submission_ids[index-1]
+            submission_id = submissions[index-1]['id']
             if submission_id in guess:
                 return await message.channel.send(f"Duplicate guess for {index} found. Guesses are bijections. This is terrible. Aborting.")
             if user in guessed_people:
