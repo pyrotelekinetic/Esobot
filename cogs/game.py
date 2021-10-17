@@ -216,9 +216,9 @@ class Games(commands.Cog):
                            "You didn't do anything last round, so there's nothing I can do for you. Come back next round.")
         else:
             assert d["stage"] == 2
-            await ctx.send(embed=discord.Embed(description=f"The current round is in stage 2 (guessing). Look at the list of submissions [here]({domain}/{d['round']}) and try to figure out who wrote what. "
+            await ctx.send(embed=discord.Embed(description=f"The current round is in stage 2 (guessing). Look at the list of submissions and try to figure out who wrote what. "
                                                             "Once you're done, submit your guesses like this (it should be a bijection from entry to user):\n"
-                                                            "```\n#1: lyricly\n#2: christina\n#3: i-have-no-other-names\n```"))
+                                                            "```\n1: lyricly\n2: christina\n3: i-have-no-other-names\n```"))
 
     @commands.has_role("Event Managers")
     @codeguess.command()
@@ -293,7 +293,7 @@ class Games(commands.Cog):
         submissions.sort(key=lambda e: filename_of_submission(e, d["round"]))
         print(submissions)
 
-        for line in message.content.removeprefix("```").removesuffix("```").splitlines():
+        for line in message.content.strip("`").splitlines():
             if not line.strip():
                 continue
 
@@ -352,7 +352,7 @@ class Games(commands.Cog):
             return
         if self.cg["round"]["stage"] == 1 and len(message.attachments) == 1:
             await self.take_submission(message)
-        elif self.cg["round"]["stage"] == 2 and str(message.author.id) in self.cg["round"]["submissions"] and message.content.startswith("```") and message.content.endswith("```"):
+        elif self.cg["round"]["stage"] == 2 and str(message.author.id) in self.cg["round"]["submissions"] and not message.content.startswith("!"):
             await self.take_guesses(message)
 
     @commands.has_role("Event Managers")
@@ -384,8 +384,8 @@ class Games(commands.Cog):
 
         d["stage"] = 2
         save_json(CODE_GUESSING_SAVES, self.cg)
-        await ctx.send(embed=discord.Embed(description=f"You can no longer send submissions, and the guessing phase has begun. The entries to guess are available [here]({domain}/{d['round']}). "
-                                                       "For more on how to guess, do `!cg` in <#457999277311131649>."))
+        await ctx.send(embed=discord.Embed(description=f"You can no longer send submissions, and the guessing phase has begun. "
+                                                        "For more on how to guess, do `!cg` in <#457999277311131649>."))
 
     @commands.has_role("Event Managers")
     @codeguess.command(aliases=["end"])
