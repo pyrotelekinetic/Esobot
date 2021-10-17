@@ -126,8 +126,10 @@ async def on_command_error(ctx, exc):
             description += f"Missing {missing_perms}"
         elif isinstance(exc, commands.NotOwner):
             description = "You have to be the bot owner to do that."
+        elif isinstance(exc, commands.MissingRole):
+            description = f"You're missing the required role '{exc.missing_role}'."
         else:
-            description = "Command check failed."
+            description = "Command check failed. For one reason or another, you're not allowed to run that command in this context."
     elif isinstance(exc, commands.DisabledCommand):
         description = "That command is disabled."
     elif isinstance(exc, commands.CommandOnCooldown):

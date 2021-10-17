@@ -16,7 +16,7 @@ class Admin(commands.Cog):
         self.bot = bot
 
     async def cog_check(self, ctx):
-        return await self.bot.is_owner(ctx.author)
+        return await commands.is_owner().predicate(ctx)
 
     @commands.command(aliases=["shutdown!"], hidden=True)
     async def shutdown(self, ctx):
