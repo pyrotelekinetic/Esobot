@@ -296,6 +296,9 @@ class Games(commands.Cog):
         for line in message.content.removeprefix("```").removesuffix("```").splitlines():
             if not line.strip():
                 continue
+
+            if ":" not in line:
+                return await message.channel.send(f"Invalid line `{line}` found during parsing. All lines must be of the form `#<num>: <name>`. Aborting.")
             index_s, user_s = line.split(":")
 
             try:
