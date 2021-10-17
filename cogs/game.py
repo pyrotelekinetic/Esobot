@@ -406,14 +406,21 @@ class Games(commands.Cog):
         bad = defaultdict(int)
 
         with open(f"./config/code_guessing/{d['round']}/results.txt", "w+") as f:
+            submissions = list(d["submissions"].values())
+            submissions.sort(key=lambda e: filename_of_submission(e, d["round"]))
+
             f.write("correct answers:\n")
-            for idx, user in enumerate(sorted(d["submissions"]), start=1):
+            for idx, user in enumerate(submissions), start=1):
                 f.write(f"#{idx}: {format_person(user)}\n")
 
             f.write("\n\npeople's guesses:\n")
             for user, guess in d["guesses"].items():
                 f.write(f"\n{format_person(user)} guessed:\n")
-                for idx, (actual, guessed) in enumerate(guess.items(), start=1):
+                for idx, s in enumerate(submissions, start=1):
+                    actual = s["id"]
+                    guessed = guess.get(actual)
+                    if not guessed:
+                        continue
                     if actual == guessed:
                         f.write(f"[O] #{idx} correctly as {format_person(actual)}\n")
                         good[user] += 1
@@ -422,7 +429,7 @@ class Games(commands.Cog):
                         f.write(f"[X] #{idx} incorrectly as {format_person(guessed)} (was {format_person(actual)})\n")
 
             f.write("\n\nscores this round:\n")
-            for user in sorted(d["submissions"], key=lambda u: good[u] - bad[u]):
+            for user in sorted(d["submissions"], key=lambda u: good[u] - bad[u], reverse=True):
                 f.write(f"{format_person(user)} +{good[user]} -{bad[user]} = {good[user] - bad[user]}\n")
 
             f.seek(0)
