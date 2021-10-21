@@ -410,7 +410,7 @@ class Games(commands.Cog):
             submissions.sort(key=lambda e: filename_of_submission(e, d["round"]))
 
             f.write("correct answers:\n")
-            for idx, user in enumerate(submissions), start=1):
+            for idx, user in enumerate(submissions, start=1):
                 f.write(f"#{idx}: {format_person(user)}\n")
 
             f.write("\n\npeople's guesses:\n")
