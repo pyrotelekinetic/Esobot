@@ -136,7 +136,7 @@ class ReactionRoles(commands.Cog, name="Reaction roles"):
                 await method(guild.get_member(payload.user_id), role)
             except discord.Forbidden:
                 channel = guild.get_channel(data["origin"])
-                await channel.send("I tried to change the role '{role.name}' on {payload.member}, but I don't have permission.")
+                await channel.send(f"I tried to change the role '{role.name}' on {payload.member}, but I don't have permission.")
 
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, payload):
