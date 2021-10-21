@@ -73,10 +73,18 @@ class ReactionRoles(commands.Cog, name="Reaction roles"):
 
 
         old_data = self.messages.get(str(msg_id))
-        if not old_data or pairs != old_data["pairs"]:
-            await msg.clear_reactions()
-            for emoji in pairs:
-                await msg.add_reaction(emoji)
+        old_pairs = old_data and old_data["pairs"]
+        if pairs != old_pairs:
+            current_emoji = list(old_pairs) if old_pairs else []
+            target_emoji = list(pairs)
+
+            if target_emoji[:len(current_emoji)] == current_emoji:
+                for emoji in target_emoji[len(current_emoji):]:
+                    await msg.add_reaction(emoji)
+            else:
+                await msg.clear_reactions()
+                for emoji in target_emoji:
+                    await msg.add_reaction(emoji)
 
             if channel_id:
                 self.messages[str(msg_id)] = {"origin": channel_id, "pairs": pairs}
