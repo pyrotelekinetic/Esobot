@@ -253,7 +253,7 @@ class Games(commands.Cog):
             else:
                 guess = None
 
-        choices = ["Python", "C", "Java", "Polyglot"]
+        choices = ["Python", "C", "Rust", "Polyglot"]
         p = Prompt(message.author)
         if guess and guess.name in choices:
             choices.remove(guess.name)
@@ -263,7 +263,7 @@ class Games(commands.Cog):
 
         await message.channel.send("What language is this written in?", view=p)
         lang = await p.response()
-        shortname = {"Python": "python3", "C": "c", "Java": "java", "Polyglot": None}[lang]
+        shortname = {"Python": "python3", "C": "c", "Rust": "rust", "Polyglot": None}[lang]
         i = str(message.author.id)
         sub = {"id": i, "filename": attachment.filename, "tested": False, "language": shortname, "uuid": str(uuid.uuid4())}
         if i in d["submissions"]:
