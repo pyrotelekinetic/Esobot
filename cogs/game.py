@@ -201,6 +201,9 @@ class Games(commands.Cog):
         await ctx.send("\n".join(f"{i + 1}. {u.name.replace('@', '@' + zwsp)} - {t:.4f} seconds ({len(prompt) / t * 12:.2f}WPM)" for i, (u, t) in enumerate(winners.items())))
 
 
+    def get_user_name(self, user_id):
+        return self.bot.get_user(user_id).name.lower() if user_id != self.cg["kit"] else "kit"
+
     @commands.group(invoke_without_command=True, aliases=["cg", "codeguessing"])
     async def codeguess(self, ctx):
         if "round" not in self.cg:
@@ -219,6 +222,12 @@ class Games(commands.Cog):
             await ctx.send(embed=discord.Embed(description=f"The current round is in stage 2 (guessing). Look at the list of submissions and try to figure out who wrote what. "
                                                             "Once you're done, submit your guesses like this (it should be a bijection from entry to user):\n"
                                                             "```\n1: lyricly\n2: christina\n3: i-have-no-other-names\n```"))
+
+    @commands.has_role("Event Managers")
+    @codeguess.command()
+    async def kit(self, ctx, member: discord.Member):
+        self.cg["kit"] = member.id
+        await ctx.send(f"{member.display_name} assigned as the stand-in for Kit. Their name will be replaced with Kit's accordingly.")
 
     @commands.has_role("Event Managers")
     @codeguess.command()
@@ -307,7 +316,7 @@ class Games(commands.Cog):
                 return await message.channel.send(f"Invalid index '{index_s}' found while parsing guess. Aborting.")
 
             user = discord.utils.find(
-                lambda us: aggressive_normalize(user_s) in map(aggressive_normalize, filter(None, ((u := self.bot.get_guild(346530916832903169).get_member(int(us))).name, u.nick, us))),
+                lambda us: aggressive_normalize(user_s) in map(aggressive_normalize, filter(None, (self.get_user_name(int(us)), us))),
                 d["submissions"],
             )
             if user is None:
@@ -380,7 +389,7 @@ class Games(commands.Cog):
             return await ctx.send("Easy there. There are untested submissions to attend to. Deal with them using `!cg test` first.", delete_after=2)
 
         with open(f"./config/code_guessing/{d['round']}/people", "w") as f:
-            f.write("\n".join(self.bot.get_user(int(i)).name.lower() for i in sorted(d["submissions"])))
+            f.write("\n".join(self.get_user_name(int(i)) for i in sorted(d["submissions"])))
 
         d["stage"] = 2
         save_json(CODE_GUESSING_SAVES, self.cg)
@@ -400,7 +409,7 @@ class Games(commands.Cog):
             return await ctx.send("Bit premature to be stopping, no? Well, in any case, I've done as you asked. No results file generated, because the round wasn't done.")
 
         def format_person(u):
-            return "-".join(self.bot.get_user(int(u)).name.lower().split())
+            return "-".join(self.get_user_name(int(u)).split())
 
         good = defaultdict(int)
         bad = defaultdict(int)
