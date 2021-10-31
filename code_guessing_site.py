@@ -49,9 +49,10 @@ def show_round(roundnum):
             lexer = TextLexer()
         with open(f"./config/code_guessing/{roundnum}/{entry}", encoding="utf-8", errors="replace") as f:
             y = f.read()
+        entries += highlight(y, lexer, formatter)
     style = formatter.get_style_defs()
     contents = "<br>".join(f'<a href="#{idx}">entry #{idx}</a>' for idx in range(1, len(l)+1))
-    return f"""
+    o = f"""
 <!DOCTYPE html>
 <html>
   <head>
@@ -78,3 +79,6 @@ def show_round(roundnum):
   </body>
 </html>
 """
+    with open("cg7.html", "w") as f:
+        f.write(o)
+    return o
