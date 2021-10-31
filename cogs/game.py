@@ -202,7 +202,7 @@ class Games(commands.Cog):
 
 
     def get_user_name(self, user_id):
-        return self.bot.get_user(user_id).name.lower() if user_id != self.cg["kit"] else "kit"
+        return "-".join((self.bot.get_user(user_id).name.lower() if user_id != self.cg["kit"] else "kit").split())
 
     @commands.group(invoke_without_command=True, aliases=["cg", "codeguessing"])
     async def codeguess(self, ctx):
@@ -408,9 +408,6 @@ class Games(commands.Cog):
             save_json(CODE_GUESSING_SAVES, self.cg)
             return await ctx.send("Bit premature to be stopping, no? Well, in any case, I've done as you asked. No results file generated, because the round wasn't done.")
 
-        def format_person(u):
-            return "-".join(self.get_user_name(int(u)).split())
-
         good = defaultdict(int)
         bad = defaultdict(int)
 
@@ -420,26 +417,26 @@ class Games(commands.Cog):
 
             f.write("correct answers:\n")
             for idx, user in enumerate(submissions, start=1):
-                f.write(f"#{idx}: {format_person(user)}\n")
+                f.write(f"#{idx}: {self.get_user_name(user)}\n")
 
             f.write("\n\npeople's guesses:\n")
             for user, guess in d["guesses"].items():
-                f.write(f"\n{format_person(user)} guessed:\n")
+                f.write(f"\n{self.get_user_name(user)} guessed:\n")
                 for idx, s in enumerate(submissions, start=1):
                     actual = s["id"]
                     guessed = guess.get(actual)
                     if not guessed:
                         continue
                     if actual == guessed:
-                        f.write(f"[O] #{idx} correctly as {format_person(actual)}\n")
+                        f.write(f"[O] #{idx} correctly as {self.get_user_name(actual)}\n")
                         good[user] += 1
                         bad[actual] += 1
                     else:
-                        f.write(f"[X] #{idx} incorrectly as {format_person(guessed)} (was {format_person(actual)})\n")
+                        f.write(f"[X] #{idx} incorrectly as {self.get_user_name(guessed)} (was {self.get_user_name(actual)})\n")
 
             f.write("\n\nscores this round:\n")
             for user in sorted(d["submissions"], key=lambda u: good[u] - bad[u], reverse=True):
-                f.write(f"{format_person(user)} +{good[user]} -{bad[user]} = {good[user] - bad[user]}\n")
+                f.write(f"{self.get_user_name(user)} +{good[user]} -{bad[user]} = {good[user] - bad[user]}\n")
 
             f.seek(0)
             self.cg.pop("round")
