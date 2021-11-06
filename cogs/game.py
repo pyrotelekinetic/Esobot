@@ -202,6 +202,7 @@ class Games(commands.Cog):
 
 
     def get_user_name(self, user_id):
+        user_id = int(user_id)
         return "-".join((self.bot.get_user(user_id).name.lower() if user_id != self.cg["kit"] else "kit").split())
 
     @commands.group(invoke_without_command=True, aliases=["cg", "codeguessing"])
@@ -417,7 +418,7 @@ class Games(commands.Cog):
 
             f.write("correct answers:\n")
             for idx, user in enumerate(submissions, start=1):
-                f.write(f"#{idx}: {self.get_user_name(user)}\n")
+                f.write(f"#{idx}: {self.get_user_name(user['id'])}\n")
 
             f.write("\n\npeople's guesses:\n")
             for user, guess in d["guesses"].items():
