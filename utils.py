@@ -107,17 +107,24 @@ class Pronouns:
         self.refl = refl
         self.plural = plural
 
+pronoun_sets = {
+    "he/him": Pronouns("he", "him", "his", "his", "himself", False),
+    "she/her": Pronouns("she", "her", "her", "hers", "herself", False),
+    "it/its": Pronouns("it", "it", "its", "its", "itself", False),
+    "they/them": Pronouns("they", "them", "their", "theirs", "themselves", True),
+}
+
 def get_pronouns(member):
     roles = [role.name for role in member.roles]
     pronouns = []
-    if "he/him" in roles:
-        pronouns.append(Pronouns("he", "him", "his", "his", "himself", False))
-    if "she/her" in roles:
-        pronouns.append(Pronouns("she", "her", "her", "hers", "herself", False))
-    if "it/its" in roles:
-        pronouns.append(Pronouns("it", "it", "its", "its", "itself", False))
-    if not pronouns or "they/them" in roles:
-        pronouns.append(Pronouns("they", "them", "their", "theirs", "themselves", True))
+    for s, p in pronoun_sets.items():
+        if s in roles:
+            pronouns.append(p)
+    if not pronouns:
+        if "any pronouns" in roles:
+            pronouns.extend(p for (s, p) in pronoun_sets.items() if s != "it/its")
+        else:
+            pronouns.append(pronoun_sets["they/them"])
     return random.choice(pronouns)
 
 
