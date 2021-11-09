@@ -13,7 +13,7 @@ import pygments.util
 import discord
 from discord.ext import commands
 
-from utils import make_embed, load_json, save_json, Prompt, aggressive_normalize
+from utils import make_embed, load_json, save_json, Prompt, aggressive_normalize, get_pronouns
 from constants.paths import CODE_GUESSING_SAVES
 
 
@@ -228,7 +228,8 @@ class Games(commands.Cog):
     @codeguess.command()
     async def kit(self, ctx, member: discord.Member):
         self.cg["kit"] = member.id
-        await ctx.send(f"{member.display_name} assigned as the stand-in for Kit. Their name will be replaced with Kit's accordingly.")
+        p = get_pronouns(member)
+        await ctx.send(f"{member.display_name} assigned as the stand-in for Kit. {p.pos_det.title()} name will be replaced with Kit's accordingly.")
 
     @commands.has_role("Event Managers")
     @codeguess.command()

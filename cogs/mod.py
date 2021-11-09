@@ -26,12 +26,12 @@ class Moderation(commands.Cog):
 
         embed = discord.Embed(title="Are you sure?", description=f"You are about to {ctx.command.name} {users}. Please confirm the following things.")
 
-        embed.add_field(name="Warned?", value="Have you given the user due warning? If their infraction is minor, consider a verbal caution before taking action.")
+        embed.add_field(name="Warned?", value="Have you given the users due warning? If their infractions are minor, consider a verbal caution before taking action.")
         embed.add_field(name="Legitimacy", value=f"Take care not to {ctx.command.name} for insincere reasons such as jokes, as intimidation or due to corruption. \
                                                    Ensure your punishment is proportional to the severity of the rule violation you are punishing.")
 
         if not reason:
-            embed.add_field(name="No reason?", value="Consider adding a reason for your action. This will inform the user of your reasoning, as well as storing it in the audit log for future reference.")
+            embed.add_field(name="No reason?", value="Consider adding a reason for your action. This will inform the users of your reasoning, as well as storing it in the audit log for future reference.")
         embed.set_footer(text="If you're certain you want to proceed, click the checkmark emoji below. If you've rethought your decision, click the X.")
 
         msg = await ctx.send(embed=embed)

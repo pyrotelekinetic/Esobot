@@ -11,7 +11,7 @@ import itertools
 
 from constants import colors, channels, paths
 from discord.ext import commands, tasks
-from utils import EmbedPaginator, make_embed, clean, show_error, load_json, save_json
+from utils import EmbedPaginator, make_embed, clean, show_error, load_json, save_json, get_pronouns
 
 
 class Event(commands.Converter):
@@ -196,10 +196,11 @@ class Time(commands.Cog):
                 else ""
             )
         )
+        p = get_pronouns(member)
         await ctx.send(
             embed=make_embed(
                 title="Ping scheduled",
-                description=f"{member.mention} will be pinged when they go online with the message:\n\n{message}",
+                description=f"{member.mention} will be pinged when {p.subj} {'go' if p.plural else 'goes'} online with the message:\n\n{message}",
                 color=colors.EMBED_SUCCESS,
             )
         )
@@ -218,10 +219,11 @@ class Time(commands.Cog):
             f"{member.mention}, {ctx.author.mention} has sent you a scheduled ping."
             + (f" A message was attached:\n\n```\n{message}\n```" if message else "")
         )
+        p = get_pronouns(member)
         await ctx.send(
             embed=make_embed(
                 title="Ping scheduled",
-                description=f"{member.mention} will be pinged when they stop playing a game with the message:\n\n{message}",
+                description=f"{member.mention} will be pinged when {p.subj} {'stop' if p.plural else 'stops'} playing a game with the message:\n\n{message}",
                 color=colors.EMBED_SUCCESS,
             )
         )

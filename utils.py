@@ -1,6 +1,7 @@
 import asyncio
 import discord
 import json
+import random
 import string
 import logging
 import traceback
@@ -95,6 +96,30 @@ class Prompt(discord.ui.View):
 
 def aggressive_normalize(s):
     return "".join([x for x in unidecode(s.casefold()) if x in string.ascii_letters + string.digits])
+
+
+class Pronouns:
+    def __init__(self, subj, obj, pos_det, pos_noun, refl, plural):
+        self.subj = subj
+        self.obj = obj
+        self.pos_det = pos_det
+        self.pos_noun = pos_noun
+        self.refl = refl
+        self.plural = plural
+
+def get_pronouns(member):
+    roles = [role.name for role in member.roles]
+    pronouns = []
+    if "he/him" in roles:
+        pronouns.append(Pronouns("he", "him", "his", "his", "himself", False))
+    if "she/her" in roles:
+        pronouns.append(Pronouns("she", "her", "her", "hers", "herself", False))
+    if "it/its" in roles:
+        pronouns.append(Pronouns("it", "it", "its", "its", "itself", False))
+    if not pronouns or "they/them" in roles:
+        pronouns.append(Pronouns("they", "them", "their", "theirs", "themselves", True))
+    return random.choice(pronouns)
+
 
 def make_embed(*, fields=[], footer_text=None, **kwargs):
     embed = discord.Embed(**kwargs)
