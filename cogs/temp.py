@@ -111,6 +111,20 @@ class Temporary(commands.Cog):
         if ctx.guild.id == 346530916832903169:
             await self.bot.get_command("time")(ctx, user=ctx.guild.get_member(636797375184240640))
 
+    @commands.Cog.listener()
+    async def on_message(self, message):
+        print("hey")
+        if message.author.id == 319753218592866315 and message.content.count("night") >= 10:
+            msg = ""
+            c = 0
+            for idx, word in enumerate(message.content.split(), start=1):
+                if word == "night":
+                    c += 1
+                else:
+                    msg += f"Word {idx} is misspelled: ``{word}``\n"
+            msg += f"That's {c}."
+            await message.channel.send(msg)
+
 
 def setup(bot):
     bot.add_cog(Temporary(bot))
