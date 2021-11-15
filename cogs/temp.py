@@ -113,7 +113,6 @@ class Temporary(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message):
-        print("hey")
         if message.author.id == 319753218592866315 and message.content.count("night") >= 10:
             msg = ""
             c = 0

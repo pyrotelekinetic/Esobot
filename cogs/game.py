@@ -2,6 +2,7 @@ import asyncio
 import datetime
 import random
 import os
+import re
 import shutil
 import uuid
 from collections import defaultdict
@@ -14,17 +15,22 @@ import discord
 from discord.ext import commands
 
 from utils import make_embed, load_json, save_json, Prompt, aggressive_normalize, get_pronouns
-from constants.paths import CODE_GUESSING_SAVES
+from constants.paths import CODE_GUESSING_SAVES, IDEA_SAVES
 
 
 ip = requests.get("https://api.ipify.org").text
 domain = f"http://{ip}:7001"
+
 
 def filename_of_submission(sub, roundnum):
     if sub['language']:
         return f"./config/code_guessing/{roundnum}/{sub['uuid']}.{sub['language']}:{sub['filename']}"
     else:
         return f"./config/code_guessing/{roundnum}/{sub['uuid']}:{sub['filename']}"
+
+def is_idea_message(content):
+    return bool(re.match(r"\bidea\s*:", content))
+
 
 class OkButton(discord.ui.Button):
     def __init__(self):
@@ -73,6 +79,30 @@ class Games(commands.Cog):
         self.bot = bot
         self.words = None
         self.cg = load_json(CODE_GUESSING_SAVES)
+        self.ideas = load_json(IDEA_SAVES)
+
+    @commands.Cog.listener("on_message")
+    async def on_message_idea(self, message):
+        if not message.author.bot and message.guild and is_idea_message(message.content):
+            self.ideas.append({"guild_id": message.guild.id, "channel_id": message.channel.id, "message_id": message.id})
+            save_json(IDEA_SAVES, self.ideas)
+
+    @commands.command()
+    async def idea(self, ctx):
+        while True:
+            i = random.randrange(len(self.ideas))
+            m = self.ideas[i]
+            try:
+                msg = await self.bot.get_guild(m["guild_id"]).get_channel(m["channel_id"]).fetch_message(m["message_id"])
+            except discord.HTTPException:
+                self.ideas.pop(i)
+                continue
+            if not is_idea_message(msg.content):
+                self.ideas.pop(i)
+                continue
+            await ctx.send(f"{msg.jump_url}\n{msg.content}")
+            break
+
 
     @commands.group(invoke_without_command=True)
     async def hwdyk(self, ctx):
@@ -302,7 +332,6 @@ class Games(commands.Cog):
         guessed_people = set()
         submissions = list(d["submissions"].values())
         submissions.sort(key=lambda e: filename_of_submission(e, d["round"]))
-        print(submissions)
 
         for line in message.content.strip("`").splitlines():
             if not line.strip():
@@ -357,8 +386,8 @@ class Games(commands.Cog):
         else:
             await message.channel.send("Guess registered. Have a swell day. Just as with your code submission, you can re-submit your guesses at any time.")
 
-    @commands.Cog.listener()
-    async def on_message(self, message):
+    @commands.Cog.listener("on_message")
+    async def on_message_cg(self, message):
         if message.author.bot or message.guild or "round" not in self.cg:
             return
         if self.cg["round"]["stage"] == 1 and len(message.attachments) == 1:
