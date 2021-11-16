@@ -29,7 +29,7 @@ def filename_of_submission(sub, roundnum):
         return f"./config/code_guessing/{roundnum}/{sub['uuid']}:{sub['filename']}"
 
 def is_idea_message(content):
-    return bool(re.match(r"\bidea\s*:", content))
+    return bool(re.match(r".*\bidea\s*:", content))
 
 
 class OkButton(discord.ui.Button):
