@@ -33,7 +33,8 @@ class Esolangs(commands.Cog):
                         description=f"Page not found.",
                     )
                 )
-            await ctx.send(resp.headers["Location"].replace(".", "%2E"))
+            f, l = resp.headers["Location"].rsplit("/", 1)
+            await ctx.send(f + "/" + l.replace(".", "%2E"))
 
 
 def setup(bot):
