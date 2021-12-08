@@ -1,5 +1,6 @@
 import aiohttp
 import socket
+import urllib.parse
 
 from discord.ext import commands
 from constants import colors, info
@@ -32,7 +33,7 @@ class Esolangs(commands.Cog):
                         description=f"Page not found.",
                     )
                 )
-            await ctx.send("<" + resp.headers["Location"] + ">")
+            await ctx.send(resp.headers["Location"].replace(".", "%2E"))
 
 
 def setup(bot):
