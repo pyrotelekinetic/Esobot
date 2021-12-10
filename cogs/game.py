@@ -330,7 +330,7 @@ class Games(commands.Cog):
         d = self.cg["round"]
         guess = {}
         guessed_people = set()
-        submissions = list(d["submissions"].values())
+        submissions = list(filter(None, d["submissions"].values()))
         submissions.sort(key=lambda e: filename_of_submission(e, d["round"]))
 
         for line in message.content.strip("`").splitlines():
