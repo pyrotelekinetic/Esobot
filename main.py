@@ -109,7 +109,7 @@ async def on_command_error(ctx, exc):
     if isinstance(exc, commands.UserInputError):
         if isinstance(exc, commands.MissingRequiredArgument):
             description = f"Missing required argument `{exc.param.name}`."
-        elif isinstance(exc, commands.BadArgument):
+        elif isinstance(exc, (commands.BadArgument, commands.BadUnionArgument)):
             description = f"Invalid argument. {str(exc)}"
         else:
             description = f"Unknown user input exception."
@@ -119,15 +119,17 @@ async def on_command_error(ctx, exc):
         return
     elif isinstance(exc, commands.CheckFailure):
         if isinstance(exc, commands.NoPrivateMessage):
-            description = "Cannot be run in a private message channel."
+            description = "Cannot be used in a DM."
         elif isinstance(exc, commands.MissingPermissions):
             description = "You don't have permission to do that. "
-            missing_perms = ", ".join(exc.missing_perms)
+            missing_perms = ", ".join(exc.missing_permissions)
             description += f"Missing {missing_perms}"
         elif isinstance(exc, commands.NotOwner):
             description = "You have to be the bot owner to do that."
         elif isinstance(exc, commands.MissingRole):
             description = f"You're missing the required role '{exc.missing_role}'."
+        elif isinstance(exc, commands.PrivateMessageOnly):
+            description = "This command has to be used in a DM."
         else:
             description = "Command check failed. For one reason or another, you're not allowed to run that command in this context."
     elif isinstance(exc, commands.DisabledCommand):
