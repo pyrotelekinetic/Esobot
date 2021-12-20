@@ -338,10 +338,10 @@ class Games(commands.Cog):
             await message.channel.send("I successfully submitted your entry, but I noticed that the file isn't encoded in valid UTF-8. "
                                        "That could cause issues or something, so maybe don't do that. Your call, though. I'm just letting you know. "
                                        "You'll be informed of any problems found while testing. Just resubmit if there are any issues. "
-                                       "If you need to talk anonymously to the event managers, just leave a message in your solution and remove it later. :^)")
+                                       "If you need to talk anonymously to the event managers, send an anonymous message with `!anon LyricLy`.")
         else:
             await message.channel.send("Successfully submitted your entry. You'll be informed of any problems found while testing. Just resubmit if there are any issues. "
-                                       "If you need to talk anonymously to the event managers, just put a message in your solution and you can remove it later. :^)")
+                                       "If you need to talk anonymously to the event managers, send an anonymous message with `!anon LyricLy`.")
 
     async def take_guesses(self, message):
         d = self.cg["round"]
