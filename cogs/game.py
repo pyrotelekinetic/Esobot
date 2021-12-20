@@ -97,10 +97,15 @@ class Games(commands.Cog):
             except discord.HTTPException:
                 self.ideas.pop(i)
                 continue
-            if not is_idea_message(msg.content):
+            idea = msg.content
+            if not is_idea_message(idea):
                 self.ideas.pop(i)
                 continue
-            await ctx.send(f"{msg.jump_url}\n{msg.content}")
+            if idea.endswith("idea:"):
+                idea_extra = await msg.channel.history(after=msg, check=lambda m: m.author == msg.author, limit=1).flatten()
+                idea += "\n"
+                idea += idea_extra[0].content
+            await ctx.send(f"{msg.jump_url}\n{msg.content}", allowed_mentions=discord.AllowedMentions(everyone=False, roles=False, users=False))
             break
 
 
