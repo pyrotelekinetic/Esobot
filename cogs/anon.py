@@ -9,12 +9,13 @@ from utils import get_pronouns
 
 
 def rand_name(taken_names):
-    name = "jan "
-    for _ in range(2, 4):
+    name = ""
+    for i in range(2, 4):
         syllable = "ji"
         while syllable[:2] in ("ji", "wo", "wo", "ti"):
-            syllable = random.choice("ptkswlj" if name.endswith("n") else "mnptkswlj").upper() + random.choice("aeiou") + "n"*random.randint(0, 1)
+            syllable = random.choice("ptkswlj" if name.endswith("n") else "mnptkswlj") + random.choice("aeiou") + "n"*random.randint(0, 1)
         name += syllable
+    name = f"jan {name.capitalize()}"
     return name if name not in taken_names else rand_name(taken_names)
 
 
