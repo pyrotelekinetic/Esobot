@@ -39,17 +39,22 @@ def show_round(roundnum):
         t = f'<p>note: this round has ended! see the results <a href="results.txt">here</a></p>'
     else:
         t = ""
+    if roundnum == 9:
+        p = "<p>due to the nature of this round, code previews are disabled. please download the games to experience them.</p>"
+    else:
+        p = ""
     l.sort()
     formatter = HtmlFormatter(style="monokai")
     for idx, entry in enumerate(l, start=1):
-        entries += f'<h2 id="{idx}">entry #{idx} (<a href="{entry}">{entry.split(":", 1)[1]}</a>)</h2>'
+        entries += f'<h2 id="{idx}">entry #{idx} (<a href="/{roundnum}/{entry}">{entry.split(":", 1)[1]}</a>)</h2>'
         try:
             lexer = get_lexer_by_name(entry.split(":", 1)[0].rsplit(".", 1)[-1])
         except ClassNotFound:
             lexer = TextLexer()
         with open(f"./config/code_guessing/{roundnum}/{entry}", encoding="utf-8", errors="replace") as f:
             y = f.read()
-        entries += highlight(y, lexer, formatter)
+        if roundnum != 9:
+            entries += highlight(y, lexer, formatter)
     style = formatter.get_style_defs()
     contents = "<br>".join(f'<a href="#{idx}">entry #{idx}</a>' for idx in range(1, len(l)+1))
     o = f"""
@@ -68,6 +73,7 @@ def show_round(roundnum):
   <body>
     <h1>code guessing, round #{roundnum}</h1>
     <p>all the submissions received this round follow. naturally, they have been randomly shuffled.</p>
+    {p}
     <p>the people who submitted solutions are:</p>
     <ul>
         {people}
@@ -79,6 +85,4 @@ def show_round(roundnum):
   </body>
 </html>
 """
-    with open("cg7.html", "w") as f:
-        f.write(o)
     return o
