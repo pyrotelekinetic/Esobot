@@ -246,7 +246,6 @@ class Games(commands.Cog):
             return await ctx.send("There isn't a game of code guessing running here at the moment. Check in later?")
         d = self.cg["round"]
 
-        to_submit = "To submit an entry, simply DM me your program as an attachment. For the full set of rules, do `!cg rules`."
         if d["stage"] == 1:
             await ctx.send("The current round is in stage 1 (writing) right now, meaning anyone can participate. Check <#746231084353847366> for more information on what the challenge is for this round. "
                            "To submit an entry, just DM me your program as an attachment. Note that the filename **will not** be secret.")
@@ -276,7 +275,7 @@ class Games(commands.Cog):
         self.cg["round"] = {"round": round_num, "stage": 1, "submissions": {}, "guesses": {}}
         save_json(CODE_GUESSING_SAVES, self.cg)
         await ctx.send("All right! Keep in mind that to submit your entry, you just have to DM me the program as an attachment (the filename **will not** be secret) and I'll do the rest. "
-                       "For the full rules to the game, do `!cg rules`. Good luck and have fun.")
+                       "Good luck and have fun.")
 
     async def take_submission(self, message):
         d = self.cg["round"]
