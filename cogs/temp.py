@@ -1,13 +1,16 @@
+import asyncio
 import datetime
 import io
 import os
 import random
 import uuid
+import shlex
 from textwrap import dedent
+from typing import Optional
 
-import asyncio
 import discord
 from discord.ext import commands, tasks
+from PIL import Image, ImageOps
 
 
 class Temporary(commands.Cog):
@@ -93,6 +96,40 @@ class Temporary(commands.Cog):
     #         await partner.remove_roles(playing)
     #         await self.bot.get_channel(730593893195710525).send(f"{ctx.channel.mention} finished with the following submission: {text}")
 
+    @commands.command()
+    async def identicon(self, ctx, username: str, color: Optional[discord.Colour] = discord.Colour(0xF0F0F0), alpha: float = 1.0):
+        """Send someone's GitHub identicon. `color` and `alpha` control the background colour."""
+
+        if not 0 <= alpha <= 1.0:
+            return await ctx.send("`alpha` must be between 0 and 1.")
+        colour = (*color.to_rgb(), int(255*alpha))
+
+        async with self.bot.session.get(f"https://github.com/identicons/{username}.png") as resp:
+            if resp.status != 200:
+                return await ctx.send("404ed trying to access that identicon.")
+            b = io.BytesIO(await resp.read())
+
+        i = Image.open(b, formats=["png"]).convert("RGBA")
+
+        # this sucks
+        default = (0xF0, 0xF0, 0xF0, 0xFF)
+        w, h = i.size
+        if colour != default:
+            data = i.load()
+            for y in range(h):
+                for x in range(w):
+                    if data[x, y] == default:
+                        data[x, y] = colour
+
+        i2 = Image.new("RGBA", (512, 512), colour)
+        i2.paste(i, ((512-w)//2, (512-h)//2))
+
+        b.seek(0)
+        i2.save(b, "png")
+        b.truncate()
+        b.seek(0)
+        await ctx.send(file=discord.File(b, "result.png"))
+
     @commands.group(hidden=True, invoke_without_command=True)
     async def olivia(self, ctx):
         pass
@@ -123,6 +160,9 @@ class Temporary(commands.Cog):
                     msg += f"Word {idx} is misspelled: ``{word}``\n"
             msg += f"That's {c}."
             await message.channel.send(msg)
+
+        if message.guild and message.guild.id == 800373244162867231 and message.author.id == 319753218592866315 and message.content.startswith("?choose"):
+            await message.channel.send(random.choice(shlex.split(message.content.removeprefix("?choose"))))
 
 
 def setup(bot):
