@@ -73,7 +73,7 @@ class Anonymity(commands.Cog):
             await target.send(f"<{name}> {content}", embeds=message.embeds, files=[await f.to_file() for f in message.attachments])
         if message.author == self.bot.user and message.content.startswith("<"):
             return
-        for _, person in self.targets[message.channel]:
+        for _, person in self.targets[message.channel if message.guild else message.author]:
             await person.send(f"<{message.author.display_name}> {message.content}", embeds=message.embeds, files=[await f.to_file() for f in message.attachments])
 
 def setup(bot):
