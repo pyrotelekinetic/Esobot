@@ -97,7 +97,7 @@ class Temporary(commands.Cog):
     #         await self.bot.get_channel(730593893195710525).send(f"{ctx.channel.mention} finished with the following submission: {text}")
 
     @commands.command()
-    async def identicon(self, ctx, username: str, color: Optional[discord.Colour] = discord.Colour(0xF0F0F0), alpha: float = 1.0):
+    async def identicon(self, ctx, username: str, color: Optional[discord.Colour] = discord.Colour(0xF0F0F0), alpha: float = 0.0):
         """Send someone's GitHub identicon. `color` and `alpha` control the background colour."""
 
         if not 0 <= alpha <= 1.0:
