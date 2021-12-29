@@ -30,6 +30,8 @@ class Anonymity(commands.Cog):
     @commands.group(invoke_without_command=True)
     @commands.dm_only()
     async def anon(self, ctx, target: Union[discord.User, discord.TextChannel, discord.Thread]):
+        if isinstance(target, discord.User) and target.bot:
+            return await ctx.send("That's a bot, silly!")
         name = rand_name([name for name, _ in self.targets[target]])
         if (k := self.sessions.pop(ctx.author, None)):
             name, target = k
