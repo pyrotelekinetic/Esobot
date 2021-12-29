@@ -34,8 +34,10 @@ class Anonymity(commands.Cog):
             return await ctx.send("That's a bot, silly!")
         name = rand_name([name for name, _ in self.targets[target]])
         if (k := self.sessions.pop(ctx.author, None)):
-            name, target = k
-            self.targets[target].remove((name, ctx.author))
+            old_name, old_target = k
+            if old_target == target:
+                return await ctx.send("But nothing changed.")
+            self.targets[old_target].remove((old_name, ctx.author))
         self.sessions[ctx.author] = name, target
         self.targets[target].append((name, ctx.author))
         if isinstance(target, discord.User):
