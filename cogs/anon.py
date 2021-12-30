@@ -118,9 +118,11 @@ class Anonymity(commands.Cog):
     @anon.command(aliases=["return"])
     @commands.dm_only()
     async def unhide(self, ctx):
+        """Reverse the effects of `hide`."""
         if ctx.author not in self.hiding:
             return await ctx.send("?")
         self.hiding.remove(ctx.author)
+        await ctx.send("You're no longer a coward.")
 
     @commands.Cog.listener()
     async def on_message(self, message):
