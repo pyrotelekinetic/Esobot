@@ -32,15 +32,20 @@ class Anonymity(commands.Cog):
     async def anon(self, ctx, target: Union[discord.User, discord.TextChannel, discord.Thread]):
         if isinstance(target, discord.User) and target.bot:
             return await ctx.send("That's a bot, silly!")
-        name = rand_name([name for name, _ in self.targets[target]])
+        if not (target.dm_channel or await target.create_dm() if isinstance(target, discord.User) else target).permissions_for(ctx.author).read_messages:
+            return await ctx.send("You can't speak in that channel.")
+
         if (k := self.sessions.get(ctx.author, None)):
             old_name, old_target = k
             if old_target == target:
                 return await ctx.send("But nothing changed.")
             self.sessions.pop(ctx.author)
             self.targets[old_target].remove((old_name, ctx.author))
+
+        name = rand_name([name for name, _ in self.targets[target]])
         self.sessions[ctx.author] = name, target
         self.targets[target].append((name, ctx.author))
+
         if isinstance(target, discord.User):
             p = get_pronouns(target)
             where = f"to {p.obj}"
