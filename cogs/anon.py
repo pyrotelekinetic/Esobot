@@ -5,7 +5,7 @@ from typing import Union
 import discord
 from discord.ext import commands
 
-from utils import get_pronouns
+from utils import get_pronouns, aggressive_normalize
 
 
 def rand_name(taken_names):
@@ -145,7 +145,10 @@ class Anonymity(commands.Cog):
                 content = content[1:]
             else:
                 content = content.lower().replace(",", "").replace("'", "").replace(".", "").replace("?", "")
-            await target.send(f"<{name}> {content}", embeds=message.embeds, files=[await f.to_file() for f in message.attachments])
+            if "smig" in aggressive_normalize(content):
+                await message.channel.send("No.")
+            else:
+                await target.send(f"<{name}> {content}", embeds=message.embeds, files=[await f.to_file() for f in message.attachments])
 
         for name, person in self.targets[message.channel if message.guild else message.author]:
             if message.author == self.bot.user and message.content.startswith(f"<{name}>") or not message.guild and message.content.startswith("!"):
