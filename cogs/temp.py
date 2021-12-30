@@ -18,6 +18,7 @@ class Temporary(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
+        self.last_10 = None
         #self.pride_loop.start()
 
     # 6PM UTC
@@ -150,6 +151,11 @@ class Temporary(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message):
+        if message.author == self.bot.user and len(message.content.split()) == 10:
+            self.last_10 = message.content
+        if message.author.id == 509849474647064576 and message.content == self.last_10:
+            await message.delete()
+
         if message.author.id == 319753218592866315 and message.content.count("night") >= 10:
             msg = ""
             c = 0

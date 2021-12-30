@@ -175,11 +175,6 @@ class Games(commands.Cog):
         else:
             await ctx.send("Too bad. Good luck with the next time!")
 
-
-    async def screen_abr(self, ctx):
-        m = await self.bot.wait_for("message", check=lambda m: m.channel == ctx.channel and m.author.id == 509849474647064576, timeout=1)
-        await m.delete()
-
     @commands.command(aliases=["tr", "type", "race"])
     @commands.guild_only()
     async def typerace(self, ctx, words: int = 10):
@@ -197,7 +192,6 @@ class Games(commands.Cog):
         prompt = " ".join(random.choices(self.words, k=words))
         zwsp = "\u2060"
 
-        self.bot.loop.create_task(self.screen_abr(ctx))
         start = await ctx.send(zwsp.join(list(prompt.translate(str.maketrans({
             "a": "а",
             "c": "с",
