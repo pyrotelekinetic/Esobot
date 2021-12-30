@@ -32,7 +32,7 @@ class Anonymity(commands.Cog):
     async def anon(self, ctx, target: Union[discord.User, discord.TextChannel, discord.Thread]):
         if isinstance(target, discord.User) and target.bot:
             return await ctx.send("That's a bot, silly!")
-        if not (target.dm_channel or await target.create_dm() if isinstance(target, discord.User) else target).permissions_for(ctx.author).read_messages:
+        if not (isinstance(target, discord.User) or (member := target.guild.get_member(ctx.author.id)) and target.permissions_for(member).read_messages):
             return await ctx.send("You can't speak in that channel.")
 
         if (k := self.sessions.get(ctx.author, None)):
