@@ -124,6 +124,18 @@ class Anonymity(commands.Cog):
         self.hiding.remove(ctx.author)
         await ctx.send("You're no longer a coward.")
 
+    @anon.command(aliases=["list"])
+    async def who(self, ctx):
+        """List the anonymous users connected to the current channel."""
+        names = []
+        for name, target in self.sessions.values():
+            if target == ctx.channel if ctx.guild else target == ctx.author:
+                names.append(name)
+        if not names:
+            await ctx.send("There's nobody here.")
+        else:
+            await ctx.send(f"{len(names)} user{'s'*(len(names)>1)} connected ({', '.join(names)})")
+
     @commands.Cog.listener()
     async def on_message(self, message):
         if not message.guild and message.author in self.sessions and not message.content.startswith("!"):
