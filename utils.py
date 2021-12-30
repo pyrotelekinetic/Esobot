@@ -95,7 +95,10 @@ class Prompt(discord.ui.View):
         return self._response
 
 def aggressive_normalize(s):
-    return "".join([x for x in unidecode(s.casefold()) if x in string.ascii_letters + string.digits])
+    s = ""
+    for c, _ in itertools.groupby([x for x in unidecode(s.casefold()) if x in string.ascii_letters + string.digits]):
+        s += c
+    return s.replace("rn", "m")
 
 
 class Pronouns:
