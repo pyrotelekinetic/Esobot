@@ -98,7 +98,7 @@ def aggressive_normalize(s):
     s = ""
     for c, _ in itertools.groupby([x for x in unidecode(s.casefold()) if x in string.ascii_letters + string.digits]):
         s += c
-    return s.replace("rn", "m")
+    return s.replace("rn", "m").replace("z", "s")
 
 
 class Pronouns:
