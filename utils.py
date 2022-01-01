@@ -5,7 +5,6 @@ import random
 import string
 import logging
 import traceback
-import itertools
 
 from unidecode import unidecode
 
@@ -96,10 +95,7 @@ class Prompt(discord.ui.View):
         return self._response
 
 def aggressive_normalize(s):
-    r = ""
-    for c, _ in itertools.groupby([x for x in unidecode(s.casefold()) if x in "abcdfghjklmnpqrstvwxyz" + string.digits]):
-        r += c
-    return r.replace("rn", "m").replace("z", "s").replace("5", "s").replace("9", "g").replace("6", "g")
+    return "".join([x for x in unidecode(s.casefold()) if x in string.ascii_letters + string.digits])
 
 
 class Pronouns:
@@ -127,7 +123,7 @@ def get_pronouns(member):
                 member = guild.get_member(member.id)
                 break
         else:
-            return [pronoun_sets["they/them"]]
+            return pronoun_sets["they/them"]
     roles = [role.name for role in member.roles]
     pronouns = []
     for s, p in pronoun_sets.items():
