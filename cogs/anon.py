@@ -76,7 +76,9 @@ class Anonymity(commands.Cog):
         await ctx.send(f"Started an anonymous messaging session {prep} {target.mention}. All the messages you send (except commands) after this point will be sent {where}.\n"
                        "Do `!anon leave` to stop bridging.\n"
                        "Note: There is automatic normalization of orthography applied to each message (removing apostrophes, commas, question marks, and periods; and lowercasing everything). "
-                       r"You can avoid this for a single message by prefixing it with a backspace character (\\).")
+                       r"You can avoid this for a single message by prefixing it with a backspace character (\\).\n"
+                       "**NB**: Full anonymity is not guaranteed. The bot can see your identity, and this information may be used for any purpose by the developers of the bot. "
+                       "Moderators of guilds are also able to reveal your identity.")
 
     @commands.dm_only()
     @anon.command(aliases=["stop"])
