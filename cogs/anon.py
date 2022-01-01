@@ -36,8 +36,8 @@ class Anonymity(commands.Cog):
         self.targets[target].remove((name, user))
         return name, target
 
-    @commands.group(invoke_without_command=True)
     @commands.dm_only()
+    @commands.group(invoke_without_command=True)
     async def anon(self, ctx, target: Union[discord.User, discord.TextChannel, discord.Thread]):
         """Use in DMs with Esobot to anonymously message a user or channel."""
         if isinstance(target, discord.User) and target.bot:
@@ -78,8 +78,8 @@ class Anonymity(commands.Cog):
                        "Note: There is automatic normalization of orthography applied to each message (removing apostrophes, commas, question marks, and periods; and lowercasing everything). "
                        r"You can avoid this for a single message by prefixing it with a backspace character (\\).")
 
-    @anon.command(aliases=["stop"])
     @commands.dm_only()
+    @anon.command(aliases=["stop"])
     async def leave(self, ctx):
         """Leave a channel which you are anonymously messaging."""
         if p := self.end_session(ctx.author):
@@ -88,8 +88,8 @@ class Anonymity(commands.Cog):
         else:
             await ctx.send("?")
 
-    @anon.command(aliases=["cower"])
     @commands.dm_only()
+    @anon.command(aliases=["cower"])
     async def hide(self, ctx):
         """Opt out of being anonymously messaged in your DMs. Undo with `unhide`."""
         if ctx.author in self.hiding:
@@ -115,8 +115,8 @@ class Anonymity(commands.Cog):
                 report = f" and disconnected {', '.join(xs)}, and {y}"
         await ctx.send(f"Alright, coward. Started blocking incoming connections{report}.")
 
-    @anon.command(aliases=["return"])
     @commands.dm_only()
+    @anon.command(aliases=["return"])
     async def unhide(self, ctx):
         """Reverse the effects of `hide`."""
         if ctx.author not in self.hiding:
@@ -135,6 +135,16 @@ class Anonymity(commands.Cog):
             await ctx.send("There's nobody here.")
         else:
             await ctx.send(f"{len(names)} user{'s'*(len(names)>1)} connected ({', '.join(names)})")
+
+    @commands.has_permissions(manage_nicknames=True)
+    @commands.guild_only()
+    @anon.command(aliases=["uncover", "reveal", "deanon", "de"])
+    async def see(self, ctx, *, target_name):
+        target_name = target_name.removeprefix("jan ")
+        for name, person in self.targets[ctx.channel]:
+            if name.removeprefix("jan ") == target_name:
+                return await ctx.send(f"That is {person}.")
+        await ctx.send("Nobody here is called that.")
 
     @commands.Cog.listener()
     async def on_message(self, message):
