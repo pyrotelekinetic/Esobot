@@ -5,6 +5,7 @@ import random
 import string
 import logging
 import traceback
+import itertools
 
 from unidecode import unidecode
 
