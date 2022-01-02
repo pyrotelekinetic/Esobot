@@ -130,12 +130,11 @@ class Anonymity(commands.Cog):
         k = (targeting.id, target.id)
         if not any(self.match_pat(k, x) for x in self.allow) or any(self.match_pat(k, x) for x in self.deny):
             return None
-        if self.names.get(str(targeting.id), (None, True))[1]:
-            self.names[str(targeting.id)] = [rand_name(self.names.values()), False]
-            self.save()
         new = (targeting.id, target.id)
         if new in self.conns:
             return (None, None)
+        if self.names.get(str(targeting.id), (None, True))[1]:
+            self.names[str(targeting.id)] = [rand_name(self.names.values()), False]
         old = self.end_session((targeting, None))
         self.conns.append(new)
         self.save()
