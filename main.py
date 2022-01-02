@@ -105,7 +105,7 @@ async def on_command_error(ctx, exc):
     ):
         return
 
-    command_name = ctx.command.name if ctx.command else "unknown command"
+    command_name = ctx.command.qualified_name if ctx.command else "unknown command"
     if isinstance(exc, commands.UserInputError):
         if isinstance(exc, commands.MissingRequiredArgument):
             description = f"Missing required argument `{exc.param.name}`."

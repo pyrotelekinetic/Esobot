@@ -159,6 +159,14 @@ class Anonymity(commands.Cog):
                 l.append(self.pred_objs(pred))
         return l
 
+    async def convert_user(self, ctx, s):
+        n = await commands.UserConverter().convert(ctx, s)
+        if n.bot:
+            await ctx.send("That's a bot.")
+            # muahaha
+            raise commands.CommandNotFound()
+        return n
+
     @commands.dm_only()
     @commands.group(invoke_without_command=True)
     async def anon(self, ctx, target: Union[discord.User, discord.TextChannel, discord.Thread]):
@@ -224,7 +232,7 @@ class Anonymity(commands.Cog):
             return await ctx.send("?")
         for u in l:
             await u[0].send("Your anonymous session was forcibly closed by the recipient opting out.")
-        names = [self.name_for(x) for x in l]
+        names = [self.name_for(x[0]) for x in l]
         match names:
             case []:
                 report = ""
@@ -248,22 +256,26 @@ class Anonymity(commands.Cog):
     @anon.command()
     async def block(self, ctx, *, name):
         """Block a particular anonymous user to stop them DMing you."""
-        n = self.one_with_name(name) or await commands.MemberConverter().convert(ctx, name)
+        n = self.one_with_name(name)
+        name_was_anon = True
+        if not n:
+             n = await self.convert_user(ctx, name)
+             name_was_anon = False
+
         l = self.disable((n, await self.ensure_channel(ctx.author)))
-        if l is None:
-            return await ctx.send("I think they were already blocked. All good, though.")
-        for u in l:
-            await u[0].send("Your anonymous session was forcibly closed by the recipient blocking you.")
-        report = " and disconnected them"*bool(l)
+        if l is not None:
+            for u in l:
+                await u[0].send("Your anonymous session was forcibly closed by the recipient blocking you.")
+
+        report = " and disconnected them"*(bool(l) and name_was_anon)
         await ctx.send(f"Alright. Blocked {name}{report}.")
 
     @commands.dm_only()
     @anon.command()
     async def unblock(self, ctx, *, name):
         """Unblock a user. Undoes `block`."""
-        n = self.one_with_name(name) or await commands.MemberConverter().convert(ctx, name)
-        if self.enable((n, await self.ensure_channel(ctx.author))):
-            return await ctx.send("I don't think you had them blocked. All good, though.")
+        n = self.one_with_name(name) or await self.convert_user(ctx, name)
+        self.enable((n, await self.ensure_channel(ctx.author)))
         await ctx.send(f"Okay, {name} can message you anonymously now.")
 
     @commands.has_permissions(manage_channels=True)
@@ -291,23 +303,21 @@ class Anonymity(commands.Cog):
     @anon.command()
     async def unmute(self, ctx, channel: Optional[discord.TextChannel] = None, *, name):
         """Unmute a user, reversing `mute`."""
-        n = self.one_with_name(name) or await commands.MemberConverter().convert(ctx, name)
+        n = self.one_with_name(name) or await self.convert_user(ctx, name)
         channel = channel or ctx.channel
-        if self.enable((n, channel)):
-            return await ctx.send("They... they weren't muted.")
+        self.enable((n, channel))
         await ctx.send("They're back.")
 
     @commands.has_permissions(kick_members=True)
     @anon.command()
     async def mute(self, ctx, channel: Optional[discord.TextChannel] = None, *, name):
         """Mute a user in a single channel, stopping them from being able to use anonymous messaging there."""
-        n = self.one_with_name(name) or await commands.MemberConverter().convert(ctx, name)
+        n = self.one_with_name(name) or await self.convert_user(ctx, name)
         channel = channel or ctx.channel
         l = self.disable((n, channel))
-        if l is None:
-            return await ctx.send("They're already muted. You don't need to insist.")
-        for u in l:
-            await u[0].send("Your anonymous session was closed forcibly because you were muted.")
+        if l is not None:
+            for u in l:
+                await u[0].send("Your anonymous session was closed forcibly because you were muted.")
         await ctx.send("They're gone.")
 
     @anon.command(aliases=["list"])
@@ -322,7 +332,7 @@ class Anonymity(commands.Cog):
     @commands.is_owner()
     @anon.command()
     async def halt(self, ctx, *, name):
-        n = self.one_with_name(name) or await commands.MemberConverter().convert(ctx, name)
+        n = self.one_with_name(name) or await self.convert_user(ctx, name)
         l = self.disable((n, None))
         if l is None:
             return await ctx.send("Not sure how you forgot that you already did that, but yeah, they were already super banned.")
@@ -333,7 +343,7 @@ class Anonymity(commands.Cog):
     @commands.is_owner()
     @anon.command()
     async def unhalt(self, ctx, *, name):
-        n = self.one_with_name(name) or await commands.MemberConverter().convert(ctx, name)
+        n = self.one_with_name(name) or await self.convert_user(ctx, name)
         if self.enable((n, None)):
             return await ctx.send("No, they were alright, actually. They weren't banned.")
         await ctx.send("'Tis the season for forgiveness. Unless it isn't Christmas time any more. It roughly was at the time of writing. Anyway, they're unbanned.")
