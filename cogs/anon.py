@@ -31,12 +31,12 @@ class Anonymity(commands.Cog):
         allow = []
         deny = []
         conns = []
-        for x, y in self.data["allow"]:
-            allow.append((x, y))
-        for x, y in self.data["deny"]:
-            deny.append((x, y))
-        for x, y in self.data["conns"]:
-            conns.append((x, y))
+        for t in self.data["allow"]:
+            allow.append(tuple(t))
+        for t in self.data["deny"]:
+            deny.append(tuple(t))
+        for t in self.data["conns"]:
+            conns.append(tuple(t))
         self.data["allow"] = allow
         self.data["deny"] = deny
         self.data["conns"] = conns
@@ -95,40 +95,52 @@ class Anonymity(commands.Cog):
     def targeting(self, t):
         return [targeting for targeting, target in self.conns if target == t.id]
 
-    def add_rule(self, rules, pat):
-        if pat in rules:
-            return False
-        rules.append(pat)
+    def add_rule(self, rules, pat, tag):
+        to_add = *pat, tag
+        if tag is None:
+            if to_add in rules:
+                return False
+        else:
+            if any(this_tag == tag for _, _, this_tag in rules):
+                return True
+        rules.append(to_add)
         return True
 
-    def remove_rule(self, rules, pat):
-        try:
-            rules.remove(pat)
-        except ValueError:
-            return False
+    def remove_rule(self, rules, pat, tag):
+        if tag is None:
+            try:
+                rules.remove((*pat, tag))
+            except ValueError:
+                return False
+            else:
+                return True
         else:
-            return True
+            for i, (_, _, this_tag) in enumerate(rules):
+                if this_tag == tag:
+                    rules.pop(i)
+                    return True
+            return False
 
-    def disable(self, pat):
+    def disable(self, pat, tag=None):
         l = [self.end_session(x) for x in self.connections(pat)]
         pat = self.pat_ids(pat)
-        self.remove_rule(self.allow, pat)
-        if self.add_rule(self.deny, pat):
+        self.remove_rule(self.allow, pat, tag)
+        if self.add_rule(self.deny, pat, tag):
             self.save()  # it looks like this save is in the wrong place but it's actually fine
             return l
         else:
             return None
 
-    def enable(self, pat):
+    def enable(self, pat, tag=None):
         pat = self.pat_ids(pat)
-        self.remove_rule(self.deny, pat)
-        r = self.add_rule(self.allow, pat)
+        self.remove_rule(self.deny, pat, tag)
+        r = self.add_rule(self.allow, pat, tag)
         self.save()
         return not r
 
     def start_session(self, targeting, target):
         k = (targeting.id, target.id)
-        if not any(self.match_pat(k, x) for x in self.allow) or any(self.match_pat(k, x) for x in self.deny):
+        if not any(self.match_pat(k, x[:2]) for x in self.allow) or any(self.match_pat(k, x[:2]) for x in self.deny):
             return None
         new = (targeting.id, target.id)
         if new in self.conns:
@@ -158,13 +170,19 @@ class Anonymity(commands.Cog):
                 l.append(self.pred_objs(pred))
         return l
 
-    async def convert_user(self, ctx, s):
-        n = await commands.UserConverter().convert(ctx, s)
-        if n.bot:
-            await ctx.send("That's a bot.")
-            # muahaha
-            raise commands.CommandNotFound()
-        return n
+    async def take_user_arg(self, ctx, name):
+        n = self.one_with_name(name)
+        tag = name
+        dn = name
+        if not n:
+            n = await commands.UserConverter().convert(ctx, name)
+            if n.bot:
+                await ctx.send("That's a bot.")
+                # muahaha
+                raise commands.CommandNotFound()
+            tag = n.id
+            dn = n.display_name
+        return n, tag, dn
 
     @commands.dm_only()
     @commands.group(invoke_without_command=True)
@@ -255,27 +273,25 @@ class Anonymity(commands.Cog):
     @anon.command()
     async def block(self, ctx, *, name):
         """Block a particular anonymous user to stop them DMing you."""
-        n = self.one_with_name(name)
-        name_was_anon = True
-        if not n:
-             n = await self.convert_user(ctx, name)
-             name_was_anon = False
+        
+        n, tag, dn = await self.take_user_arg(ctx, name)
 
-        l = self.disable((n, await self.ensure_channel(ctx.author)))
-        if l is not None:
-            for u in l:
-                await u[0].send("Your anonymous session was forcibly closed by the recipient blocking you.")
+        l = self.disable((n, await self.ensure_channel(ctx.author)), tag)
+        if l is None:
+            return await ctx.send("You already have them blocked.")
+        for u in l:
+            await u[0].send("Your anonymous session was forcibly closed by the recipient blocking you.")
 
-        report = " and disconnected them"*(bool(l) and name_was_anon)
-        await ctx.send(f"Alright. Blocked {name}{report}.")
+        report = " and disconnected them"*(bool(l) and isinstance(n, str))
+        await ctx.send(f"Alright. Blocked {dn}{report}.")
 
     @commands.dm_only()
     @anon.command()
     async def unblock(self, ctx, *, name):
         """Unblock a user. Undoes `block`."""
-        n = self.one_with_name(name) or await self.convert_user(ctx, name)
-        self.enable((n, await self.ensure_channel(ctx.author)))
-        await ctx.send(f"Okay, {name} can message you anonymously now.")
+        n, tag, dn = await self.take_user_arg(ctx, name)
+        self.enable((n, await self.ensure_channel(ctx.author)), tag)
+        await ctx.send(f"Okay, {dn} can message you anonymously now.")
 
     @commands.has_permissions(manage_channels=True)
     @anon.command(name="enable")
@@ -302,18 +318,18 @@ class Anonymity(commands.Cog):
     @anon.command()
     async def unmute(self, ctx, channel: Optional[discord.TextChannel] = None, *, name):
         """Unmute a user, reversing `mute`."""
-        n = self.one_with_name(name) or await self.convert_user(ctx, name)
+        n, tag, _ = await self.take_user_arg(ctx, name)
         channel = channel or ctx.channel
-        self.enable((n, channel))
+        self.enable((n, channel), tag)
         await ctx.send("They're back.")
 
     @commands.has_permissions(kick_members=True)
     @anon.command()
     async def mute(self, ctx, channel: Optional[discord.TextChannel] = None, *, name):
         """Mute a user in a single channel, stopping them from being able to use anonymous messaging there."""
-        n = self.one_with_name(name) or await self.convert_user(ctx, name)
+        n, tag, _ = await self.take_user_arg(ctx, name)
         channel = channel or ctx.channel
-        l = self.disable((n, channel))
+        l = self.disable((n, channel), tag)
         if l is not None:
             for u in l:
                 await u[0].send("Your anonymous session was closed forcibly because you were muted.")
@@ -331,7 +347,7 @@ class Anonymity(commands.Cog):
     @commands.is_owner()
     @anon.command()
     async def halt(self, ctx, *, name):
-        n = self.one_with_name(name) or await self.convert_user(ctx, name)
+        n, _, _ = await self.take_user_arg(ctx, name)
         l = self.disable((n, None))
         if l is None:
             return await ctx.send("Not sure how you forgot that you already did that, but yeah, they were already super banned.")
@@ -342,7 +358,7 @@ class Anonymity(commands.Cog):
     @commands.is_owner()
     @anon.command()
     async def unhalt(self, ctx, *, name):
-        n = self.one_with_name(name) or await self.convert_user(ctx, name)
+        n, _, _ = await self.take_user_arg(ctx, name)
         if self.enable((n, None)):
             return await ctx.send("No, they were alright, actually. They weren't banned.")
         await ctx.send("'Tis the season for forgiveness. Unless it isn't Christmas time any more. It roughly was at the time of writing. Anyway, they're unbanned.")
