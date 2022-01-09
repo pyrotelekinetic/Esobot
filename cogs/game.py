@@ -386,6 +386,9 @@ class Games(commands.Cog):
             guess[submission_id] = user
             guessed_people.add(user)
 
+        if not guess:
+            return
+
         d["guesses"][str(message.author.id)] = guess
         save_json(CODE_GUESSING_SAVES, self.cg)
 
