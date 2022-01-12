@@ -149,6 +149,11 @@ class Temporary(commands.Cog):
         if ctx.guild.id == 346530916832903169:
             await self.bot.get_command("time")(ctx, user=ctx.guild.get_member(636797375184240640))
 
+    @kaylynn.command(hidden=True)
+    async def cute(self, ctx):
+        if ctx.guild.id == 346530916832903169:
+            await ctx.send("yeah!")
+
     @commands.Cog.listener()
     async def on_message(self, message):
         if message.author == self.bot.user and len(message.content.split()) == 10:
