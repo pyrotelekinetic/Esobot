@@ -56,7 +56,9 @@ class DismissButton(discord.ui.Button):
         super().__init__(style=discord.ButtonStyle.danger, label="Remove")
 
     async def callback(self, interaction):
-        self.view.cg["round"]["submissions"].pop(self.view.s['id'])
+        d = self.view.cg["round"]
+        if p := d["submissions"].pop(self.view.s['id']):
+            os.remove(filename_of_submission(p, d["round"]))
         save_json(CODE_GUESSING_SAVES, self.view.cg)
         await interaction.message.delete()
 
