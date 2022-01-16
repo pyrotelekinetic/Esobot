@@ -262,7 +262,7 @@ class Anonymity(commands.Cog):
         await ctx.send(f"Alright. Stopped incoming connections{report}.")
 
     @commands.dm_only()
-    @anon.command(aliases=["return", "opt-in", "in"])
+    @anon.command(aliases=["unhide", "return", "opt-in", "in"])
     async def optin(self, ctx):
         """Opt in to receiving messages anonymously in your DMs."""
         if self.enable((None, await self.ensure_channel(ctx.author))):
