@@ -292,7 +292,7 @@ class Games(commands.Cog):
             else:
                 guess = None
 
-        choices = ["Java", "C#", "PHP", "Python", "JavaScript", "WASM", "It's complicated"]
+        choices = ["Python", "C", "Rust", "JavaScript", "PHP", "It's complicated"]
         p = Prompt(message.author)
         if guess and guess.name in choices:
             choices.remove(guess.name)
