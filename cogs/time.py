@@ -71,7 +71,7 @@ class Time(commands.Cog):
             await show_error(ctx, message, "Timezone not set")
         else:
             embed = make_embed(
-                title=f"{user.name}'s time",
+                title=f"{user.display_name}'s time",
                 description=time,
                 color=colors.EMBED_SUCCESS,
             )
