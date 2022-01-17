@@ -421,7 +421,8 @@ class Games(commands.Cog):
         if not warnings:
             await message.channel.send("Guess registered. You can re-submit your guesses at any time.")
         else:
-            await message.channel.send(f"Guess registered with {len(warnings)} warnings:\n{'\n'.join(warnings)}\nYou can re-submit your guesses at any time.")
+            warning_list = '\n'.join(f"- {s}" for s in warnings)
+            await message.channel.send(f"Guess registered with {len(warnings)} warnings:\n{warning_list}\nYou can re-submit your guesses at any time.")
 
     @commands.Cog.listener("on_message")
     async def on_message_cg(self, message):
