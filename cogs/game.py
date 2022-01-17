@@ -404,7 +404,8 @@ class Games(commands.Cog):
 
             guess[submission_id] = user
             guessed_people.add(user)
-            likes.append(user)
+            if liked:
+                likes.append(user)
 
         if not guess:
             return
