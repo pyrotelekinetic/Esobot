@@ -104,9 +104,14 @@ class Games(commands.Cog):
                 self.ideas.pop(i)
                 continue
             if idea.endswith("idea:"):
-                idea_extra = await msg.channel.history(after=msg, check=lambda m: m.author == msg.author, limit=1).flatten()
-                idea += "\n"
-                idea += idea_extra[0].content
+                idea_extra = None
+                async for m in msg.channel.history(after=msg, limit=5):
+                    if m.author == msg.author:
+                        idea_extra = m.content
+                        break
+                if idea_extra is not None:
+                    idea += "\n"
+                    idea += idea_extra[0].content
             await ctx.send(f"{msg.jump_url}\n{msg.content}", allowed_mentions=discord.AllowedMentions(everyone=False, roles=False, users=False))
             break
 
