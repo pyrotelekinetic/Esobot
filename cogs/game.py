@@ -360,6 +360,8 @@ class Games(commands.Cog):
             liked = index_s.endswith("*")
             if liked:
                 index_s = index_s[:-1]
+                if user == str(message.author.id):
+                    warnings.append("You can't like your own submission.")
 
             try:
                 index = int(index_s.strip().lstrip("#"))
