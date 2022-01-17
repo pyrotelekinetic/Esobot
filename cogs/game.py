@@ -252,7 +252,8 @@ class Games(commands.Cog):
             assert d["stage"] == 2
             await ctx.send(embed=discord.Embed(description=f"The current round is in stage 2 (guessing). Look at the list of submissions and try to figure out who wrote what. "
                                                             "Once you're done, submit your guesses like this (it should be a bijection from entry to user):\n"
-                                                            "```\n1: lyricly\n2: christina\n3: i-have-no-other-names\n```"))
+                                                            "```\n1: lyricly\n2*: christina\n3: i-have-no-other-names\n```\n"
+                                                            "You can vote for submissions you liked by adding an asterisk after the number."))
 
     @commands.has_role("Event Managers")
     @codeguess.command()
@@ -268,7 +269,7 @@ class Games(commands.Cog):
         if "round" in self.cg:
             return await ctx.send("There's already a game running, though?", delete_after=2)
         shutil.rmtree(f"./config/code_guessing/{round_num}", ignore_errors=True)
-        self.cg["round"] = {"round": round_num, "stage": 1, "submissions": {}, "guesses": {}}
+        self.cg["round"] = {"round": round_num, "stage": 1, "submissions": {}, "guesses": {}, "likes": {}}
         save_json(CODE_GUESSING_SAVES, self.cg)
         await ctx.send("All right! Keep in mind that to submit your entry, you just have to DM me the program as an attachment (the filename **will not** be secret) and I'll do the rest. "
                        "Good luck and have fun.")
@@ -342,64 +343,85 @@ class Games(commands.Cog):
         d = self.cg["round"]
         guess = {}
         guessed_people = set()
+        likes = []
         submissions = list(filter(None, d["submissions"].values()))
         submissions.sort(key=lambda e: filename_of_submission(e, d["round"]))
+        warnings = []
 
         for line in message.content.strip("`").splitlines():
             if not line.strip():
                 continue
 
             if ":" not in line:
-                return await message.channel.send(f"Invalid line `{line}` found during parsing. All lines must be of the form `#<num>: <name>`. Aborting.")
+                warnings.append(f"Invalid line `{line}`. Lines should be of the form `#<num>[*]: <name>`.")
+                continue
             index_s, user_s = line.split(":")
+
+            liked = index_s.endswith("*")
+            if liked:
+                index_s = index_s[:-1]
 
             try:
                 index = int(index_s.strip().lstrip("#"))
             except ValueError:
-                return await message.channel.send(f"Invalid index '{index_s}' found while parsing guess. Aborting.")
+                warnings.append(f"Invalid index '{index_s}'.")
+                continue
 
             user = discord.utils.find(
                 lambda us: aggressive_normalize(user_s) in map(aggressive_normalize, filter(None, (self.get_user_name(int(us)), us))),
                 d["submissions"],
             )
             if user is None:
-                return await message.channel.send(f"Unknown user '{user_s}'. Aborting.")
+                warnings.append(f"Unknown user '{user_s}'.")
+                continue
 
             if index == 0:
-                return await message.channel.send("Index 0 is out of bounds. These are 1-indexed. Aborting.")
+                warnings.append("Index 0 is out of bounds. These are 1-indexed.")
+                continue
             elif index < 0:
-                return await message.channel.send("Negative indices are inappropriate. Aborting.")
+                warnings.append("Negative indices are inappropriate.")
+                continue
             elif index > len(d["submissions"]):
-                return await message.channel.send(f"Index {index} is out of bounds as there are only {len(d['submissions'])} submissions. Aborting.")
+                warnings.append(f"Index {index} is out of bounds as there are only {len(d['submissions'])} submissions.")
+                continue
 
             submission_id = submissions[index-1]['id']
             if submission_id in guess:
-                return await message.channel.send(f"Duplicate guess for {index} found. Guesses are bijections. This is terrible. Aborting.")
+                warnings.append(f"Duplicate guess for {index} found. Guesses should be bijections.")
+                continue
             if user in guessed_people:
-                return await message.channel.send(f"Duplicate guess for {user_s} found. Guesses are bijections. This is terrible. Aborting.")
+                warnings.append(f"Duplicate guess for {user_s} found. Guesses are bijections. This is terrible. Aborting.")
+                continue
 
             if user == submission_id == str(message.author.id):
                 continue
             elif str(message.author.id) == user:
-                return await message.channel.send("You guessed yourself for the wrong submission, dummy. Aborting, I guess?")
+                warnings.append("You guessed yourself for the wrong submission.")
+                continue
             elif str(message.author.id) == submission_id:
-                return await message.channel.send("How did you guess your own solution wrong? Aborting for your own good.")
+                warnings.append("You guessed your own submission incorrectly.")
+                continue
 
             guess[submission_id] = user
             guessed_people.add(user)
+            likes.append(user)
 
         if not guess:
             return
 
         d["guesses"][str(message.author.id)] = guess
+        d["likes"][str(message.author.id)] = likes
         save_json(CODE_GUESSING_SAVES, self.cg)
 
         if len(guess) != len(d["submissions"])-1:
-            await message.channel.send(f"I registered your guess, but I noticed that you haven't put in a guess for every entry (you guessed {len(guess)}, but there are {len(d['submissions'])}). "
-                                       "This is allowed, but there's no reason to do it, as there's no penalty for guessing wrong. Consider putting in a few extra random guesses to maybe score "
-                                       "some extra points! Just as with your code submission, you can re-submit your guesses at any time.")
+            warnings.append("You haven't put in a guess for every entry (you guessed {len(guess)}, but there are {len(d['submissions'])-1} to guess).")
+        if not likes:
+            warnings.append("You didn't like any of the entries? :( (Remember you can put a `*` after a number if you liked that entry.)")
+
+        if not warnings:
+            await message.channel.send("Guess registered. You can re-submit your guesses at any time.")
         else:
-            await message.channel.send("Guess registered. Have a swell day. Just as with your code submission, you can re-submit your guesses at any time.")
+            await message.channel.send(f"Guess registered with {len(warnings)} warnings:\n{'\n'.join(warnings)}\nYou can re-submit your guesses at any time.")
 
     @commands.Cog.listener("on_message")
     async def on_message_cg(self, message):
@@ -461,9 +483,14 @@ class Games(commands.Cog):
             submissions = list(d["submissions"].values())
             submissions.sort(key=lambda e: filename_of_submission(e, d["round"]))
 
+            like_counts = {i: 0 for i in d["submissions"]}
+            for likes in d["likes"].values():
+                for like in likes:
+                    like_counts[like] += 1
+
             f.write("correct answers:\n")
             for idx, user in enumerate(submissions, start=1):
-                f.write(f"#{idx}: {self.get_user_name(user['id'])}\n")
+                f.write(f"#{idx}: {self.get_user_name(user['id'])} ({like_counts[user['id']]} likes)\n")
 
             f.write("\n\npeople's guesses:\n")
             for user, guess in d["guesses"].items():
