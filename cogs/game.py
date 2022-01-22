@@ -422,7 +422,7 @@ class Games(commands.Cog):
         save_json(CODE_GUESSING_SAVES, self.cg)
 
         if len(guess) != len(d["submissions"])-1:
-            warnings.append("You haven't put in a guess for every entry (you guessed {len(guess)}, but there are {len(d['submissions'])-1} to guess).")
+            warnings.append(f"You haven't put in a guess for every entry. (you guessed {len(guess)}, but there are {len(d['submissions'])-1} to guess)")
         if not likes:
             warnings.append("You didn't like any of the entries? :( (Remember you can put a `*` after a number if you liked that entry.)")
 

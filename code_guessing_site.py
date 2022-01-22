@@ -42,7 +42,7 @@ def show_round(roundnum):
     if "results.txt" in l:
         l.remove("results.txt")
         parsed_results = []
-        with open("./config/code_guessing/{roundnum}/result.txt") as f:
+        with open(f"./config/code_guessing/{roundnum}/results.txt") as f:
             next(f)
             for line in f:
                 p = line.strip()
@@ -76,7 +76,7 @@ def show_round(roundnum):
                 link = "/10/games/xii.html"
             elif idx == 7:
                 link = "/10/games/main.html"
-            entries += f'<h2 id="{idx}"><a href="{link}">entry #{idx}</a> (source: <a href="/{roundnum}/{entry}">{entry.split(":", 1)[1]}</a>)</h2>'
+            entries += f'<h2 id="{idx}"><a href="{link}">entry #{idx}</a> by {parsed_results[idx-1]} (source: <a href="/{roundnum}/{entry}">{entry.split(":", 1)[1]}</a>)</h2>'
         else:
             by = " by " + parsed_results[idx-1] if parsed_results else ""
             entries += f'<h2 id="{idx}">entry #{idx} (<a href="/{roundnum}/{entry}">{entry.split(":", 1)[1]}</a>{by})</h2>'
@@ -91,7 +91,7 @@ def show_round(roundnum):
     style = formatter.get_style_defs()
     if roundnum not in (9, 10):
         if parsed_results:
-            contents = "<br>".join(f'<a href="#{idx}">entry #{idx} by {r}</a>' for idx, r in enumerate(parsed_results, start=1))
+            contents = "<br>".join(f'<a href="#{idx}">entry #{idx}</a> by {r}' for idx, r in enumerate(parsed_results, start=1))
         else:
             contents = "<br>".join(f'<a href="#{idx}">entry #{idx}</a>' for idx in range(1, len(l)+1))
     else:
@@ -114,7 +114,7 @@ def show_round(roundnum):
     <p>all the submissions received this round follow. naturally, they have been randomly shuffled.</p>
     {p}
     {t}
-    <h2>"table" of "contents".</h2>
+    <h2>table of contents</h2>
     {contents}
     {entries}
   </body>
