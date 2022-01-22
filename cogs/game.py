@@ -362,6 +362,14 @@ class Games(commands.Cog):
                 continue
             index_s, user_s = line.split(":")
 
+            user = discord.utils.find(
+                lambda us: aggressive_normalize(user_s) in map(aggressive_normalize, filter(None, (self.get_user_name(int(us)), us))),
+                d["submissions"],
+            )
+            if user is None:
+                warnings.append(f"Unknown user '{user_s}'.")
+                continue
+
             liked = index_s.endswith("*")
             if liked:
                 index_s = index_s[:-1]
@@ -372,14 +380,6 @@ class Games(commands.Cog):
                 index = int(index_s.strip().lstrip("#"))
             except ValueError:
                 warnings.append(f"Invalid index '{index_s}'.")
-                continue
-
-            user = discord.utils.find(
-                lambda us: aggressive_normalize(user_s) in map(aggressive_normalize, filter(None, (self.get_user_name(int(us)), us))),
-                d["submissions"],
-            )
-            if user is None:
-                warnings.append(f"Unknown user '{user_s}'.")
                 continue
 
             if index == 0:
