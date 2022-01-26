@@ -5,7 +5,7 @@ import os
 import re
 import shutil
 import uuid
-from collections import defaultdict
+from collections import defaultdict, Counter
 
 import requests
 import pygments
@@ -323,8 +323,56 @@ class Games(commands.Cog):
             "WASM": None,
             "It's complicated": None,
         }[lang]
+
+        await message.channel.send("Which people are you trying to impersonate with this? List people (IDs, usernames, normalized-usernames, @mentions), one per line, most preferred first. "
+                                   "The first person in your list who submits an entry this round will be used. You'll get an extra point for everyone who thinks your submission was written by them.")
+        resp = await self.bot.wait_for("message", check=lambda m: m.channel == message.channel and m.author == message.author)
+        marks = []
+        for line in resp.content.strip("`").strip().splitlines():
+            try:
+                user = await commands.MemberConverter().convert(await self.bot.get_context(message), line)
+            except commands.MemberNotFound:
+                user = discord.utils.find(
+                    lambda us: line == self.get_user_name(us.id),
+                    self.bot.users,
+                )
+                if not user:
+                    return await message.channel.send(f"I don't know who '{line}' is supposed to be.")
+            marks.append(user.id)
+
+        c = Counter()
+        listdir = os.listdir("config/code_guessing/")
+        rounds = len(listdir)
+        for d in listdir:
+            try:
+                with open(f"config/code_guessing/{d}/people") as f:
+                    c.update(f.read().splitlines())
+            except FileNotFoundError:
+                pass
+        # lol
+        c["camto"] += c["feed-the-machine"]
+
+        current_prob = 1.0
+        probabilities = []
+        for mark in marks:
+            name = self.get_user_name(mark)
+            p = c[name] / rounds
+            probabilities.append((current_prob*p, name))
+            current_prob *= 1.0-p
+        if current_prob:
+            probabilities.append((current_prob, "Nobody at all"))
+        probabilities.sort(reverse=True)
+
+        table = "```ansi\n"
+        for prob, name in probabilities:
+            s = f"{name:<40}{prob*100:.2f}%"
+            if prob == 0.0 or name == "Nobody at all":
+                s = f"\033[0;31m{s}\033[0m"
+            table += s + "\n"
+        table += "```"
+
         i = str(message.author.id)
-        sub = {"id": i, "filename": attachment.filename, "tested": False, "language": shortname, "uuid": str(uuid.uuid4())}
+        sub = {"id": i, "filename": attachment.filename, "tested": False, "language": shortname, "uuid": str(uuid.uuid4()), "marks": marks}
         if i in d["submissions"]:
             os.remove(filename_of_submission(d["submissions"][i], d["round"]))
         d["submissions"][i] = sub
@@ -335,14 +383,9 @@ class Games(commands.Cog):
         with open(filename, "wb") as f:
             f.write(code)
 
-        if code_str is None:
-            await message.channel.send("I successfully submitted your entry, but I noticed that the file isn't encoded in valid UTF-8. "
-                                       "That could cause issues or something, so maybe don't do that. Your call, though. I'm just letting you know. "
-                                       "You'll be informed of any problems found while testing. Just resubmit if there are any issues. "
-                                       "If you need to talk anonymously to the event managers, send an anonymous message with `!anon LyricLy`.")
-        else:
-            await message.channel.send("Successfully submitted your entry. You'll be informed of any problems found while testing. Just resubmit if there are any issues. "
-                                       "If you need to talk anonymously to the event managers, send an anonymous message with `!anon LyricLy`.")
+        await message.channel.send("Successfully submitted your entry. You'll be informed of any problems found while testing. Just resubmit if there are any issues. "
+                                   "If you need to talk anonymously to the event managers, send an anonymous message with `!anon LyricLy`.\n\n"
+                                   f"The approximate chances of each person in your list being picked, based on their activity in previous rounds, is as follows:\n{table}")
 
     async def take_guesses(self, message):
         d = self.cg["round"]
@@ -370,11 +413,12 @@ class Games(commands.Cog):
                 warnings.append(f"Unknown user '{user_s}'.")
                 continue
 
-            liked = index_s.endswith("*")
-            if liked:
+            if index_s.endswith("*"):
                 index_s = index_s[:-1]
                 if user == str(message.author.id):
                     warnings.append("You can't like your own submission.")
+                else:
+                    likes.append(user)
 
             try:
                 index = int(index_s.strip().lstrip("#"))
@@ -411,8 +455,6 @@ class Games(commands.Cog):
 
             guess[submission_id] = user
             guessed_people.add(user)
-            if liked:
-                likes.append(user)
 
         if not guess:
             return
@@ -492,14 +534,19 @@ class Games(commands.Cog):
             submissions = list(d["submissions"].values())
             submissions.sort(key=lambda e: filename_of_submission(e, d["round"]))
 
-            like_counts = {i: 0 for i in d["submissions"]}
+            marks = {}
+            for submission in submissions:
+                for mark in submission.get("marks", ()):
+                    if mark in d["submissions"]:
+                        marks[submission["id"]] = mark
+                        break
+            like_counts = Counter()
             for likes in d["likes"].values():
-                for like in likes:
-                    like_counts[like] += 1
+                like_counts.update(likes)
 
             f.write("correct answers:\n")
             for idx, user in enumerate(submissions, start=1):
-                f.write(f"#{idx}: {self.get_user_name(user['id'])} ({like_counts[user['id']]} likes)\n")
+                f.write(f"#{idx}: {self.get_user_name(user['id'])} ({like_counts[user['id']]} likes, impersonation target {self.get_user_name(marks[user['id']])})\n")
 
             f.write("\n\npeople's guesses:\n")
             for user, guess in d["guesses"].items():
@@ -514,6 +561,8 @@ class Games(commands.Cog):
                         good[user] += 1
                         bad[actual] += 1
                     else:
+                        if marks[actual] == guessed:
+                            good[actual] += 1
                         f.write(f"[X] #{idx} incorrectly as {self.get_user_name(guessed)} (was {self.get_user_name(actual)})\n")
 
             f.write("\n\nscores this round:\n")
