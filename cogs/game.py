@@ -338,6 +338,8 @@ class Games(commands.Cog):
                 )
                 if not user:
                     return await message.channel.send(f"I don't know who '{line}' is supposed to be.")
+                if user == message.author:
+                    return await message.channel.send("You can't use yourself.")
             marks.append(user.id)
 
         c = Counter()
@@ -365,7 +367,7 @@ class Games(commands.Cog):
 
         table = "```ansi\n"
         for prob, name in probabilities:
-            s = f"{name:<40}{prob*100:.2f}%"
+            s = f"{name:<36}{prob*100:.2f}%"
             if prob == 0.0 or name == "Nobody at all":
                 s = f"\033[0;31m{s}\033[0m"
             table += s + "\n"
