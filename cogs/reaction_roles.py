@@ -78,13 +78,13 @@ class ReactionRoles(commands.Cog, name="Reaction roles"):
             current_emoji = list(old_pairs) if old_pairs else []
             target_emoji = list(pairs)
 
-            if target_emoji[:len(current_emoji)] == current_emoji:
-                for emoji in target_emoji[len(current_emoji):]:
-                    await msg.add_reaction(emoji)
-            else:
-                await msg.clear_reactions()
-                for emoji in target_emoji:
-                    await msg.add_reaction(emoji)
+            for emoji in current_emoji:
+                try:
+                    target_emoji.remove(emoji)
+                except ValueError:
+                    pass
+            for emoji in target_emoji:
+                await msg.add_reaction(emoji)
 
             if channel_id:
                 self.messages[str(msg_id)] = {"origin": channel_id, "pairs": pairs}
