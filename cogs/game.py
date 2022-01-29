@@ -566,7 +566,7 @@ class Games(commands.Cog):
                         good[user] += 1
                         bad[actual] += 1
                     else:
-                        if marks[actual] == guessed:
+                        if marks.get(actual) == guessed:
                             good[actual] += 1
                         f.write(f"[X] #{idx} incorrectly as {self.get_user_name(guessed)} (was {self.get_user_name(actual)})\n")
 
