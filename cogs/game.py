@@ -548,7 +548,10 @@ class Games(commands.Cog):
 
             f.write("correct answers:\n")
             for idx, user in enumerate(submissions, start=1):
-                f.write(f"#{idx}: {self.get_user_name(user['id'])} ({like_counts[user['id']]} likes, impersonation target {self.get_user_name(marks[user['id']])})\n")
+                if mark := marks.get(user['id']):
+                    f.write(f"#{idx}: {self.get_user_name(user['id'])} ({like_counts[user['id']]} likes, impersonation target {mark})\n")
+                else:
+                    f.write(f"#{idx}: {self.get_user_name(user['id'])} ({like_counts[user['id']]} likes)\n")
 
             f.write("\n\npeople's guesses:\n")
             for user, guess in d["guesses"].items():
