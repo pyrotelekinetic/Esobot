@@ -349,9 +349,9 @@ class Games(commands.Cog):
         c = Counter()
         listdir = os.listdir("config/code_guessing/")
         rounds = len(listdir)
-        for d in listdir:
+        for dir in listdir:
             try:
-                with open(f"config/code_guessing/{d}/people") as f:
+                with open(f"config/code_guessing/{dir}/people") as f:
                     c.update(f.read().splitlines())
             except FileNotFoundError:
                 pass
