@@ -167,7 +167,9 @@ class Anonymity(commands.Cog):
         l = []
         for pred in self.conns:
             if self.match_pat(pred, pat):
-                l.append(self.pred_objs(pred))
+                objs = self.pred_objs(pred)
+                if objs[0]:
+                    l.append(objs)
         return l
 
     async def take_user_arg(self, ctx, name):
@@ -394,7 +396,10 @@ class Anonymity(commands.Cog):
             # don't relay ourselves in DMs
             if not message.guild and (message.author == self.bot.user or message.content.startswith("!")):
                 continue
-            await connection[0].send(f"<{message.author.display_name}> {message.content}", embeds=message.embeds, files=[await f.to_file() for f in message.attachments])
+            try:
+                await connection[0].send(f"<{message.author.display_name}> {message.content}", embeds=message.embeds, files=[await f.to_file() for f in message.attachments])
+            except discord.Forbidden:
+                pass
 
 def setup(bot):
     bot.add_cog(Anonymity(bot))
