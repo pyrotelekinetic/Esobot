@@ -258,7 +258,7 @@ class Games(commands.Cog):
             await ctx.send(f"The current round is in stage 2 (guessing). Look at the list of submissions and try to figure out who wrote what. "
                             "Once you're done, submit your guesses like this (it should be a bijection from entry to user):\n"
                             "```\n1: lyricly\n2*: christina\n3: i-have-no-other-names\n```\n"
-                            "You can vote for submissions you liked by adding an asterisk after the number."))
+                            "You can vote for submissions you liked by adding an asterisk after the number.")
 
     @commands.has_role("Event Managers")
     @codeguess.command()
