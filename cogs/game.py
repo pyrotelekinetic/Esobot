@@ -255,10 +255,10 @@ class Games(commands.Cog):
                            "You didn't do anything last round, so there's nothing I can do for you. Come back next round.")
         else:
             assert d["stage"] == 2
-            await ctx.send(embed=discord.Embed(description=f"The current round is in stage 2 (guessing). Look at the list of submissions and try to figure out who wrote what. "
-                                                            "Once you're done, submit your guesses like this (it should be a bijection from entry to user):\n"
-                                                            "```\n1: lyricly\n2*: christina\n3: i-have-no-other-names\n```\n"
-                                                            "You can vote for submissions you liked by adding an asterisk after the number."))
+            await ctx.send(f"The current round is in stage 2 (guessing). Look at the list of submissions and try to figure out who wrote what. "
+                            "Once you're done, submit your guesses like this (it should be a bijection from entry to user):\n"
+                            "```\n1: lyricly\n2*: christina\n3: i-have-no-other-names\n```\n"
+                            "You can vote for submissions you liked by adding an asterisk after the number."))
 
     @commands.has_role("Event Managers")
     @codeguess.command()
@@ -266,6 +266,10 @@ class Games(commands.Cog):
         self.cg["kit"] = member.id
         p = get_pronouns(member)
         await ctx.send(f"{member.display_name} assigned as the stand-in for Kit. {p.pos_det.title()} name will be replaced with Kit's accordingly.")
+
+    @staticmethod
+    def get_deadline():
+        return discord.utils.format_dt(datetime.datetime.now()+datetime.timedelta(days=7), "D")
 
     @commands.has_role("Event Managers")
     @codeguess.command()
@@ -277,7 +281,7 @@ class Games(commands.Cog):
         self.cg["round"] = {"round": round_num, "stage": 1, "submissions": {}, "guesses": {}, "likes": {}}
         save_json(CODE_GUESSING_SAVES, self.cg)
         await ctx.send("All right! Keep in mind that to submit your entry, you just have to DM me the program as an attachment (the filename **will not** be secret) and I'll do the rest. "
-                       "Good luck and have fun.")
+                       f"Good luck and have fun. The deadline is {self.get_deadline()}.")
 
     async def take_submission(self, message):
         d = self.cg["round"]
@@ -515,7 +519,7 @@ class Games(commands.Cog):
         d["stage"] = 2
         save_json(CODE_GUESSING_SAVES, self.cg)
         await ctx.send(embed=discord.Embed(description=f"You can no longer send submissions, and the guessing phase has begun. "
-                                                        "For more on how to guess, do `!cg` in <#457999277311131649>."))
+                                                       f"For more on how to guess, do `!cg` in <#457999277311131649>. The deadline is {self.get_deadline()}."))
 
     @commands.has_role("Event Managers")
     @codeguess.command(aliases=["end"])
