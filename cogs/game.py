@@ -354,7 +354,7 @@ class Games(commands.Cog):
                 with open(f"config/code_guessing/{dir}/people") as f:
                     c.update(f.read().splitlines())
             except FileNotFoundError:
-                pass
+                rounds -= 1
         # lol
         c["camto"] += c["feed-the-machine"]
 
