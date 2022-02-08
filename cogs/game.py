@@ -24,7 +24,7 @@ domain = f"http://{ip}:7001"
 
 def filename_of_submission(sub, roundnum):
     ext = f".{sub['language']}" if sub['language'] else ""
-    len = f"{sub['length']}-" if sub['length'] else ""
+    len = f"{sub['length']:06}-" if sub['length'] else ""
     return f"./config/code_guessing/{roundnum}/{len}{sub['uuid']}{ext}:{sub['filename']}"
 
 def is_idea_message(content):
