@@ -532,20 +532,24 @@ class Games(commands.Cog):
 
         good = defaultdict(int)
         bad = defaultdict(int)
+        bonus = defaultdict(int)
+
+        def total_score(u):
+            return good[u] + bonus[u] - bad[u]
+
+        submissions = self.submissions
+
+        marks = {}
+        for submission in submissions:
+            for mark in submission.get("marks", ()):
+                if mark in d["submissions"]:
+                    marks[submission["id"]] = mark
+                    break
+        like_counts = Counter()
+        for likes in d["likes"].values():
+            like_counts.update(likes)
 
         with open(f"./config/code_guessing/{d['round']}/results.txt", "w+") as f:
-            submissions = self.submissions
-
-            marks = {}
-            for submission in submissions:
-                for mark in submission.get("marks", ()):
-                    if mark in d["submissions"]:
-                        marks[submission["id"]] = mark
-                        break
-            like_counts = Counter()
-            for likes in d["likes"].values():
-                like_counts.update(likes)
-
             f.write("correct answers:\n")
             for idx, user in enumerate(submissions, start=1):
                 if mark := marks.get(user['id']):
@@ -567,12 +571,15 @@ class Games(commands.Cog):
                         bad[actual] += 1
                     else:
                         if marks.get(actual) == guessed:
-                            good[actual] += 1
-                        f.write(f"[X] #{idx} incorrectly as {self.get_user_name(guessed)} (was {self.get_user_name(actual)})\n")
+                            bonus[actual] += 1
+                            word = "as planned by"
+                        else:
+                            word = "was"
+                        f.write(f"[X] #{idx} incorrectly as {self.get_user_name(guessed)} ({word} {self.get_user_name(actual)})\n")
 
             f.write("\n\nscores this round:\n")
-            for user in sorted(d["submissions"], key=lambda u: good[u] - bad[u], reverse=True):
-                f.write(f"{self.get_user_name(user)} +{good[user]} -{bad[user]} = {good[user] - bad[user]}\n")
+            for user in sorted(d["submissions"], key=total_score, reverse=True):
+                f.write(f"{self.get_user_name(user)} +{good[user]} ~{bonus[user]} -{bad[user]} = {total_score(user)}\n")
 
             f.seek(0)
             self.cg.pop("round")
