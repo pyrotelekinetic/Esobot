@@ -23,10 +23,9 @@ domain = f"http://{ip}:7001"
 
 
 def filename_of_submission(sub, roundnum):
-    if sub['language']:
-        return f"./config/code_guessing/{roundnum}/{sub['uuid']}.{sub['language']}:{sub['filename']}"
-    else:
-        return f"./config/code_guessing/{roundnum}/{sub['uuid']}:{sub['filename']}"
+    ext = f".{sub['language']}" if sub['language'] else ""
+    len = f"{sub['length']}-" if sub['length'] else ""
+    return f"./config/code_guessing/{roundnum}/{len}{sub['uuid']}{ext}:{sub['filename']}"
 
 def is_idea_message(content):
     return bool(re.match(r".*\bidea\s*:", content))
@@ -238,8 +237,12 @@ class Games(commands.Cog):
 
 
     def get_user_name(self, user_id):
-        user_id = int(user_id)
-        return "-".join((self.bot.get_user(user_id).name.lower() if user_id != self.cg["kit"] else "kit").split())
+        return "-".join(self.bot.get_user(int(user_id)).name.lower().split())
+
+    @property
+    def submissions(self):
+        d = self.cg["round"]
+        return sorted(filter(None, self.cg["round"]["submissions"].values()), key=lambda e: filename_of_submission(e, d["round"]))
 
     @commands.group(invoke_without_command=True, aliases=["cg", "codeguessing"])
     async def codeguess(self, ctx):
@@ -260,16 +263,9 @@ class Games(commands.Cog):
                             "```\n1: lyricly\n2*: christina\n3: i-have-no-other-names\n```\n"
                             "You can vote for submissions you liked by adding an asterisk after the number.")
 
-    @commands.has_role("Event Managers")
-    @codeguess.command()
-    async def kit(self, ctx, member: discord.Member):
-        self.cg["kit"] = member.id
-        p = get_pronouns(member)
-        await ctx.send(f"{member.display_name} assigned as the stand-in for Kit. {p.pos_det.title()} name will be replaced with Kit's accordingly.")
-
     @staticmethod
-    def get_deadline():
-        return discord.utils.format_dt(datetime.datetime.now()+datetime.timedelta(days=7), "D")
+    def get_deadline(days):
+        return discord.utils.format_dt(datetime.datetime.now()+datetime.timedelta(days=days), "D")
 
     @commands.has_role("Event Managers")
     @codeguess.command()
@@ -281,7 +277,7 @@ class Games(commands.Cog):
         self.cg["round"] = {"round": round_num, "stage": 1, "submissions": {}, "guesses": {}, "likes": {}}
         save_json(CODE_GUESSING_SAVES, self.cg)
         await ctx.send("All right! Keep in mind that to submit your entry, you just have to DM me the program as an attachment (the filename **will not** be secret) and I'll do the rest. "
-                       f"Good luck and have fun. The deadline is {self.get_deadline()}.")
+                       f"Good luck and have fun. The deadline is {self.get_deadline(7)}.")
 
     async def take_submission(self, message):
         d = self.cg["round"]
@@ -378,7 +374,7 @@ class Games(commands.Cog):
         table += "```"
 
         i = str(message.author.id)
-        sub = {"id": i, "filename": attachment.filename, "tested": False, "language": shortname, "uuid": str(uuid.uuid4()), "marks": marks}
+        sub = {"id": i, "filename": attachment.filename, "tested": False, "language": shortname, "uuid": str(uuid.uuid4()), "marks": marks, "length": len(code.splitlines())}
         if i in d["submissions"]:
             os.remove(filename_of_submission(d["submissions"][i], d["round"]))
         d["submissions"][i] = sub
@@ -398,8 +394,7 @@ class Games(commands.Cog):
         guess = {}
         guessed_people = set()
         likes = []
-        submissions = list(filter(None, d["submissions"].values()))
-        submissions.sort(key=lambda e: filename_of_submission(e, d["round"]))
+        submissions = self.submissions
         warnings = []
 
         for line in message.content.strip("`").splitlines():
@@ -438,7 +433,7 @@ class Games(commands.Cog):
             elif index < 0:
                 warnings.append("Negative indices are inappropriate.")
                 continue
-            elif index > len(d["submissions"]):
+            elif index > len(submissions):
                 warnings.append(f"Index {index} is out of bounds as there are only {len(d['submissions'])} submissions.")
                 continue
 
@@ -469,8 +464,8 @@ class Games(commands.Cog):
         d["likes"][str(message.author.id)] = likes
         save_json(CODE_GUESSING_SAVES, self.cg)
 
-        if len(guess) != len(d["submissions"])-1:
-            warnings.append(f"You haven't put in a guess for every entry. (you guessed {len(guess)}, but there are {len(d['submissions'])-1} to guess)")
+        if len(guess) != len(submissions)-1:
+            warnings.append(f"You haven't put in a guess for every entry. (you guessed {len(guess)}, but there are {len(submissions)-1} to guess)")
         if not likes:
             warnings.append("You didn't like any of the entries? :( (Remember you can put a `*` after a number if you liked that entry.)")
 
@@ -497,7 +492,7 @@ class Games(commands.Cog):
         d = self.cg["round"]
         if d["stage"] == 2:
             return await ctx.send("We're already in round 2, though...?")
-        for i, s in d["submissions"].items():
+        for s in self.submissions:
             if not s["tested"]:
                 await ctx.author.send(file=discord.File(filename_of_submission(s, d["round"]), s["filename"]), view=TestView(self.bot, self.cg, s))
 
@@ -510,16 +505,18 @@ class Games(commands.Cog):
         d = self.cg["round"]
         if d["stage"] == 2:
             return await ctx.send("We're already in round 2. Did you mean to do `!cg stop`?", delete_after=2)
-        if not all(s["tested"] for s in d["submissions"].values()):
+        if not all(s["tested"] for s in self.submissions):
             return await ctx.send("Easy there. There are untested submissions to attend to. Deal with them using `!cg test` first.", delete_after=2)
 
         with open(f"./config/code_guessing/{d['round']}/people", "w") as f:
-            f.write("\n".join(self.get_user_name(int(i)) for i in sorted(d["submissions"])))
+            people = [self.get_user_name(int(i)) for i in d["submissions"]]
+            people.sort()
+            f.write("\n".join(people))
 
         d["stage"] = 2
         save_json(CODE_GUESSING_SAVES, self.cg)
         await ctx.send(embed=discord.Embed(description=f"You can no longer send submissions, and the guessing phase has begun. "
-                                                       f"For more on how to guess, do `!cg` in <#457999277311131649>. The deadline is {self.get_deadline()}."))
+                                                       f"For more on how to guess, do `!cg` in <#457999277311131649>. The deadline is {self.get_deadline(4)}."))
 
     @commands.has_role("Event Managers")
     @codeguess.command(aliases=["end"])
@@ -537,8 +534,7 @@ class Games(commands.Cog):
         bad = defaultdict(int)
 
         with open(f"./config/code_guessing/{d['round']}/results.txt", "w+") as f:
-            submissions = list(d["submissions"].values())
-            submissions.sort(key=lambda e: filename_of_submission(e, d["round"]))
+            submissions = self.submissions
 
             marks = {}
             for submission in submissions:
