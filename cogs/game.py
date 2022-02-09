@@ -326,21 +326,30 @@ class Games(commands.Cog):
 
         await message.channel.send("Which people are you trying to impersonate with this? List people (IDs, usernames, normalized-usernames, @mentions), one per line, most preferred first. "
                                    "The first person in your list who submits an entry this round will be used. You'll get an extra point for everyone who thinks your submission was written by them.")
-        resp = await self.bot.wait_for("message", check=lambda m: m.channel == message.channel and m.author == message.author)
         marks = []
-        for line in resp.content.strip("`").strip().splitlines():
+        while True:
             try:
-                user = await commands.MemberConverter().convert(await self.bot.get_context(message), line)
-            except commands.MemberNotFound:
-                user = discord.utils.find(
-                    lambda us: line == self.get_user_name(us.id),
-                    self.bot.users,
-                )
-                if not user:
-                    return await message.channel.send(f"I don't know who '{line}' is supposed to be.")
-                if user == message.author:
-                    return await message.channel.send("You can't use yourself.")
-            marks.append(user.id)
+                resp = await self.bot.wait_for("message", check=lambda m: m.channel == message.channel and m.author == message.author, timeout=300)
+            except asyncio.TimeoutError:
+                await message.channel.send("Timed out.")
+                break
+            for line in resp.content.strip("`").strip().splitlines():
+                try:
+                    user = await commands.MemberConverter().convert(await self.bot.get_context(message), line)
+                except commands.MemberNotFound:
+                    user = discord.utils.find(
+                        lambda us: line == self.get_user_name(us.id),
+                        self.bot.users,
+                    )
+                    if not user:
+                        await message.channel.send(f"I don't know who '{line}' is supposed to be. Post another list.")
+                        break
+                    if user == message.author:
+                        await message.channel.send("You can't use yourself. Post another list.")
+                        break
+                marks.append(user.id)
+            else:
+                break
 
         c = Counter()
         listdir = os.listdir("config/code_guessing/")
