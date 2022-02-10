@@ -31,22 +31,22 @@ class DictSource(menus.ListPageSource):
         super().__init__(data, per_page=1)
 
     async def format_page(self, menu, entry):
-        jlpt = ["JLPT " + max(x.partition("-")[2] for x in entry_jlpt)] if (entry_jlpt := entry["jlpt"]) else []
-        common = ["common"] if "is_common" in entry and entry["is_common"] else []
-
         e = discord.Embed(
             title = f"Result #{menu.current_page + 1}",
             description = format_jp_entry(entry['japanese'][0])
         )
-        if common or jlpt:
-            e.title += f" ({', '.join(common + jlpt)})"
+        if tags := [
+            *(["common"]*entry.get("is_common", False)),
+            *sorted(f"JLPT {x.partition('-')[2]}" for x in entry.get("jlpt", []))[-1:],
+        ]:
+            e.title += f" ({', '.join(tags)})"
         for i, sense in enumerate(entry["senses"], start=1):
             e.add_field(
                 name = ", ".join(sense["parts_of_speech"]) if sense["parts_of_speech"] else "\u200b",
-                value = " | ".join(
-                    [f"{i}. " + "; ".join(sense["english_definitions"])] +
-                    [tags := ", ".join(f"*{x}*" for x in sense["tags"] + sense["info"])] * bool(tags)
-                ),
+                value = " | ".join([
+                    f"{i}. " + "; ".join(sense["english_definitions"]),
+                    *filter(None, [", ".join(f"*{x}*" for x in sense["tags"] + sense["info"])]),
+                ]),
                 inline=False
             )
         if len(entry["japanese"]) > 1:
