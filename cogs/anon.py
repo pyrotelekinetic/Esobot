@@ -102,7 +102,7 @@ class Anonymity(commands.Cog):
                 return False
         else:
             if any(this_tag == tag for _, _, this_tag in rules):
-                return True
+                return False
         rules.append(to_add)
         return True
 
@@ -172,7 +172,7 @@ class Anonymity(commands.Cog):
                     l.append(objs)
         return l
 
-    async def take_user_arg(self, ctx, name):
+    async def take_user_arg(self, ctx, name, context=None):
         n = self.one_with_name(name)
         tag = name
         dn = name
@@ -184,7 +184,7 @@ class Anonymity(commands.Cog):
                 raise commands.CommandNotFound()
             tag = n.id
             dn = n.display_name
-        return n, tag, dn
+        return n, [*context, tag], dn
 
     @commands.dm_only()
     @commands.group(invoke_without_command=True)
@@ -276,7 +276,7 @@ class Anonymity(commands.Cog):
     async def block(self, ctx, *, name):
         """Block a particular anonymous user to stop them DMing you."""
         
-        n, tag, dn = await self.take_user_arg(ctx, name)
+        n, tag, dn = await self.take_user_arg(ctx, name, ("block", ctx.author.id))
 
         l = self.disable((n, await self.ensure_channel(ctx.author)), tag)
         if l is None:
@@ -291,7 +291,7 @@ class Anonymity(commands.Cog):
     @anon.command()
     async def unblock(self, ctx, *, name):
         """Unblock a user. Undoes `block`."""
-        n, tag, dn = await self.take_user_arg(ctx, name)
+        n, tag, dn = await self.take_user_arg(ctx, name, ("block", ctx.author.id))
         if self.enable((n, await self.ensure_channel(ctx.author)), tag):
             return await ctx.send("They weren't blocked.")
         await ctx.send(f"Okay, {dn} can message you anonymously now.")
@@ -321,8 +321,8 @@ class Anonymity(commands.Cog):
     @anon.command()
     async def unmute(self, ctx, channel: Optional[discord.TextChannel] = None, *, name):
         """Unmute a user, reversing `mute`."""
-        n, tag, _ = await self.take_user_arg(ctx, name)
         channel = channel or ctx.channel
+        n, tag, _ = await self.take_user_arg(ctx, name, ("mute", channel.id))
         if self.enable((n, channel), tag):
             return await ctx.send("They weren't muted.")
         await ctx.send("They're back.")
@@ -331,8 +331,8 @@ class Anonymity(commands.Cog):
     @anon.command()
     async def mute(self, ctx, channel: Optional[discord.TextChannel] = None, *, name):
         """Mute a user in a single channel, stopping them from being able to use anonymous messaging there."""
-        n, tag, _ = await self.take_user_arg(ctx, name)
         channel = channel or ctx.channel
+        n, tag, _ = await self.take_user_arg(ctx, name, ("mute", channel.id))
         l = self.disable((n, channel), tag)
         if l is not None:
             for u in l:
