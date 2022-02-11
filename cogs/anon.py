@@ -292,7 +292,8 @@ class Anonymity(commands.Cog):
     async def unblock(self, ctx, *, name):
         """Unblock a user. Undoes `block`."""
         n, tag, dn = await self.take_user_arg(ctx, name)
-        self.enable((n, await self.ensure_channel(ctx.author)), tag)
+        if self.enable((n, await self.ensure_channel(ctx.author)), tag):
+            return await ctx.send("They weren't blocked.")
         await ctx.send(f"Okay, {dn} can message you anonymously now.")
 
     @commands.has_permissions(manage_channels=True)
@@ -322,7 +323,8 @@ class Anonymity(commands.Cog):
         """Unmute a user, reversing `mute`."""
         n, tag, _ = await self.take_user_arg(ctx, name)
         channel = channel or ctx.channel
-        self.enable((n, channel), tag)
+        if self.enable((n, channel), tag):
+            return await ctx.send("They weren't muted.")
         await ctx.send("They're back.")
 
     @commands.has_permissions(kick_members=True)
