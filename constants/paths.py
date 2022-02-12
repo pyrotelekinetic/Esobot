@@ -6,4 +6,4 @@ REACTION_ROLE_SAVES = "reaction_roles.json"
 CODE_GUESSING_SAVES = "code_guessing.json"
 IDEA_SAVES = "ideas.json"
 ANON_SAVES = "anon.json"
-SAVE_FILES = {TIME_SAVES: "{}", EVENT_SAVES: "{}", HUB_SAVES: "[{},{}]", REACTION_ROLE_SAVES: "{}", CODE_GUESSING_SAVES: '{"scores": {}}', IDEA_SAVES: '[]', ANON_SAVES: '{"allow": [], "deny": [], "names": {}, "conns": []}'}
+SAVE_FILES = {TIME_SAVES: "{}", EVENT_SAVES: "{}", HUB_SAVES: "[{},{}]", REACTION_ROLE_SAVES: "{}", CODE_GUESSING_SAVES: '{}', IDEA_SAVES: '[]', ANON_SAVES: '{"allow": [], "deny": [], "names": {}, "conns": []}'}

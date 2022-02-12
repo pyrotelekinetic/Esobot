@@ -133,11 +133,11 @@ class Games(commands.Cog):
             412764872816852994,
             415981720286789634,
             445375649511768074,
-            348697452712427522
+            348697452712427522,
         ]))
 
-        # this doesn't uniformly pick a random message: it strongly prefers messages sent after longer pauses, however this is a trade-off for an incredibly cheap getting oper-
-        # ation which doesn't require spamming calls or storing data
+        # this doesn't uniformly pick a random message: it strongly prefers messages sent after longer pauses
+        # however this is a trade-off for making it incredibly cheap to grab a message because we don't have to spam history calls or store any data
         base = datetime.datetime(year=2020, month=1, day=1)
         while True:
             t = base + datetime.timedelta(milliseconds=random.randint(0, int((datetime.datetime.utcnow() - base).total_seconds() * 1000)))
@@ -347,7 +347,7 @@ class Games(commands.Cog):
                     if user == message.author:
                         await message.channel.send("You can't use yourself. Post another list.")
                         break
-                marks.append(user.id)
+                marks.append(str(user.id))
             else:
                 break
 
@@ -423,12 +423,9 @@ class Games(commands.Cog):
                 warnings.append(f"Unknown user '{user_s}'.")
                 continue
 
-            if index_s.endswith("*"):
+            liked = index_s.endswith("*")
+            if liked:
                 index_s = index_s[:-1]
-                if user == str(message.author.id):
-                    warnings.append("You can't like your own submission.")
-                else:
-                    likes.append(user)
 
             try:
                 index = int(index_s.strip().lstrip("#"))
@@ -451,7 +448,7 @@ class Games(commands.Cog):
                 warnings.append(f"Duplicate guess for {index} found. Guesses should be bijections.")
                 continue
             if user in guessed_people:
-                warnings.append(f"Duplicate guess for {user_s} found. Guesses are bijections. This is terrible. Aborting.")
+                warnings.append(f"Duplicate guess for {user_s} found. Guesses should be bijections.")
                 continue
 
             if user == submission_id == str(message.author.id):
@@ -465,6 +462,8 @@ class Games(commands.Cog):
 
             guess[submission_id] = user
             guessed_people.add(user)
+            if liked:
+                likes.append(submission_id)
 
         if not guess:
             return
@@ -505,7 +504,7 @@ class Games(commands.Cog):
             if not s["tested"]:
                 await ctx.author.send(file=discord.File(filename_of_submission(s, d["round"]), s["filename"]), view=TestView(self.bot, self.cg, s))
 
-    @commands.has_role("Event Managers")
+    @commands.is_owner()
     @codeguess.command(aliases=["r2", "next"])
     async def round2(self, ctx):
         await ctx.message.delete()
@@ -527,7 +526,7 @@ class Games(commands.Cog):
         await ctx.send(embed=discord.Embed(description=f"You can no longer send submissions, and the guessing phase has begun. "
                                                        f"For more on how to guess, do `!cg` in <#457999277311131649>. The deadline is {self.get_deadline(4)}."))
 
-    @commands.has_role("Event Managers")
+    @commands.is_owner()
     @codeguess.command(aliases=["end"])
     async def stop(self, ctx):
         await ctx.message.delete()
