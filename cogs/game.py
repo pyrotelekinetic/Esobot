@@ -344,9 +344,9 @@ class Games(commands.Cog):
                     if not user:
                         await message.channel.send(f"I don't know who '{line}' is supposed to be. Post another list.")
                         break
-                    if user == message.author:
-                        await message.channel.send("You can't use yourself. Post another list.")
-                        break
+                if user == message.author:
+                    await message.channel.send("You can't use yourself. Post another list.")
+                    break
                 marks.append(str(user.id))
             else:
                 break
