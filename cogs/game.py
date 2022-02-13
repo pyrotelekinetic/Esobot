@@ -561,7 +561,7 @@ class Games(commands.Cog):
             f.write("correct answers:\n")
             for idx, user in enumerate(submissions, start=1):
                 if mark := marks.get(user['id']):
-                    f.write(f"#{idx}: {self.get_user_name(user['id'])} ({like_counts[user['id']]} likes, impersonation target {self.get_user_name(mark)})\n")
+                    f.write(f"#{idx}: {self.get_user_name(user['id'])} ({like_counts[user['id']]} likes, imitating {self.get_user_name(mark)})\n")
                 else:
                     f.write(f"#{idx}: {self.get_user_name(user['id'])} ({like_counts[user['id']]} likes)\n")
 
