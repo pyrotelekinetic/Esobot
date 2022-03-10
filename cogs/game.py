@@ -81,11 +81,7 @@ class Games(commands.Cog):
         base = datetime.datetime(year=2020, month=1, day=1)
         while True:
             t = base + datetime.timedelta(milliseconds=random.randint(0, int((datetime.datetime.utcnow() - base).total_seconds() * 1000)))
-            try:
-                message = (await channel.history(after=t, limit=1).flatten())[0]
-            except IndexError:
-                pass
-            else:
+            async for message in channel.history(after=t, limit=1):
                 if (not message.content or len(message.content) > 25) and message.author in ctx.guild.members:
                     break
 

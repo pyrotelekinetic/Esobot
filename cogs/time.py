@@ -157,7 +157,7 @@ class Time(commands.Cog):
         paginator.embeds[-1].set_footer(text="The timezones and current times for every user on the server who has opted in, in order of UTC offset.")
         to_send = paginator.embeds
 
-        own_messages = await channel.history(oldest_first=True).flatten()
+        own_messages = [x async for x in channel.history(oldest_first=True)]
         if len(own_messages) > len(to_send):
             await channel.purge(limit=len(own_messages) - len(to_send))
         if len(to_send) > len(own_messages) and (on_messages[-1].created_at - datetime.datetime.utcnow()).total_seconds() > 7 * 60:
