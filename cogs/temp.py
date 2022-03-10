@@ -12,6 +12,8 @@ import discord
 from discord.ext import commands, tasks
 from PIL import Image, ImageOps
 
+from utils import aggressive_normalize
+
 
 class Temporary(commands.Cog):
     """Temporary, seasonal, random and miscellaneous poorly-written functionality. Things in here should probably be developed further or removed at some point."""
@@ -158,7 +160,7 @@ class Temporary(commands.Cog):
     async def on_message(self, message):
         if message.author == self.bot.user and len(message.content.split()) == 10:
             self.last_10 = message.content
-        if message.author.id == 509849474647064576 and message.content == self.last_10:
+        if message.author.id == 509849474647064576 and aggressive_normalize(message.content) == aggressive_normalize(self.last_10):
             await message.delete()
 
         if message.author.id == 319753218592866315 and message.content.count("night") >= 10:
