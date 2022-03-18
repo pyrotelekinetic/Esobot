@@ -17,7 +17,7 @@ def rand_name(taken_names):
             syllable = random.choice("ptkswlj" if name.endswith("n") else "mnptkswlj") + random.choice("aeiou") + "n"*random.randint(0, 1)
         name += syllable
     name = f"jan {name.capitalize()}"
-    return name if name not in taken_names else rand_name(taken_names)
+    return name if name != "jan Sonja" and name not in taken_names else rand_name(taken_names)
 
 
 class Anonymity(commands.Cog):
