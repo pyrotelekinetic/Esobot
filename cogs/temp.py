@@ -21,11 +21,11 @@ class Temporary(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.last_10 = None
-        #self.pride_loop.start()
+        self.pride_loop.start()
 
-    # 6PM UTC
+    # 2PM UTC
     @tasks.loop(
-        time=datetime.time(18),
+        time=datetime.time(14),
     )
     async def pride_loop(self):
         PATH = "./assets/limes/"
