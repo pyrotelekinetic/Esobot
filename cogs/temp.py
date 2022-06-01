@@ -23,9 +23,9 @@ class Temporary(commands.Cog):
         self.last_10 = None
         self.pride_loop.start()
 
-    # 2PM UTC
+    # 1AM UTC
     @tasks.loop(
-        time=datetime.time(14),
+        time=datetime.time(2),
     )
     async def pride_loop(self):
         PATH = "./assets/limes/"
