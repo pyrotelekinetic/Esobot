@@ -156,6 +156,15 @@ class Temporary(commands.Cog):
         if ctx.guild.id == 346530916832903169:
             await ctx.send("yeah!")
 
+    @commands.group(hidden=True, invoke_without_command=True)
+    async def soup(self, ctx):
+        pass
+
+    @soup.command(name="time", hidden=True)
+    async def _time3(self, ctx):
+        if ctx.guild.id == 346530916832903169:
+            await ctx.send("<@636797375184240640> <@309787486278909952> <@319753218592866315> <@224379582785126401> <@402456897812168705> <@261243340752814085> <@166910808305958914> soup time !!")
+
     @commands.Cog.listener()
     async def on_message(self, message):
         if message.author == self.bot.user and len(message.content.split(" ")) == 10:
