@@ -15,6 +15,19 @@ from PIL import Image, ImageOps
 from utils import aggressive_normalize
 
 
+@commands.check
+def is_in_esolangs(ctx):
+    if ctx.guild.id != 346530916832903169:
+        raise commands.CommandNotFound()
+    return True
+
+@commands.check
+def is_olivia(ctx):
+    if ctx.author.id not in (156021301654454272, 319753218592866315):
+        raise commands.CommandNotFound()
+    return True
+
+
 class Temporary(commands.Cog):
     """Temporary, seasonal, random and miscellaneous poorly-written functionality. Things in here should probably be developed further or removed at some point."""
 
@@ -138,18 +151,18 @@ class Temporary(commands.Cog):
         pass
 
     @olivia.command(name="time", hidden=True)
+    @is_in_esolangs
     async def _time(self, ctx):
-        if ctx.guild.id == 346530916832903169:
-            await self.bot.get_command("time")(ctx, user=ctx.guild.get_member(156021301654454272))
+        await self.bot.get_command("time")(ctx, user=ctx.guild.get_member(156021301654454272))
 
     @commands.group(hidden=True, invoke_without_command=True, aliases=["ky", "kay", "k"])
     async def kaylynn(self, ctx):
         pass
 
     @kaylynn.command(name="time", hidden=True)
+    @is_in_esolangs
     async def _time2(self, ctx):
-        if ctx.guild.id == 346530916832903169:
-            await self.bot.get_command("time")(ctx, user=ctx.guild.get_member(636797375184240640))
+        await self.bot.get_command("time")(ctx, user=ctx.guild.get_member(636797375184240640))
 
     @kaylynn.command(hidden=True)
     async def cute(self, ctx):
@@ -161,6 +174,8 @@ class Temporary(commands.Cog):
         pass
 
     @soup.command(name="time", hidden=True)
+    @is_in_esolangs
+    @is_olivia
     async def _time3(self, ctx):
         if ctx.guild.id == 346530916832903169:
             await ctx.send("<@636797375184240640> <@309787486278909952> <@319753218592866315> <@224379582785126401> <@402456897812168705> <@261243340752814085> <@166910808305958914> soup time !!")
