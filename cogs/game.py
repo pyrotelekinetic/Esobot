@@ -50,7 +50,7 @@ class Games(commands.Cog):
                         break
                 if idea_extra is not None:
                     idea += "\n"
-                    idea += idea_extra[0].content
+                    idea += idea_extra
             await ctx.send(f"{msg.jump_url}\n{msg.content}", allowed_mentions=discord.AllowedMentions(everyone=False, roles=False, users=False))
             break
 
