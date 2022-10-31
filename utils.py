@@ -112,6 +112,7 @@ pronoun_sets = {
     "she/her": Pronouns("she", "her", "her", "hers", "herself", False),
     "it/its": Pronouns("it", "it", "its", "its", "itself", False),
     "they/them": Pronouns("they", "them", "their", "theirs", "themselves", True),
+    "fae/faer": Pronouns("fae", "faer", "faer", "faers", "faerself", False),
 }
 
 def get_pronouns(member):
