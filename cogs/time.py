@@ -144,7 +144,7 @@ class Time(commands.Cog):
                 time_config_members.items(),
                 key=lambda m: (
                     n := now.astimezone(pytz.timezone(m[1])).replace(tzinfo=None)
-                ) and (n.year, n.month, n.day, Time.get_time(m[1]), str(m[0])),
+                ) and (n, str(m[0])),
             ),
             lambda x: Time.get_time(x[1]),
         )
