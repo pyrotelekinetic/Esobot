@@ -51,17 +51,20 @@ class Time(commands.Cog):
         self.time_loop.cancel()
         self.event_loop.cancel()
 
-    def get_time(self, timezone_name):
+    @staticmethod
+    def get_time(timezone_name):
         timezone = pytz.timezone(timezone_name)
         now = datetime.datetime.now().astimezone(timezone)
-        return now.strftime("**%H:%M** (**%I:%M%p**) on %A (%Z, UTC%z)")
+        t = now + datetime.timedelta(minutes=15)
+        emoji = chr(ord("🕐") + (t.hour-1)%12 + 12*(t.minute > 30))
+        return now.strftime(f"{emoji} **%H:%M** (**%I:%M%p**) on %A (%Z, UTC%z)")
 
     @commands.group(aliases=["tz", "when", "t"], invoke_without_command=True)
     async def time(self, ctx, *, user: discord.Member = None):
         """Get a user's time."""
         user = ctx.author if not user else user
         try:
-            time = self.get_time(self.time_config[str(user.id)])
+            time = Time.get_time(self.time_config[str(user.id)])
         except KeyError:
             message = (
                 "You don't have a timezone set. You can set one with `time set`."
@@ -141,9 +144,9 @@ class Time(commands.Cog):
                 time_config_members.items(),
                 key=lambda m: (
                     n := now.astimezone(pytz.timezone(m[1])).replace(tzinfo=None)
-                ) and (n.year, n.month, n.day, self.get_time(m[1]), str(m[0])),
+                ) and (n.year, n.month, n.day, Time.get_time(m[1]), str(m[0])),
             ),
-            lambda x: self.get_time(x[1]),
+            lambda x: Time.get_time(x[1]),
         )
         for key, group in groups:
             if not key:
