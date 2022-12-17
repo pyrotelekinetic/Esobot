@@ -177,7 +177,7 @@ class Temporary(commands.Cog):
     @is_in_esolangs
     @is_olivia
     async def _time3(self, ctx):
-        await ctx.send("<@636797375184240640> <@309787486278909952> <@319753218592866315> <@224379582785126401> <@402456897812168705> <@261243340752814085> <@166910808305958914> soup time !!")
+        await ctx.send("<@636797375184240640> <@309787486278909952> <@319753218592866315> <@224379582785126401> <@166910808305958914> <@275982450432147456> soup time !!")
 
     @commands.Cog.listener()
     async def on_message(self, message):
