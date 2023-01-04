@@ -197,9 +197,6 @@ class Temporary(commands.Cog):
             msg += f"That's {c}."
             await message.channel.send(msg)
 
-        if message.guild and message.guild.id == 800373244162867231 and message.author.id == 319753218592866315 and message.content.startswith("?choose"):
-            await message.channel.send(random.choice(shlex.split(message.content.removeprefix("?choose"))))
-
 
 def setup(bot):
     bot.add_cog(Temporary(bot))
