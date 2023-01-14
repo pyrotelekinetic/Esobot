@@ -131,10 +131,10 @@ def get_pronouns(member):
         if s in roles:
             pronouns.append(p)
     if not pronouns:
+        pronouns.append(pronoun_sets["they/them"])
         if "any pronouns" in roles:
-            pronouns.extend(p for (s, p) in pronoun_sets.items() if s != "it/its")
-        else:
-            pronouns.append(pronoun_sets["they/them"])
+            pronouns.append(pronoun_sets["he/him"])
+            pronouns.append(pronoun_sets["she/her"])
     return random.choice(pronouns)
 
 
