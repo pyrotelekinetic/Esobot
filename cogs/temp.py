@@ -152,7 +152,7 @@ class Temporary(commands.Cog):
     @commands.guild_only()
     async def dox(self, ctx, *, target: discord.Member):
         """Reveal someone's address if they have set it through the bot. Must be used in a guild; the answer will be DMed to you."""
-        if not addr := self.addresses.get(str(target.id)):
+        if not (addr := self.addresses.get(str(target.id))):
             return await ctx.send("That user doesn't have an address set.")
         await ctx.author.send(addr)
         await ctx.send("Alright, I've DMed you their address.")
