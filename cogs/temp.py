@@ -13,7 +13,7 @@ from discord.ext import commands, tasks
 from PIL import Image, ImageOps
 
 from constants.paths import ADDRESS_SAVES
-from utils import aggressive_normalize
+from utils import aggressive_normalize, load_json, save_json
 
 
 @commands.check
