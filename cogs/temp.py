@@ -12,6 +12,7 @@ import discord
 from discord.ext import commands, tasks
 from PIL import Image, ImageOps
 
+from constants.paths import ADDRESS_SAVES
 from utils import aggressive_normalize
 
 
@@ -34,6 +35,7 @@ class Temporary(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.last_10 = None
+        self.addresses = load_json(ADDRESS_SAVES)
         #self.pride_loop.start()
 
     # 1AM UTC
@@ -145,6 +147,27 @@ class Temporary(commands.Cog):
         b.truncate()
         b.seek(0)
         await ctx.send(file=discord.File(b, "result.png"))
+
+    @commands.group(hidden=True, invoke_without_command=True, aliases=["doxx"])
+    @commands.guild_only()
+    async def dox(self, ctx, *, target: discord.Member):
+        """Reveal someone's address if they have set it through the bot. Must be used in a guild; the answer will be DMed to you."""
+        if not addr := self.addresses.get(str(target.id)):
+            return await ctx.send("That user doesn't have an address set.")
+        await ctx.author.send(addr)
+        await ctx.send("Alright, I've DMed you their address.")
+        
+
+    @dox.group(hidden=True)
+    @commands.dm_only()
+    async def set(self, ctx, *, address=""):
+        """Set your address to be doxxed by others. Must be used in a DM with the bot. You can clear your address by using `set` without an argument."""
+        self.addresses[str(ctx.author.id)] = address
+        save_json(ADDRESS_SAVES, self.addresses)
+        if not address:
+            await ctx.send("Successfully cleared your address.")
+        else:
+            await ctx.send("Successfully set your address.")
 
     @commands.group(hidden=True, invoke_without_command=True)
     async def olivia(self, ctx):
