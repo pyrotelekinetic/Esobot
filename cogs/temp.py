@@ -13,7 +13,7 @@ from discord.ext import commands, tasks
 from PIL import Image, ImageOps
 
 from constants.paths import ADDRESS_SAVES
-from utils import aggressive_normalize, load_json, save_json
+from utils import aggressive_normalize, load_json, save_json, get_pronouns
 
 
 @commands.check
@@ -155,7 +155,7 @@ class Temporary(commands.Cog):
         if not (addr := self.addresses.get(str(target.id))):
             return await ctx.send("That user doesn't have an address set.")
         await ctx.author.send(addr)
-        await ctx.send("Alright, I've DMed you their address.")
+        await ctx.send(f"Alright, I've DMed you {get_pronouns(target).pos_det} address.")
         
 
     @dox.group(hidden=True)
