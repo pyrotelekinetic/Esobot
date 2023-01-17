@@ -23,6 +23,12 @@ def is_in_esolangs(ctx):
     return True
 
 @commands.check
+def is_in_qwd(ctx):
+    if ctx.guild.id != 1047299292492206101:
+        raise commands.CommandNotFound()
+    return True
+
+@commands.check
 def is_olivia(ctx):
     if ctx.author.id not in (156021301654454272, 319753218592866315):
         raise commands.CommandNotFound()
@@ -150,6 +156,7 @@ class Temporary(commands.Cog):
 
     @commands.group(hidden=True, invoke_without_command=True, aliases=["doxx"])
     @commands.guild_only()
+    @is_in_qwd
     async def dox(self, ctx, *, target: discord.Member):
         """Reveal someone's address if they have set it through the bot. Must be used in a guild; the answer will be DMed to you."""
         if not (addr := self.addresses.get(str(target.id))):
@@ -160,6 +167,7 @@ class Temporary(commands.Cog):
 
     @dox.group(hidden=True)
     @commands.dm_only()
+    @is_in_qwd
     async def set(self, ctx, *, address=""):
         """Set your address to be doxxed by others. Must be used in a DM with the bot. You can clear your address by using `set` without an argument."""
         self.addresses[str(ctx.author.id)] = address
