@@ -167,7 +167,6 @@ class Temporary(commands.Cog):
 
     @dox.group(hidden=True)
     @commands.dm_only()
-    @is_in_qwd
     async def set(self, ctx, *, address=""):
         """Set your address to be doxxed by others. Must be used in a DM with the bot. You can clear your address by using `set` without an argument."""
         self.addresses[str(ctx.author.id)] = address
