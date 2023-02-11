@@ -74,15 +74,13 @@ class Time(commands.Cog):
             await show_error(ctx, message, "Timezone not set")
         else:
             embed = make_embed(
-                title=f"{user.display_name}'s time",
+                title=f"{discord.utils.escape_markdown(user.display_name)}'s time",
                 description=time,
                 color=colors.EMBED_SUCCESS,
             )
             if user.id == 319753218592866315:
                 embed.add_field(name="Warning", value="This user's schedule is unstable and rather arbitrary. Apply caution before using her current time to extrapolate information.")
-            await ctx.send(
-                embed=embed
-            )
+            await ctx.send(embed=embed)
 
     @time.command()
     async def set(self, ctx, timezone=None):
