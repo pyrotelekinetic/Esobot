@@ -149,27 +149,27 @@ class Games(commands.Cog):
 
         winners = {}
         is_ended = asyncio.Event()
-        timeout = False
-        while not is_ended.is_set():
-            done, pending = await asyncio.wait([
-                self.bot.wait_for("message", check=lambda m: m.channel == ctx.channel and m.content.lower() == prompt.lower() and not m.author.bot and m.author not in winners),
-                is_ended.wait()
-            ], return_when=asyncio.FIRST_COMPLETED); [*map(asyncio.Task.cancel, pending)]
-            r = done.pop().result()
-            if isinstance(r, discord.Message):
-                msg = r
-            else:
-                break
-            await msg.delete()
-            winners[msg.author] = (msg.created_at - start.created_at).total_seconds()
-            if not timeout:
-                timeout = True
-                async def ender():
-                    await asyncio.sleep(10)
-                    is_ended.set()
-                await ctx.send(f"{msg.author.name.replace('@', '@' + zwsp)} wins. Other participants have 10 seconds to finish.")
-                self.bot.loop.create_task(ender())
-        await ctx.send("\n".join(f"{i + 1}. {u.name.replace('@', '@' + zwsp)} - {t:.4f} seconds ({len(prompt) / t * 12:.2f}WPM)" for i, (u, t) in enumerate(winners.items())))
+
+        async def on_message(message):
+            if message.channel == ctx.channel and message.content.lower() == prompt.lower() and not message.author.bot and message.author not in winners:
+                if not winners:
+                    async def ender():
+                        await asyncio.sleep(10)
+                        is_ended.set()
+                    await ctx.send(f"{message.author.name.replace('@', '@' + zwsp)} wins. Other participants have 10 seconds to finish.")
+                    self.bot.loop.create_task(ender())
+                winners[message.author] = (message.created_at - start.created_at).total_seconds()
+                await message.delete()
+
+        self.bot.add_listener(on_message)
+        try:
+            await asyncio.wait_for(is_ended.wait(), 120)
+        except asyncio.TimeoutError:
+            pass
+        else:
+            await ctx.send("\n".join(f"{i + 1}. {u.name.replace('@', '@' + zwsp)} - {t:.4f} seconds ({len(prompt) / t * 12:.2f}WPM)" for i, (u, t) in enumerate(winners.items())))
+        finally:
+            self.bot.remote_listener(on_message)
 
 
 def setup(bot):
