@@ -228,5 +228,5 @@ class Temporary(commands.Cog):
             await message.channel.send(msg)
 
 
-def setup(bot):
-    bot.add_cog(Temporary(bot))
+async def setup(bot):
+    await bot.add_cog(Temporary(bot))

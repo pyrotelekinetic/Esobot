@@ -147,5 +147,5 @@ class ReactionRoles(commands.Cog, name="Reaction roles"):
         await self.dry(discord.Member.remove_roles, payload)
 
 
-def setup(bot):
-    bot.add_cog(ReactionRoles(bot))
+async def setup(bot):
+    await bot.add_cog(ReactionRoles(bot))

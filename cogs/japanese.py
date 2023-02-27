@@ -139,5 +139,5 @@ class Japanese(commands.Cog):
         await ctx.send("\n".join(f"{i + 1}. {u.name.replace('@', '@' + zwsp)} - {t:.4f} seconds ({len(prompt) / t * 12:.2f}WPM)" for i, (u, t) in enumerate(winners.items())))
 
 
-def setup(bot):
-    bot.add_cog(Japanese(bot))
+async def setup(bot):
+    await bot.add_cog(Japanese(bot))

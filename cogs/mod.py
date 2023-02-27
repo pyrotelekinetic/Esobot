@@ -222,5 +222,5 @@ class StopButton(discord.ui.Button):
         await interaction.response.edit_message(content="Cancelled move.", view=self.view)
 
 
-def setup(bot):
-    bot.add_cog(Moderation(bot))
+async def setup(bot):
+    await bot.add_cog(Moderation(bot))

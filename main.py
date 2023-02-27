@@ -71,7 +71,6 @@ bot = commands.Bot(
     allowed_mentions=discord.AllowedMentions(everyone=False),
     intents=intents
 )
-bot.load_extension("jishaku")
 bot.owner_id = owner_id
 bot.needed_extensions = set(get_extensions())
 bot.loaded_extensions = set()
@@ -157,18 +156,18 @@ async def on_error(event_method, *args, **kwargs):
         f"Error encountered during '{event_method}' (args: {args}; kwargs: {kwargs})\n" + traceback.format_exc()
     )
 
-
-async def load_extensions(extensions):
-    for extension in extensions:
+async def load_extensions():
+    await bot.load_extension("jishaku")
+    for extension in bot.needed_extensions:
         await asyncio.sleep(0)
         try:
-            bot.load_extension("cogs." + extension)
+            await bot.load_extension("cogs." + extension)
         except Exception as e:
             print(f"Failed to load {extension}: {type(e).__name__}: {e}")
             continue
         bot.loaded_extensions.add(extension)
     l.info("Loaded all extensions")
-
+bot.setup_hook = load_extensions
 
 async def wait_until_loaded():
     while bot.needed_extensions < bot.loaded_extensions:
@@ -176,5 +175,4 @@ async def wait_until_loaded():
 
 
 if __name__ == "__main__":
-    bot.loop.create_task(load_extensions(bot.needed_extensions))
     bot.run(TOKEN)

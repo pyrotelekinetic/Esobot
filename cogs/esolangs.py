@@ -37,5 +37,5 @@ class Esolangs(commands.Cog):
             await ctx.send(f + "/" + l.replace(".", "%2E"))
 
 
-def setup(bot):
-    bot.add_cog(Esolangs(bot))
+async def setup(bot):
+    await bot.add_cog(Esolangs(bot))

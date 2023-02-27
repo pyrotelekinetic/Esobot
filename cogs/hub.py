@@ -72,5 +72,5 @@ class Hub(commands.Cog):
         self.save()
 
 
-def setup(bot):
-    bot.add_cog(Hub(bot))
+async def setup(bot):
+    await bot.add_cog(Hub(bot))

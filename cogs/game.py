@@ -172,5 +172,5 @@ class Games(commands.Cog):
             self.bot.remote_listener(on_message)
 
 
-def setup(bot):
-    bot.add_cog(Games(bot))
+async def setup(bot):
+    await bot.add_cog(Games(bot))

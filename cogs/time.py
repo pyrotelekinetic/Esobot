@@ -469,6 +469,6 @@ class Time(commands.Cog):
         await self.bot.wait_until_ready()
 
 
-def setup(bot):
+async def setup(bot):
     t = Time(bot)
-    bot.add_cog(t)
+    await bot.add_cog(t)
