@@ -118,14 +118,7 @@ pronoun_sets = {
 def get_pronouns(member):
     if member.id == 199151261604380672:
         return Pronouns("e", "er", "er", "ers", "erself", False)
-    if not isinstance(member, discord.Member):
-        for guild in member.mutual_guilds:
-            if guild.id in (346530916832903169, 800373244162867231):
-                member = guild.get_member(member.id)
-                break
-        else:
-            return pronoun_sets["they/them"]
-    roles = [role.name for role in member.roles]
+    roles = [role.name for guild in member.mutual_guilds if guild.id in (346530916832903169, 800373244162867231) for role in guild.get_member(member.id).roles]
     pronouns = []
     for s, p in pronoun_sets.items():
         if s in roles:
