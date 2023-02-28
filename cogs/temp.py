@@ -159,10 +159,12 @@ class Temporary(commands.Cog):
     @is_in_qwd
     async def dox(self, ctx, *, target: discord.Member):
         """Reveal someone's address if they have set it through the bot. Must be used in a guild; the answer will be DMed to you."""
+        pronouns = get_pronouns(target)
         if not (addr := self.addresses.get(str(target.id))):
-            return await ctx.send("That user doesn't have an address set.")
+            do_not = "don't" if pronouns.plural else "doesn't"
+            return await ctx.send('{pronouns.subj} {do_not} have an address set.')
         await ctx.author.send(addr)
-        await ctx.send(f"Alright, I've DMed you {get_pronouns(target).pos_det} address.")
+        await ctx.send(f"Alright, I've DMed you {pronouns.pos_det} address.")
         
 
     @dox.group(hidden=True)
