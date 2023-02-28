@@ -162,7 +162,7 @@ class Temporary(commands.Cog):
         pronouns = get_pronouns(target)
         if not (addr := self.addresses.get(str(target.id))):
             do_not = "don't" if pronouns.plural else "doesn't"
-            return await ctx.send('{pronouns.subj} {do_not} have an address set.')
+            return await ctx.send(f'{pronouns.subj} {do_not} have an address set.')
         await ctx.author.send(addr)
         await ctx.send(f"Alright, I've DMed you {pronouns.pos_det} address.")
         
