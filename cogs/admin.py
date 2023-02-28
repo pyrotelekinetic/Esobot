@@ -83,11 +83,11 @@ class Admin(commands.Cog):
             extensions = get_extensions()
         for extension in extensions:
             try:
-                self.bot.unload_extension("cogs." + extension)
+                await self.bot.unload_extension("cogs." + extension)
             except commands.ExtensionNotLoaded:
                 pass
             try:
-                self.bot.load_extension("cogs." + extension)
+                await self.bot.load_extension("cogs." + extension)
                 description += f"Successfully loaded `{extension}`.\n"
             except Exception as exc:
                 color = colors.EMBED_ERROR
