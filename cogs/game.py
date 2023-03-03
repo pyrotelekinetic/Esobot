@@ -169,7 +169,7 @@ class Games(commands.Cog):
         else:
             await ctx.send("\n".join(f"{i + 1}. {u.name.replace('@', '@' + zwsp)} - {t:.4f} seconds ({len(prompt) / t * 12:.2f}WPM)" for i, (u, t) in enumerate(winners.items())))
         finally:
-            self.bot.remote_listener(on_message)
+            self.bot.remove_listener(on_message)
 
 
 async def setup(bot):
