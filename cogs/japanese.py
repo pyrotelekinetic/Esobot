@@ -88,7 +88,7 @@ class Japanese(commands.Cog):
     async def jatranslate(self, ctx, *, lyric_quote: commands.clean_content = None):
         """Translate Japanese."""
         if not lyric_quote:
-            messages = [m.content async for m in ctx.history(limit=10)]
+            messages = [m.content async for m in ctx.history(limit=10) if not m.content.startswith("!") and not m.author.bot]
             p = "\n".join([f"{i}: {m}" for i, m in enumerate(messages)][::-1])
             completion = await openai.ChatCompletion.acreate(
                 model="gpt-3.5-turbo",
