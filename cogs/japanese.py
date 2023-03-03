@@ -88,8 +88,8 @@ class Japanese(commands.Cog):
     async def jatranslate(self, ctx, *, lyric_quote: commands.clean_content = None):
         """Translate Japanese."""
         if not lyric_quote:
-            messages = [m.content async for m in ctx.history(limit=10) if not m.content.startswith("!") and not m.author.bot]
-            p = "\n".join([f"{i}: {m}" for i, m in enumerate(messages)][::-1])
+            messages = [m async for m in ctx.history(limit=10) if not m.content.startswith("!") and not m.author.bot]
+            p = "\n".join([f"{i}: {m.content}" for i, m in enumerate(messages)][::-1])
             completion = await openai.ChatCompletion.acreate(
                 model="gpt-3.5-turbo",
                 messages=[
@@ -134,7 +134,10 @@ The messages will be numbered, and you must simply say the number of which messa
             r = completion["choices"][0]["message"]["content"]
             if not r.isdigit() or int(r) not in range(len(messages)):
                 return await ctx.send("I don't see anything to translate.")
-            lyric_quote = messages[int(r)]
+            msg = messages[int(r)]
+            lyric_quote = msg.content
+        else:
+            msg = ctx.message
         completion = await openai.ChatCompletion.acreate(
             model="gpt-3.5-turbo",
             messages=[
@@ -156,7 +159,7 @@ Your responses never contain the text "Translation:"."""
                 {"role": "user", "content": lyric_quote},
             ],
         )
-        await ctx.send(completion["choices"][0]["message"]["content"])
+        await msg.reply(completion["choices"][0]["message"]["content"])
 
     @commands.command()
     @commands.guild_only()
