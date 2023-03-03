@@ -4,15 +4,11 @@ import pykakasi
 import discord
 import asyncio
 import random
-
-from googletrans import Translator
+import openai
 
 from utils import show_error
 from discord.ext import commands, menus
 
-
-def _translate(text):
-    return Translator().translate(text, src="ja", dest="en").text
 
 def format_jp_entry(entry):
     try:
@@ -83,11 +79,6 @@ class Japanese(commands.Cog):
         pages = menus.MenuPages(source=DictSource(data["data"]), clear_reactions_after=True)
         await pages.start(ctx)
 
-    @commands.Cog.listener()
-    async def on_message(self, message):
-        if message.author.id == 319753218592866315:  # LyricLy
-            self.last_lyric_msg = message.content
-
     @commands.command(aliases=["jatrans", "transja", "jtrans", "jptrans", "transjp", "transj", "tj", "jtr", "jpt", "jt",
                                "whatdidlyricjustsay", "what'dlyricsay", "whtdlysay", "wdls", "wls", "what",
                                "weebtrans", "weebt", "deweeb", "unweeb", "transweeb", "tweeb", "tw",
@@ -96,8 +87,76 @@ class Japanese(commands.Cog):
                                "ifyouhaveajapaneseimewhyareyouusingashittygoogletranslatecommand", "ifuhvajpimeyruusingshitgtcmd"])
     async def jatranslate(self, ctx, *, lyric_quote: commands.clean_content = None):
         """Translate Japanese."""
-        t = await self.bot.loop.run_in_executor(None, _translate, lyric_quote or self.last_lyric_msg)
-        await ctx.send(t)
+        if not lyric_quote:
+            messages = [m.content async for m in ctx.history(limit=10)]
+            p = "\n".join([f"{i}: {m}" for i, m in enumerate(messages)][::-1])
+            completion = await openai.ChatCompletion.acreate(
+                model="gpt-3.5-turbo",
+                messages=[
+                    {"role": "system", "content": """You are a bot whose purpose is to identify which message from a list of different messages is the "most Japanese".
+You should prioritize actual Japanese text, but after that you may take into consideration cultural references or references to anime and manga.
+The messages will be numbered, and you must simply say the number of which message is the most Japanese. Say nothing else besides the number on its own. If no message is remotely Japanese at all, then say "nil"."""},
+                    {"role": "user", "content": """2: are you a weeb
+1: 分からないんだよ
+0: got it"""},
+                    {"role": "assistant", "content": "1"},
+                    {"role": "user", "content": """3: if only it was possible to look out the window on a plane
+2: olivia is definitely in on this
+1: why else japan !!?!
+0: そうそう"""},
+                    {"role": "assistant", "content": "0"},
+                    {"role": "user", "content": """4: fastest transition in the west
+3: it would be so funny if xenia was real
+2: it would
+1: wish i were real
+0: too bad xenia is a cat walking on a keyboard with a predictive wordfilter applied"""},
+                    {"role": "assistant", "content": "nil"},
+                    {"role": "user", "content": """4: me fr
+3: do you think they would let me take blåhaj on the plane if I went to coral
+2: 変カャット
+1: wtf
+0: oh"""},
+                    {"role": "assistant", "content": "2"},
+                    {"role": "user", "content": """2: nooo
+1: mjauuu
+0: wooo"""},
+                    {"role": "assistant", "content": "nil"},
+                    {"role": "user", "content": """5: Also I refuse to make a non-gc language
+4: Other than Forth
+3: So no update
+2: the nail that sticks out will get hammered down
+1: no fucking way
+0: getting closer"""},
+                    {"role": "assistant", "content": "2"},
+                    {"role": "user", "content": p},
+                ],
+            )
+            r = completion["choices"][0]["message"]["content"]
+            if not r.isdigit() or int(r) not in range(len(messages)):
+                return await ctx.send("I don't see anything to translate.")
+            lyric_quote = messages[int(r)]
+        completion = await openai.ChatCompletion.acreate(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": """You are a translator whose job is to determine what language something is written in. The only things you ever say are "Japanese" and "Not Japanese".
+Even if something is a direct reference to a phrase in Japanese, if it is not literally written in Japanese, you always say "Not Japanese"."""},
+                {"role": "user", "content": lyric_quote},
+            ],
+        )
+        if "not" in completion["choices"][0]["message"]["content"].lower():
+            prompt = "You are a helpful translator. When given a reference to Japanese culture or media, you explain the reference briefly but comprehensively."
+        else:
+            prompt = """If you are given text that is entirely or partially written in Japanese, you provide a translation of the text.
+When translating, you never give additional commentary or explanations; you only give the literal translation of the text and nothing else.
+Your responses never contain the text "Translation:"."""
+        completion = await openai.ChatCompletion.acreate(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": prompt},
+                {"role": "user", "content": lyric_quote},
+            ],
+        )
+        await ctx.send(completion["choices"][0]["message"]["content"])
 
     @commands.command()
     @commands.guild_only()
