@@ -5,6 +5,7 @@ import discord
 import asyncio
 import random
 import openai
+import io
 
 from utils import show_error
 from discord.ext import commands, menus
