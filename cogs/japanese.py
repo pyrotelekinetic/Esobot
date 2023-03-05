@@ -159,7 +159,11 @@ Your responses never contain the text "Translation:"."""
                 {"role": "user", "content": lyric_quote},
             ],
         )
-        await msg.reply(completion["choices"][0]["message"]["content"])
+        result = completion["choices"][0]["message"]["content"]
+        if len(result) > 2000:
+            await msg.reply(file=discord.File(io.StringIO(result), "resp.txt"))
+        else:
+            await msg.reply(result)
 
     @commands.command()
     @commands.guild_only()
