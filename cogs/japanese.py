@@ -81,13 +81,8 @@ class Japanese(commands.Cog):
         pages = menus.MenuPages(source=DictSource(data["data"]), clear_reactions_after=True)
         await pages.start(ctx)
 
-    @commands.command(aliases=["jatrans", "transja", "jtrans", "jptrans", "transjp", "transj", "tj", "jtr", "jpt", "jt",
-                               "whatdidlyricjustsay", "what'dlyricsay", "whtdlysay", "wdls", "wls", "what",
-                               "weebtrans", "weebt", "deweeb", "unweeb", "transweeb", "tweeb", "tw",
-                               ";)", "forumbra", "inadequateweeb", "inadqweeb", "otherlanguagesscareme",
-                               "otherlangsscareme", "that'snotenglish", "notenglish", "noen", "日本語から",
-                               "ifyouhaveajapaneseimewhyareyouusingashittygoogletranslatecommand", "ifuhvajpimeyruusingshitgtcmd"])
-    async def jatranslate(self, ctx, *, lyric_quote: commands.clean_content = None):
+    @commands.command(aliases=[";)"])
+    async def unweeb(self, ctx, *, lyric_quote: commands.clean_content = None):
         """Translate Japanese."""
         if ctx.channel.id == HOME_ID:
             return await ctx.send("Don't prefix messages with !unweeb in this channel.")
