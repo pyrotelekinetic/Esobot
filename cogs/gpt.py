@@ -45,7 +45,11 @@ class GPT(commands.Cog):
     async def respond(self):
         await self.bot.wait_until_ready()
         home = self.bot.get_channel(HOME_ID)
-        completion = (await openai.ChatCompletion.acreate(model="gpt-3.5-turbo", messages=self.messages))["choices"][0]["message"]
+        try:
+            completion = (await openai.ChatCompletion.acreate(model="gpt-3.5-turbo", messages=self.messages))["choices"][0]["message"]
+        except openai.error.InvalidRequestError:
+            # brain bleed
+            del self.messages[:len(self.messages)//2]
         self.messages.append(completion)
         await home.send(completion["content"].removeprefix("Esobot: ").removeprefix("esobot: "))
 
