@@ -55,7 +55,7 @@ class GPT(commands.Cog):
             else:
                 break
         self.messages.append(completion)
-        t = completion["content"].removeprefix("Esobot: ").removeprefix("esobot: ").split("\n\n", 1)
+        t = completion["content"].removeprefix("Esobot: ").removeprefix("esobot: ").split("\n\n")
         for x in t:
             await home.send(x)
 
