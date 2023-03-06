@@ -63,7 +63,7 @@ class GPT(commands.Cog):
             self.t = self.bot.loop.create_task(self.timer())
             self.timeout = self.timeout * 0.9 + 0.5
             async with home.typing():
-                await self.respond(f"{message.author.name}: {message.content}")
+                await self.respond(f"{message.author.name}: {message.clean_content}")
             if random.random() > 0.1:
                 return
             await asyncio.sleep(random.randint(3, 6))
