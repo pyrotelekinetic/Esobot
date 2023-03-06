@@ -45,7 +45,7 @@ class GPT(commands.Cog):
             self.messages.append({"role": "user", "content": msg})
         completion = (await openai.ChatCompletion.acreate(model="gpt-3.5-turbo", messages=self.messages))["choices"][0]["message"]
         self.messages.append(completion)
-        await home.send(completion["content"])
+        await home.send(completion["content"].removeprefix("Esobot: "))
 
     async def timer(self):
         await asyncio.sleep(self.timeout * 60)
