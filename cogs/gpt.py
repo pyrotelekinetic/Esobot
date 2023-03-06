@@ -51,7 +51,7 @@ class GPT(commands.Cog):
                 completion = (await openai.ChatCompletion.acreate(model="gpt-3.5-turbo", messages=self.messages))["choices"][0]["message"]
             except openai.InvalidRequestError:
                 # brain bleed
-                del self.messages[:len(self.messages)//2]
+                del self.messages[6:len(self.messages)//2]
             else:
                 break
         self.messages.append(completion)
@@ -68,7 +68,7 @@ class GPT(commands.Cog):
         home = self.bot.get_channel(HOME_ID)
         if message.channel == home and message.author != self.bot.user and not message.content.startswith("!"):
             self.remember(f"{message.author.name}: {message.clean_content}")
-            if (random.random() < (0.1 if message.author.bot else 0.35)
+            if (random.random() < (0.5 if message.author.bot else 0.33)
              or self.bot.user.mentioned_in(message)
              or "esobot" in message.content.lower()
              or "you" in message.content.lower()
@@ -82,7 +82,7 @@ class GPT(commands.Cog):
                 self.timeout = self.timeout * 0.9 + 0.5
                 async with home.typing():
                     await self.respond()
-                if random.random() > 0.1:
+                if random.random() > 0.05:
                     return
                 await asyncio.sleep(random.randint(3, 6))
                 async with home.typing():
