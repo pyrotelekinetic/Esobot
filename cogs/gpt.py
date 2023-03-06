@@ -2,6 +2,7 @@ import asyncio
 import openai
 import random
 import time
+import re
 
 from discord.ext import commands
 
@@ -48,13 +49,16 @@ class GPT(commands.Cog):
         while True:
             try:
                 completion = (await openai.ChatCompletion.acreate(model="gpt-3.5-turbo", messages=self.messages))["choices"][0]["message"]
-            except openai.error.InvalidRequestError:
+            except openai.InvalidRequestError:
                 # brain bleed
                 del self.messages[:len(self.messages)//2]
             else:
                 break
         self.messages.append(completion)
-        await home.send(completion["content"].removeprefix("Esobot: ").removeprefix("esobot: "))
+        t = completion["content"].removeprefix("Esobot: ").removeprefix("esobot: ").split(":\n\n", 1)
+        for x in t[:-1]:
+            await home.send(x + ":")
+        await home.send(t[-1])
 
     async def timer(self):
         await asyncio.sleep(self.timeout * 60)
