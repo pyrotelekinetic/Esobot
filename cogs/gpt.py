@@ -54,7 +54,12 @@ class GPT(commands.Cog):
     @commands.Cog.listener()
     async def on_message(self, message):
         home = self.bot.get_channel(HOME_ID)
-        if message.channel == home and message.author != self.bot.user and (random.random() < 0.33 or self.bot.user.mentioned_in(message) or "esobot" in message.content.lower() or "you" in message.content.lower()):
+        if message.channel == home and message.author != self.bot.user and (
+            random.random() < (0.1 if message.author.bot else 0.35)
+         or self.bot.user.mentioned_in(message)
+         or "esobot" in message.content.lower()
+         or "you" in message.content.lower()
+        ):
             if self.rs:
                 self.rs.cancel()
                 self.rs = None
