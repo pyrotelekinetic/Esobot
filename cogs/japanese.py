@@ -8,6 +8,7 @@ import openai
 import io
 
 from utils import show_error
+from cogs.gpt import HOME_ID
 from discord.ext import commands, menus
 
 
@@ -88,6 +89,8 @@ class Japanese(commands.Cog):
                                "ifyouhaveajapaneseimewhyareyouusingashittygoogletranslatecommand", "ifuhvajpimeyruusingshitgtcmd"])
     async def jatranslate(self, ctx, *, lyric_quote: commands.clean_content = None):
         """Translate Japanese."""
+        if ctx.channel.id == HOME_ID:
+            return await ctx.send("Don't prefix messages with !unweeb in this channel.")
         if not lyric_quote:
             messages = [m async for m in ctx.history(limit=10) if not m.content.startswith("!") and not m.author.bot]
             p = "\n".join([f"{i}: {m.content}" for i, m in enumerate(messages)][::-1])
