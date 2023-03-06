@@ -23,7 +23,8 @@ class GPT(commands.Cog):
     async def random_speak(self):
         while True:
             await asyncio.sleep(random.randint(60*60, 180*60))
-            await self.respond(random.choice(["say something interesting but phrase it like you just heard it", "say 'hi qwdies'", "make something up about the weather", "act as if you were cold", "act as if you were hot", "act as if you were lonely", "act as if you were sad", "act as if you were hungry"]))
+            self.remember(random.choice(["say something interesting but phrase it like you just heard it", "say 'hi qwdies'", "make something up about the weather", "act as if you were cold", "act as if you were hot", "act as if you were lonely", "act as if you were sad", "act as if you were hungry"]))
+            await self.respond()
 
     def reset_thread(self):
         self.rs = self.bot.loop.create_task(self.random_speak())
@@ -38,11 +39,12 @@ class GPT(commands.Cog):
             {"role": "user", "content": "when I give you a message in the form 'username: text', it means someone by that name is talking to you."},
         ]
 
-    async def respond(self, msg):
+    def remember(self, msg):
+        self.messages.append({"role": "user", "content": msg})
+
+    async def respond(self):
         await self.bot.wait_until_ready()
         home = self.bot.get_channel(HOME_ID)
-        if msg:
-            self.messages.append({"role": "user", "content": msg})
         completion = (await openai.ChatCompletion.acreate(model="gpt-3.5-turbo", messages=self.messages))["choices"][0]["message"]
         self.messages.append(completion)
         await home.send(completion["content"].removeprefix("Esobot: "))
@@ -54,26 +56,27 @@ class GPT(commands.Cog):
     @commands.Cog.listener()
     async def on_message(self, message):
         home = self.bot.get_channel(HOME_ID)
-        if message.channel == home and message.author != self.bot.user and not message.content.startswith("!") and (
-            random.random() < (0.1 if message.author.bot else 0.35)
-         or self.bot.user.mentioned_in(message)
-         or "esobot" in message.content.lower()
-         or "you" in message.content.lower()
-        ):
-            if self.rs:
-                self.rs.cancel()
-                self.rs = None
-            if self.t:
-                self.t.cancel()
-            self.t = self.bot.loop.create_task(self.timer())
-            self.timeout = self.timeout * 0.9 + 0.5
-            async with home.typing():
-                await self.respond(f"{message.author.name}: {message.clean_content}")
-            if random.random() > 0.1:
-                return
-            await asyncio.sleep(random.randint(3, 6))
-            async with home.typing():
-                await self.respond()
+        if message.channel == home and message.author != self.bot.user and not message.content.startswith("!"):
+            self.remember(f"{message.author.name}: {message.clean_content}")
+            if (random.random() < (0.1 if message.author.bot else 0.35)
+             or self.bot.user.mentioned_in(message)
+             or "esobot" in message.content.lower()
+             or "you" in message.content.lower()
+            ):
+                if self.rs:
+                    self.rs.cancel()
+                    self.rs = None
+                if self.t:
+                    self.t.cancel()
+                self.t = self.bot.loop.create_task(self.timer())
+                self.timeout = self.timeout * 0.9 + 0.5
+                async with home.typing():
+                    await self.respond()
+                if random.random() > 0.1:
+                    return
+                await asyncio.sleep(random.randint(3, 6))
+                async with home.typing():
+                    await self.respond()
 
 
 async def setup(bot):
