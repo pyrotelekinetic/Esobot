@@ -21,6 +21,12 @@ class GPT(commands.Cog):
         self.bot = bot
         self.reset_thread()
 
+    def cog_unload(self):
+        if self.t:
+            self.t.cancel()
+        if self.rs:
+            self.rs.cancel()
+
     async def random_speak(self):
         while True:
             await asyncio.sleep(random.randint(60*60, 180*60))
@@ -80,11 +86,6 @@ class GPT(commands.Cog):
                     self.t.cancel()
                 self.t = self.bot.loop.create_task(self.timer())
                 self.timeout = self.timeout * 0.9 + 0.5
-                async with home.typing():
-                    await self.respond()
-                if random.random() > 0.05:
-                    return
-                await asyncio.sleep(random.randint(3, 6))
                 async with home.typing():
                     await self.respond()
 
