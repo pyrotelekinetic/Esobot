@@ -61,9 +61,8 @@ class GPT(commands.Cog):
             else:
                 break
         self.messages.append(completion)
-        t = completion["content"].removeprefix("Esobot: ").removeprefix("esobot: ").split("\n\n")
-        for x in t:
-            await home.send(x)
+        t = completion["content"].removeprefix("Esobot: ").removeprefix("esobot: ")
+        await home.send(t)
 
     async def timer(self):
         await asyncio.sleep(self.timeout * 60)
