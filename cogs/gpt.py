@@ -154,9 +154,9 @@ Even if something is a direct reference to a phrase in Japanese, if it is not li
             ],
         )
         if "not" in completion["choices"][0]["message"]["content"].lower():
-            prompt = "You are a helpful translator. When given a reference to Japanese culture or media, you explain the reference briefly but comprehensively."
+            prompt = "You are a helpful translator. When given a reference to Japanese culture or media, you explain the reference briefly but comprehensively in English."
         else:
-            prompt = """If you are given text that is entirely or partially written in Japanese, you provide a translation of the text.
+            prompt = """If you are given text that is entirely or partially written in Japanese, you provide a translation of the text in English.
 When translating, you never give additional commentary or explanations; you only give the literal translation of the text and nothing else.
 Your responses never contain the text "Translation:"."""
         completion = await openai.ChatCompletion.acreate(
