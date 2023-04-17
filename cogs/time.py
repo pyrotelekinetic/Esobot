@@ -66,11 +66,12 @@ class Time(commands.Cog):
         try:
             time = Time.get_time(self.time_config[str(user.id)])
         except KeyError:
-            message = (
-                "You don't have a timezone set. You can set one with `time set`."
-                if user == ctx.author
-                else "That user doesn't have a timezone set."
-            )
+            if user == ctx.author:
+                message = "You don't have a timezone set. You can set one with `time set`."
+            else:
+                p = get_pronouns(user)
+                do_not = "don't" if p.plural else "doesn't"
+                message = f'{p.subj.capitalize()} {do_not} have a timezone set.'
             await show_error(ctx, message, "Timezone not set")
         else:
             embed = make_embed(
