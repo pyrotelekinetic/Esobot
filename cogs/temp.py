@@ -42,11 +42,11 @@ class Temporary(commands.Cog):
         self.bot = bot
         self.last_10 = None
         self.addresses = load_json(ADDRESS_SAVES)
-        #self.pride_loop.start()
+        self.pride_loop.start()
 
-    # 1AM UTC
+    # 3AM UTC
     @tasks.loop(
-        time=datetime.time(1),
+        time=datetime.time(3),
     )
     async def pride_loop(self):
         PATH = "./assets/limes/"
