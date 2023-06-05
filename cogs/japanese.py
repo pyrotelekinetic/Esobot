@@ -92,7 +92,7 @@ class Japanese(commands.Cog):
             messages = [m async for m in ctx.history(limit=10) if not m.content.startswith("!") and not m.author.bot]
             p = "\n".join([f"{i}: {m.content}" for i, m in enumerate(messages)][::-1])
             completion = await openai.ChatCompletion.acreate(
-                model="gpt-3.5-turbo",
+                model="gpt-4",
                 messages=[
                     {"role": "system", "content": """You are a bot whose purpose is to identify which message from a list of different messages is the "most Japanese".
 You should prioritize actual Japanese text, but after that you may take into consideration cultural references or references to anime and manga.
