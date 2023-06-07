@@ -39,7 +39,7 @@ class Admin(commands.Cog):
     @commands.command()
     async def update(self, ctx):
         """Runs `git pull` to update the bot."""
-        subproc = await asyncio.create_subprocess_shell("git fetch && git log ..@{u} && git rebase", stdout=PIPE)
+        subproc = await asyncio.create_subprocess_shell("git fetch && git log ..@{u} && git rebase", stdout=PIPE, stderr=PIPE)
         embed = make_embed(color=colors.EMBED_INFO, title="Running `git pull`")
         m = await ctx.send(embed=embed)
         returncode = await subproc.wait()
@@ -48,14 +48,12 @@ class Admin(commands.Cog):
         fields = []
         if stdout:
             embed.add_field(
-                name="stdout", value=f"```\n{stdout.decode('utf-8')}\n```", inline=False
+                name="stdout", value=f"```\n{stdout.decode()}\n```", inline=False
             )
         if stderr:
             embed.add_field(
-                name="stderr", value=f"```\n{stderr.decode('utf-8')}\n```", inline=False
+                name="stderr", value=f"```\n{stderr.decode()}\n```", inline=False
             )
-        if not (stdout or stderr):
-            embed.description = "`git pull` completed."
         await m.edit(embed=embed)
         await self.reload_(ctx, "*")
 
