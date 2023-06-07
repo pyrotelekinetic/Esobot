@@ -166,45 +166,6 @@ Your responses never contain the text "Translation:"."""
         else:
             await msg.reply(result)
 
-    @commands.command()
-    @commands.guild_only()
-    async def kanarace(self, ctx, kana: int = 10):
-        """Race kana typing speeds!"""
-        if not 1 <= kana <= 50:
-            return await ctx.send("Use between 1 and 50 kana.")
-
-        await ctx.send("Kana reading/typing race begins in 5 seconds. Get ready!")
-        await asyncio.sleep(5)
-
-        k = "あいうえおかきくけこがぎぐげごさしすせそざじずぜぞたちつてとだぢづでどなにぬねのはひふへほばびぶべぼぱぴぷぺぽまみむめもやゆよらりるれろわを"
-        prompt = "".join(random.choices(k, k=kana))
-
-        zwsp = "\u200b"
-        start = await ctx.send(zwsp.join(prompt))
-        winners = {}
-        is_ended = asyncio.Event()
-        timeout = False
-        while not is_ended.is_set():
-            done, pending = await asyncio.wait([
-                self.bot.wait_for("message", check=lambda m: m.channel == ctx.channel and m.content == prompt and not m.author.bot and m.author not in winners),
-                is_ended.wait()
-            ], return_when=asyncio.FIRST_COMPLETED); [*map(asyncio.Task.cancel, pending)]
-            r = done.pop().result()
-            if isinstance(r, discord.Message):
-                msg = r
-            else:
-                break
-            await msg.delete()
-            winners[msg.author] = (msg.created_at - start.created_at).total_seconds()
-            if not timeout:
-                timeout = True
-                async def ender():
-                    await asyncio.sleep(10)
-                    is_ended.set()
-                await ctx.send(f"{msg.author.name.replace('@', '@' + zwsp)} wins. Other participants have 10 seconds to finish.")
-                self.bot.loop.create_task(ender())
-        await ctx.send("\n".join(f"{i + 1}. {u.name.replace('@', '@' + zwsp)} - {t:.4f} seconds ({len(prompt) / t * 12:.2f}WPM)" for i, (u, t) in enumerate(winners.items())))
-
 
 async def setup(bot):
     await bot.add_cog(Japanese(bot))

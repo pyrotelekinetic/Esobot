@@ -117,24 +117,12 @@ class Games(commands.Cog):
         else:
             await ctx.send("Too bad. Good luck with the next time!")
 
-    @commands.command(aliases=["tr", "type", "race"])
-    @commands.guild_only()
-    async def typerace(self, ctx, words: int = 10):
-        """Race typing speeds!"""
-        if not 5 <= words <= 50:
-            return await ctx.send("Use between 5 and 50 words.")
-        if not self.words:
-            async with self.bot.session.get("https://raw.githubusercontent.com/first20hours/google-10000-english/master/google-10000-english-usa-no-swears-medium.txt") as resp:
-                self.words = (await resp.text()).splitlines()
+    async def run_race(self, ctx, prompt, is_valid):
+        await ctx.send(f"Race begins in 5 seconds. Get ready!")
+        await asyncio.sleep(5)
 
-        WAIT_SECONDS = 5
-        await ctx.send(f"Type race begins in {WAIT_SECONDS} seconds. Get ready!")
-        await asyncio.sleep(WAIT_SECONDS)
-
-        prompt = " ".join(random.choices(self.words, k=words))
         zwsp = "\u2060"
-
-        start = await ctx.send(zwsp.join(list(prompt.translate(str.maketrans({
+        start = await ctx.send(zwsp.join(prompt.translate(str.maketrans({
             "a": "а",
             "c": "с",
             "e": "е",
@@ -145,13 +133,13 @@ class Games(commands.Cog):
             "p": "р",
             "y": "у",
             "x": "х"
-        })))))
+        }))))
 
         winners = {}
         is_ended = asyncio.Event()
 
         async def on_message(message):
-            if message.channel == ctx.channel and message.content.lower() == prompt.lower() and not message.author.bot and message.author not in winners:
+            if message.channel == ctx.channel and is_valid(message.content) and not message.author.bot and message.author not in winners:
                 if not winners:
                     async def ender():
                         await asyncio.sleep(10)
@@ -170,6 +158,38 @@ class Games(commands.Cog):
             await ctx.send("\n".join(f"{i + 1}. {u.name.replace('@', '@' + zwsp)} - {t:.4f} seconds ({len(prompt) / t * 12:.2f}WPM)" for i, (u, t) in enumerate(winners.items())))
         finally:
             self.bot.remove_listener(on_message)
+
+    @commands.command(aliases=["tr", "type", "race"])
+    @commands.guild_only()
+    async def typerace(self, ctx, words: int = 10):
+        """A simple typing race."""
+        if not 5 <= words <= 75:
+            return await ctx.send("Use between 5 and 75 words.")
+        if not self.words:
+            async with self.bot.session.get("https://raw.githubusercontent.com/first20hours/google-10000-english/master/google-10000-english-usa-no-swears-medium.txt") as resp:
+                self.words = (await resp.text()).splitlines()
+        prompt = " ".join(random.choices(self.words, k=words))
+        await self.run_race(ctx, prompt, lambda s: s.lower() == prompt)
+
+    @commands.command()
+    @commands.guild_only()
+    async def kanarace(self, ctx, kana_count: int = 10, use_katakana: bool = False):
+        """A typing race with hiragana (or katakana)"""
+        if not 1 <= kana_count <= 50:
+            return await ctx.send("Use between 1 and 50 kana.")
+        hiragana = "あいうえおかきくけこがぎぐげごさしすせそざじずぜぞたちつてとだぢづでどなにぬねのはひふへほばびぶべぼぱぴぷぺぽまみむめもやゆよらりるれろわを"
+        katakana = "アイウエオカキクケコガギグゲゴサシスセソザジズゼゾタチツテトダヂヅデドナニヌネノハヒフヘホバビブベボポピプペポマミムメモヤユヨラリルレロワヲ"
+        table = str.maketrans(katakana, hiragana)
+        prompt = "".join(random.choices(katakana if use_katakana else hiragana, k=kana_count))
+        await self.run_race(ctx, prompt, lambda s: s.translate(table) == prompt.translate(table))
+
+    @commands.command()
+    @commands.guild_only()
+    async def sortrace(self, ctx, count: int = 10, max_value: int = 100):
+        """Why would you play this?"""
+        prompt = [random.randint(0, max_value) for _ in range(count)]
+        sorted_prompt = sorted(prompt)
+        await self.run_race(ctx, str(prompt), lambda s: [(m := x.strip("[],")).isdigit() and int(m) for x in s.split()] == sorted_prompt)
 
 
 async def setup(bot):
