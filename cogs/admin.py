@@ -1,3 +1,4 @@
+
 import asyncio
 import io
 import traceback
@@ -38,7 +39,7 @@ class Admin(commands.Cog):
     @commands.command()
     async def update(self, ctx):
         """Runs `git pull` to update the bot."""
-        subproc = await asyncio.create_subprocess_exec("git", "pull", stdout=PIPE)
+        subproc = await asyncio.create_subprocess_shell("git fetch && git log ..@{u} && git rebase", stdout=PIPE)
         embed = make_embed(color=colors.EMBED_INFO, title="Running `git pull`")
         m = await ctx.send(embed=embed)
         returncode = await subproc.wait()
