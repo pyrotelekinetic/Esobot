@@ -44,9 +44,12 @@ class Temporary(commands.Cog):
         self.addresses = load_json(ADDRESS_SAVES)
         self.pride_loop.start()
 
-    # 3AM UTC
+    def cog_unload():
+        self.pride_loop.cancel()
+
+    # 12PM UTC
     @tasks.loop(
-        time=datetime.time(3),
+        time=datetime.time(12),
     )
     async def pride_loop(self):
         PATH = "./assets/limes/"
