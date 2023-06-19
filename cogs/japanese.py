@@ -33,7 +33,7 @@ class DictSource(menus.ListPageSource):
             description = format_jp_entry(entry['japanese'][0])
         )
         if tags := [
-            *(["common"]*entry.get("is_common", False)),
+            *["common"]*entry.get("is_common", False),
             *sorted(f"JLPT {x.partition('-')[2]}" for x in entry.get("jlpt", []))[-1:],
         ]:
             e.title += f" ({', '.join(tags)})"

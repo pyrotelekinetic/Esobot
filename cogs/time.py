@@ -70,8 +70,7 @@ class Time(commands.Cog):
                 message = "You don't have a timezone set. You can set one with `time set`."
             else:
                 p = get_pronouns(user)
-                do_not = "don't" if p.plural else "doesn't"
-                message = f'{p.subj.capitalize()} {do_not} have a timezone set.'
+                message = f'{p.Subj()} {p.plrnt("do", "es")} have a timezone set.'
             await show_error(ctx, message, "Timezone not set")
         else:
             embed = make_embed(
@@ -205,7 +204,7 @@ class Time(commands.Cog):
         await ctx.send(
             embed=make_embed(
                 title="Ping scheduled",
-                description=f"{member.mention} will be pinged when {p.subj} {'go' if p.plural else 'goes'} online with the message:\n\n{message}",
+                description=f"{member.mention} will be pinged when {p.subj} {p.plr('go', 'es')} online with the message:\n\n{message}",
                 color=colors.EMBED_SUCCESS,
             )
         )
@@ -228,7 +227,7 @@ class Time(commands.Cog):
         await ctx.send(
             embed=make_embed(
                 title="Ping scheduled",
-                description=f"{member.mention} will be pinged when {p.subj} {'stop' if p.plural else 'stops'} playing a game with the message:\n\n{message}",
+                description=f"{member.mention} will be pinged when {p.subj} {p.plr('stop', 's')} playing a game with the message:\n\n{message}",
                 color=colors.EMBED_SUCCESS,
             )
         )

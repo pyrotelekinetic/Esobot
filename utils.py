@@ -107,6 +107,21 @@ class Pronouns:
         self.refl = refl
         self.plural = plural
 
+    def Subj(self):
+        return self.subj.capitalize()
+
+    def am(self):
+        if self.subj == "I":
+            return "I'm"
+        return self.subj + ("'re" if self.plural else "'m")
+
+    def plr(self, a, b):
+        return a + b*self.plural
+
+    def plrnt(self, a, b):
+        return self.plr(a, b) + "n't"
+
+
 pronoun_sets = {
     "he/him": Pronouns("he", "him", "his", "his", "himself", False),
     "she/her": Pronouns("she", "her", "her", "hers", "herself", False),

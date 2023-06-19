@@ -4,6 +4,5 @@ EVENT_SAVES = "events.json"
 HUB_SAVES = "hub.json"
 REACTION_ROLE_SAVES = "reaction_roles.json"
 IDEA_SAVES = "ideas.json"
-ANON_SAVES = "anon.json"
 ADDRESS_SAVES = "addresses.json"
-SAVE_FILES = {TIME_SAVES: "{}", EVENT_SAVES: "{}", HUB_SAVES: "[{},{}]", REACTION_ROLE_SAVES: "{}", IDEA_SAVES: '[]', ANON_SAVES: '{"allow": [], "deny": [], "names": {}, "conns": []}', ADDRESS_SAVES: '{}'}
+SAVE_FILES = {TIME_SAVES: "{}", EVENT_SAVES: "{}", HUB_SAVES: "[{},{}]", REACTION_ROLE_SAVES: "{}", IDEA_SAVES: '[]', ADDRESS_SAVES: '{}'}

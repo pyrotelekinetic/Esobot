@@ -82,8 +82,11 @@ class Games(commands.Cog):
         while True:
             t = base + datetime.timedelta(milliseconds=random.randint(0, int((datetime.datetime.utcnow() - base).total_seconds() * 1000)))
             async for message in channel.history(after=t, limit=1):
-                if (not message.content or len(message.content) > 25) and message.author in ctx.guild.members:
+                if message.content and len(message.content) < 240 and message.author in ctx.guild.members:
                     break
+            else:
+                continue
+            break
 
         embed = make_embed(
             description=message.content,
