@@ -27,7 +27,7 @@ class Anon(commands.Cog):
         self.channel_conns = defaultdict(list)
 
     @commands.dm_only()
-    @commands.group(invoke_without_command=True, name="canon")
+    @commands.group(invoke_without_command=True)
     async def anon(self, ctx, target: Optional[Union[discord.User, discord.TextChannel]], *, name=None):
         """Use in DMs with Esobot to anonymously message a user or channel."""
         target = target or self.bot.get_channel(EVENT_DISCUSSION)
