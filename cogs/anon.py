@@ -121,6 +121,7 @@ class Anon(commands.Cog):
 
     @anon.command(aliases=["settings", "config", "opt", "options"])
     async def cfg(self, ctx, name=None, value: bool | None = None):
+        """Query and set options related to comments and anon."""
         url = f"{CANON_URL}/users/{ctx.author.id}/settings"
         async with self.bot.session.get(url) as resp:
             settings = await resp.json()
