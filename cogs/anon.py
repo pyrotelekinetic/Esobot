@@ -61,7 +61,7 @@ class Anon(commands.Cog):
             await target.send(f"You are being messaged anonymously by '{name}'.")
         elif not ((member := target.guild.get_member(ctx.author.id)) and target.permissions_for(member).send_messages):
             return await ctx.send("You can't speak in that channel.")
-        elif target.id != EVENT_DISCUSSION:
+        elif target.id not in (EVENT_DISCUSSION, 1047299292492206104):
             return await ctx.send(f"Anonymous messages are currently only allowed in <#{EVENT_DISCUSSION}>.")
         else:
             where = "there"
