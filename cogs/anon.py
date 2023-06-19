@@ -138,6 +138,7 @@ class Anon(commands.Cog):
                 if setting["value"] if cfg_norm(setting["name"]) != cfg_norm(name) else value if value is not None else not setting["value"]:
                     d[setting["name"]] = True
             await self.bot.session.post(url, json=d)
+            await ctx.send("All done.")
 
     @commands.is_owner()
     @anon.command(aliases=["uncover", "reveal", "deanon", "de"])
