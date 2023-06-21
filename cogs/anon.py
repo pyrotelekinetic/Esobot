@@ -165,7 +165,7 @@ class Anon(commands.Cog):
     @commands.Cog.listener()
     async def on_message(self, message):
         conns = self.channel_conns[message.content]
-        if not message.guild and conn := self.conns.get(message.author):
+        if not message.guild and (conn := self.conns.get(message.author)):
             conns = [conn, *[Connection(conn.name, c.target, conn.persona) for c in self.channel_conns[conn.target]]]
         for conn in conns:
             if message.author == conn.target or message.author == self.bot.user or message.content.startswith("!"):
