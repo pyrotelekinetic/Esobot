@@ -164,19 +164,21 @@ class Anon(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message):
+        if message.author == self.bot.user or message.content.startswith("!"):
+            return
         conns = self.channel_conns[message.content]
         if not message.guild and (conn := self.conns.get(message.author)):
             conns = [conn, *[Connection(conn.name, c.target, conn.persona) for c in self.channel_conns[conn.target]]]
+            async with self.bot.session.post(f"{CANON_URL}/users/{message.author.id}/transform", json={"text": message.content, "persona": conn.persona}) as resp:
+                content = (await resp.json())["text"]
+        else:
+            content = message.content
+        files = [await f.to_file() for f in message.attachments]
         for conn in conns:
-            if message.author == conn.target or message.author == self.bot.user or message.content.startswith("!"):
-                return
-            if conn.persona:
-                async with self.bot.session.post(f"{CANON_URL}/users/{message.author.id}/transform", json={"text": message.content, "persona": conn.persona}) as resp:
-                    content = (await resp.json())["text"]
-            else:
-                content = message.content
+            if message.author == conn.target:
+                continue
             name = conn.name or message.author.display_name
-            await conn.target.send(f"<{discord.utils.escape_markdown(name)}> {content}", embeds=message.embeds, files=[await f.to_file() for f in message.attachments])
+            await conn.target.send(f"<{discord.utils.escape_markdown(name)}> {content}", embeds=message.embeds, files=files)
 
 async def setup(bot):
     await bot.add_cog(Anon(bot))
