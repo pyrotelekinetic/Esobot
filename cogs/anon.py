@@ -169,7 +169,7 @@ class Anon(commands.Cog):
     async def on_message(self, message):
         if message.author == self.bot.user or message.content.startswith("!"):
             return
-        conns = self.channel_conns[message.content]
+        conns = self.channel_conns.get(message.channel)
         if not message.guild and (conn := self.conns.get(message.author)):
             conns = [conn, *[Connection(conn.name, c.target, conn.persona) for c in self.channel_conns[conn.target]]]
             async with self.bot.session.post(f"{CANON_URL}/users/{message.author.id}/transform", json={"text": message.content, "persona": conn.persona}) as resp:
