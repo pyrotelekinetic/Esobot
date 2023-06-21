@@ -28,8 +28,11 @@ class Anon(commands.Cog):
 
     @commands.dm_only()
     @commands.group(invoke_without_command=True)
-    async def anon(self, ctx, target: Optional[Union[discord.User, discord.TextChannel, discord.Thread]], *, name=None):
+    async def anon(self, ctx, target: Optional[Union[discord.User, discord.TextChannel]], *, name=None):
         """Use in DMs with Esobot to anonymously message a user or channel."""
+        if name == "bozo":
+            name = None
+            target = self.bot.get_channel(1121100917073252373)
         target = target or self.bot.get_channel(EVENT_DISCUSSION)
 
         if ctx.author in self.conns:
