@@ -103,7 +103,7 @@ class Anon(commands.Cog):
         await ctx.send("\n".join(l))
 
     @commands.dm_only()
-    @personas.command(aliases=["create", "make"])
+    @personas.command(aliases=["create", "make", "new"])
     async def add(self, ctx, *, name):
         """Add a new anonymous persona."""
         async with self.bot.session.post(f"{CANON_URL}/users/{ctx.author.id}/personas", json={"name": name}) as resp:
@@ -113,10 +113,14 @@ class Anon(commands.Cog):
         await ctx.send("All done.")
 
     @commands.dm_only()
-    @personas.command(aliases=["delete", "nix"])
+    @personas.command(aliases=["delete", "del", "rm", "nix"])
     async def remove(self, ctx, *, name):
         """Remove an anonymous persona."""
-        await self.bot.session.delete(f"{CANON_URL}/users/{ctx.author.id}/personas")
+        async with self.bot.session.get(CANON_URL + "/personas/who", params={"name": name}) as resp:
+            j = await resp.json()
+        if j["result"] == "missing":
+            return await ctx.send("You don't have a persona by that name.")
+        await self.bot.session.delete(f"{CANON_URL}/personas/{j['id']}")
         await ctx.send("All done.")
 
     @anon.command(aliases=["settings", "config", "opt", "options"])
@@ -147,7 +151,7 @@ class Anon(commands.Cog):
             j = await resp.json()
         if j["result"] == "missing":
             return await ctx.send("There's nobody called that.")
-        user = await self.bot.get_user(j["owner"])
+        user = await self.bot.get_user(j["user"])
         await ctx.send(f"That's {user}.")
 
     @commands.guild_only()
