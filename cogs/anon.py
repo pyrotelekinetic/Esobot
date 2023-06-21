@@ -164,9 +164,11 @@ class Anon(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message):
-        for conn in filter(None, [self.conns.get(message.author)]) if not message.guild else self.channel_conns[message.channel]:
-            print(conn.name, conn.target, conn.persona)
-            if message.author == self.bot.user or message.content.startswith("!"):
+        conns = self.channel_conns[message.content]
+        if conn := self.conns.get(message.author):
+            conns = [conn, *self.channel_conns.get(conn.target, [])]
+        for conn in conns:
+            if message.author == conn.target or message.author == self.bot.user or message.content.startswith("!"):
                 return
             if conn.persona:
                 async with self.bot.session.post(f"{CANON_URL}/users/{message.author.id}/transform", json={"text": message.content, "persona": conn.persona}) as resp:
