@@ -59,6 +59,7 @@ class Games(commands.Cog):
     async def hwdyk(self, ctx):
         pass
 
+    @commands.guild_only()
     @hwdyk.command(aliases=["msg"])
     async def message(self, ctx):
         """Pick a random message. If you can guess who sent it, you win!"""
