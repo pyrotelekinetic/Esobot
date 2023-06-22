@@ -99,7 +99,7 @@ class Games(commands.Cog):
             if filename.endswith(".png") or filename.endswith(".jpg") or filename.endswith(".jpeg"):
                 embed.set_image(url=message.attachments[0].url)
 
-        bot_msg = await ctx.send("Who sent this message?", embed=embed)
+        bot_msg = await ctx.reply("Who sent this message?", embed=embed)
 
         while True:
             r = await self.bot.wait_for("message", check=lambda m: m.channel == ctx.channel and m.author == ctx.author)
@@ -117,9 +117,9 @@ class Games(commands.Cog):
         await bot_msg.edit(embed=embed)
 
         if member == message.author:
-            await ctx.send("You were correct!")
+            await r.reply("You were correct!")
         else:
-            await ctx.send("Too bad. Good luck with the next time!")
+            await r.reply("Too bad. Good luck with the next time!")
 
     async def run_race(self, ctx, prompt, is_valid):
         await ctx.send(f"Race begins in 5 seconds. Get ready!")
