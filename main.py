@@ -68,7 +68,7 @@ bot = commands.Bot(
     command_prefix=commands.when_mentioned_or(COMMAND_PREFIX),
     case_insensitive=True,
     status=discord.Status.dnd,
-    allowed_mentions=discord.AllowedMentions(everyone=False),
+    allowed_mentions=discord.AllowedMentions(everyone=False, replied_user=False),
     intents=intents
 )
 bot.owner_id = owner_id
