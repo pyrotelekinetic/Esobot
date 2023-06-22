@@ -60,7 +60,7 @@ class Anon(commands.Cog):
                 return await ctx.send("{p.are()} already in an anonymous channel or {'have' if p.plural else 'has'} anonymous DMs disabled.")
             where = f"to {p.obj}"
             prep = "with"
-            self.conns[target] = Connection(target.global_name, ctx.author, None)
+            self.conns[target] = Connection(target.global_name or target.name, ctx.author, None)
             await target.send(f"You are being messaged anonymously by '{name}'.")
         elif not ((member := target.guild.get_member(ctx.author.id)) and target.permissions_for(member).send_messages):
             return await ctx.send("You can't speak in that channel.")
