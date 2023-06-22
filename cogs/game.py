@@ -65,10 +65,10 @@ class Games(commands.Cog):
 
         if ctx.guild.name == "QWD":
             year = 2023
-            channel = ctx.guild.get_channel(random.choice([1047299292492206104, 1050124370363818037]))
+            channel = ctx.guild.get_channel(1047299292492206104 if random.random() < .909 else 1050124370363818037)
         else:
             year = 2020
-            # hardcoded list of "discussion" channels: esolang*, recreation-room, off-topic, programming, *-games
+            # hardcoded list of "discussion" channels: esolang*, mathematics, off-topic, programming, *-games
             channel = self.bot.get_channel(random.choice([
                 348671457808613388,
                 348702485994668033,
