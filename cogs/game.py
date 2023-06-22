@@ -63,18 +63,21 @@ class Games(commands.Cog):
     async def message(self, ctx):
         """Pick a random message. If you can guess who sent it, you win!"""
 
-        # hardcoded list of "discussion" channels: esolang*, recreation-room, off-topic, programming, *-games
-        channel = self.bot.get_channel(random.choice([
-            348671457808613388,
-            348702485994668033,
-            348702065062838273,
-            351171126594109455,
-            348702212110680064,
-            412764872816852994,
-            415981720286789634,
-            445375649511768074,
-            348697452712427522,
-        ]))
+        if ctx.guild.name == "QWD":
+            channel = ctx.guild.get_channel(random.choice([1047299292492206104, 1050124370363818037]))
+        else:
+            # hardcoded list of "discussion" channels: esolang*, recreation-room, off-topic, programming, *-games
+            channel = _bot.get_channel(random.choice([
+                348671457808613388,
+                348702485994668033,
+                348702065062838273,
+                351171126594109455,
+                348702212110680064,
+                412764872816852994,
+                415981720286789634,
+                445375649511768074,
+                348697452712427522,
+            ]))
 
         # this doesn't uniformly pick a random message: it strongly prefers messages sent after longer pauses
         # however this is a trade-off for making it incredibly cheap to grab a message because we don't have to spam history calls or store any data
