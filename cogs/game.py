@@ -80,7 +80,7 @@ class Games(commands.Cog):
         # however this is a trade-off for making it incredibly cheap to grab a message because we don't have to spam history calls or store any data
         base = datetime.datetime(year=2020, month=1, day=1)
         t = base + datetime.timedelta(milliseconds=random.randint(0, int((datetime.datetime.utcnow() - base).total_seconds() * 1000)))
-        async for message in channel.history(after=t):
+        async for message in channel.history(before=t):
             if message.content and len(message.content) >= 20 and message.author in ctx.guild.members:
                 break
 
