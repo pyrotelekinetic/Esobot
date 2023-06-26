@@ -43,7 +43,7 @@ class Anon(commands.Cog):
         else:
             async with self.bot.session.get(CANON_URL + "/personas/who", params={"name": name}) as resp:
                 j = await resp.json()
-            if j["result"] == "missing":
+            if j["result"] == "missing" or j["user"] != ctx.author.id:
                 return await ctx.send("You don't have a persona by that name.")
             persona = j["id"]
 
