@@ -178,6 +178,8 @@ class Anon(commands.Cog):
             if message.author == conn.target:
                 continue
             name = conn.name or message.author.display_name
+            for file in files:
+                file.fp.seek(0)
             await conn.target.send(f"<{discord.utils.escape_markdown(name)}> {content}", embeds=message.embeds, files=files)
 
 async def setup(bot):
