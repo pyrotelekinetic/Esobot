@@ -1,5 +1,5 @@
 from collections import defaultdict
-from typing import Union, Optional
+from typing import Union, Optional, MutableMapping
 
 import aiohttp
 import discord
@@ -18,13 +18,21 @@ class Connection:
 def cfg_norm(s):
     return s.replace("_", "-")
 
+async def persona_named(ctx, name):
+    async with ctx.bot.session.get(CANON_URL + "/personas/who", params={"name": name}) as resp:
+        j = await resp.json()
+    if j["result"] == "missing" or j["user"] != ctx.author.id:
+        await ctx.send("You don't have a persona by that name.")
+        return None
+    return j["id"]
+
 class Anon(commands.Cog):
     """Send messages anonymously."""
 
     def __init__(self, bot):
         self.bot = bot
         self.conns = {}
-        self.channel_conns = defaultdict(list)
+        self.channel_conns: MutableMapping[discord.TextChannel, list[Connection]] = defaultdict(list)
 
     @commands.dm_only()
     @commands.group(invoke_without_command=True)
@@ -40,12 +48,8 @@ class Anon(commands.Cog):
                 j = await resp.json()
             name = j[0]["name"]
             persona = j[0]["id"]
-        else:
-            async with self.bot.session.get(CANON_URL + "/personas/who", params={"name": name}) as resp:
-                j = await resp.json()
-            if j["result"] == "missing" or j["user"] != ctx.author.id:
-                return await ctx.send("You don't have a persona by that name.")
-            persona = j["id"]
+        elif not (persona := await persona_named(ctx, name)):
+            return
 
         if isinstance(target, discord.User):
             p = get_pronouns(target)
@@ -116,11 +120,9 @@ class Anon(commands.Cog):
     @personas.command(aliases=["delete", "del", "rm", "nix"])
     async def remove(self, ctx, *, name):
         """Remove an anonymous persona."""
-        async with self.bot.session.get(CANON_URL + "/personas/who", params={"name": name}) as resp:
-            j = await resp.json()
-        if j["result"] == "missing":
-            return await ctx.send("You don't have a persona by that name.")
-        await self.bot.session.delete(f"{CANON_URL}/personas/{j['id']}")
+        if not (persona := await persona_named(ctx, name)):
+            return
+        await self.bot.session.delete(f"{CANON_URL}/personas/{persona}")
         await ctx.send("All done.")
 
     @anon.command(aliases=["settings", "config", "opt", "options"])
