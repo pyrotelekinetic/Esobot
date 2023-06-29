@@ -5,14 +5,16 @@ import os
 import random
 import uuid
 import shlex
+import re
 from textwrap import dedent
 from typing import Optional
+from collections import defaultdict
 
 import discord
 from discord.ext import commands, tasks
 from PIL import Image, ImageOps
 
-from constants.paths import ADDRESS_SAVES
+from constants.paths import QWD_SAVES
 from utils import aggressive_normalize, load_json, save_json, get_pronouns
 
 
@@ -34,6 +36,33 @@ def is_olivia(ctx):
         raise commands.CommandNotFound()
     return True
 
+def parse_height(s):
+    nums = re.findall(r"\d+(?:.\d+)?", s)
+    match [float(x) for x in nums]:
+        case [cm]:
+            return cm
+        case [feet, inches]:
+            return int(2.54 * (feet*12 + inches))
+        case [feet, in_top, in_bottom]: 
+            return int(2.54 * (feet*12 + in_top/in_bottom))
+        case [feet, in_whole, in_top, in_bottom]:
+            return int(2.54 * (feet*12 + in_whole + in_top/in_bottom))
+        case _:
+            raise commands.BadArgument("couldn't parse height")
+
+def show_height(cm):
+    base_in = cm / 2.54
+    feet, inches = divmod(base_in, 12)
+    return f"{cm}cm ({feet:.0f}'{inches:.0f}\")"
+
+def rank_enumerate(xs, *, key=lambda x: x, reverse=True):
+    cur_idx = None
+    cur_key = None
+    for idx, x in enumerate(sorted(xs, key=key), start=1):
+        if cur_key is None or key(x) < cur_key:
+            cur_idx = idx
+            cur_key = key(x)
+        yield (cur_idx, x)
 
 class Temporary(commands.Cog):
     """Temporary, seasonal, random and miscellaneous poorly-written functionality. Things in here should probably be developed further or removed at some point."""
@@ -41,10 +70,10 @@ class Temporary(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.last_10 = None
-        self.addresses = load_json(ADDRESS_SAVES)
+        self.qwdies = defaultdict(dict, load_json(QWD_SAVES))
         self.pride_loop.start()
 
-    def cog_unload():
+    def cog_unload(self):
         self.pride_loop.cancel()
 
     # 12PM UTC
@@ -157,28 +186,64 @@ class Temporary(commands.Cog):
         b.seek(0)
         await ctx.send(file=discord.File(b, "result.png"))
 
-    @commands.group(hidden=True, invoke_without_command=True, aliases=["doxx"])
-    @commands.guild_only()
+    @commands.group(invoke_without_command=True, aliases=["doxx"])
     @is_in_qwd
     async def dox(self, ctx, *, target: discord.Member):
         """Reveal someone's address if they have set it through the bot. Must be used in a guild; the answer will be DMed to you."""
         p = get_pronouns(target)
-        if not (addr := self.addresses.get(str(target.id))):
+        if not (addr := self.qwdies[str(target.id)].get("address")):
             return await ctx.send(f'{p.Subj()} {p.plrnt("do", "es")} have an address set.')
         await ctx.author.send(addr)
         await ctx.send(f"Alright, I've DMed you {p.pos_det} address.")
-        
 
-    @dox.group(hidden=True)
+    @dox.command()
     @commands.dm_only()
     async def set(self, ctx, *, address=""):
         """Set your address to be doxxed by others. Must be used in a DM with the bot. You can clear your address by using `set` without an argument."""
-        self.addresses[str(ctx.author.id)] = address
-        save_json(ADDRESS_SAVES, self.addresses)
+        self.qwdies[str(ctx.author.id)]["address"] = address
+        save_json(QWD_SAVES, self.qwdies)
         if not address:
             await ctx.send("Successfully cleared your address.")
         else:
-            await ctx.send("Successfully set your address.")
+            await ctx.send("Successfully set your address.")     
+
+    @commands.group(invoke_without_command=True)
+    @is_in_qwd
+    async def height(self, ctx, *, target: discord.Member):
+        """Show someone's height if they have set it through the bot."""
+        p = get_pronouns(target)
+        if not (height := self.qwdies[str(target.id)].get("height")):
+            return await ctx.send(f'{p.Subj()} {p.plrnt("do", "es")} have a height set.')
+        await ctx.send("{p.Subj()} are {show_height(height)} tall.")
+
+    @height.command(aliases=["lb", "top"])
+    @is_in_qwd
+    async def leaderboard(self, ctx):
+        """Show a ranking of people's heights."""
+        people = []
+        for k, v in self.qwdies.items():
+            height = v.get("height")
+            member = ctx.guild.get_member(int(k))
+            if not height or not member:
+                continue
+            people.append((height, member))
+
+        entries = []
+        for i, (height, member) in rank_enumerate(people, reverse=False):
+            entries.append(rf"{i}\. {member.global_name} - {show_height(height)}")
+        embed = discord.Embed(title="The shortest qwdies", colour=discord.Colour(0x75ffe3), description="\n".join(entries))
+        await ctx.send(embed=embed)
+
+    @height.command()
+    @is_in_qwd
+    async def set(self, ctx, *, height: parse_height):
+        """Set your height for the height leaderboard. You can clear your height by passing `0`."""
+        self.qwdies[str(ctx.author.id)]["height"] = height
+        save_json(QWD_SAVES, self.qwdies)
+        if not height:
+            await ctx.send("Successfully cleared your height.")
+        else:
+            await ctx.send(f"I set your height to {height}cm.")
 
     @commands.group(hidden=True, invoke_without_command=True)
     async def olivia(self, ctx):
