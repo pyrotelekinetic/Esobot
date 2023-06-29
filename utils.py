@@ -116,7 +116,7 @@ class Pronouns:
         return self.Subj() + ("'re" if self.plural else "'s")
 
     def plr(self, a, b):
-        return a + b*self.plural
+        return a + b*(not self.plural)
 
     def plrnt(self, a, b):
         return self.plr(a, b) + "n't"
