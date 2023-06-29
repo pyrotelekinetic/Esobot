@@ -231,7 +231,7 @@ class Temporary(commands.Cog):
             people.append((height, member))
 
         entries = []
-        for i, (height, member) in rank_enumerate(people, key=lambda x: (x[0], x.global_name)):
+        for i, (height, member) in rank_enumerate(people, key=lambda x: (x[0], x[1].global_name)):
             entries.append(rf"{i}\. {member.global_name} - {show_height(height)}")
         embed = discord.Embed(title="The shortest qwdies", colour=discord.Colour(0x75ffe3), description="\n".join(entries))
         await ctx.send(embed=embed)
