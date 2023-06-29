@@ -237,7 +237,7 @@ class Temporary(commands.Cog):
     @height.command()
     @is_in_qwd
     async def set(self, ctx, *, height: parse_height):
-        """Set your height for the height leaderboard. You can clear your height by passing `0`."""
+        """Set your height (in cm or feet and inches) for the height leaderboard. You can clear your height by passing `0`."""
         self.qwdies[str(ctx.author.id)]["height"] = height
         save_json(QWD_SAVES, self.qwdies)
         if not height:
