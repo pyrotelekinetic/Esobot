@@ -215,7 +215,7 @@ class Temporary(commands.Cog):
         p = get_pronouns(target)
         if not (height := self.qwdies[str(target.id)].get("height")):
             return await ctx.send(f'{p.Subj()} {p.plrnt("do", "es")} have a height set.')
-        are = p.are() if person else "You're"
+        they_are = p.are() if person else "You're"
         await ctx.send(f"{they_are} {show_height(height)} tall.")
 
     @height.command(aliases=["lb", "top"])
