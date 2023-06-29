@@ -113,7 +113,7 @@ class Pronouns:
     def are(self):
         if self.subj == "I":
             return "I'm"
-        return self.Subj() + ("'re" if self.plural else "'m")
+        return self.Subj() + ("'re" if self.plural else "'s")
 
     def plr(self, a, b):
         return a + b*self.plural
