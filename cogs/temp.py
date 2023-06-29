@@ -55,13 +55,13 @@ def show_height(cm):
     feet, inches = divmod(base_in, 12)
     return f"{cm:.{int(isinstance(cm, float))}f}cm ({feet:.0f}'{inches:.0f}\")"
 
-def rank_enumerate(xs):
+def rank_enumerate(xs, *, key):
     cur_idx = None
     cur_key = None
-    for idx, x in enumerate(sorted(xs), start=1):
-        if cur_key is None or x >= cur_key:
+    for idx, x in enumerate(sorted(xs, key=key), start=1):
+        if cur_key is None or key(x) >= cur_key:
             cur_idx = idx
-            cur_key = x
+            cur_key = key(x)
         yield (cur_idx, x)
 
 class Temporary(commands.Cog):
@@ -231,7 +231,7 @@ class Temporary(commands.Cog):
             people.append((height, member))
 
         entries = []
-        for i, (height, member) in rank_enumerate(people):
+        for i, (height, member) in rank_enumerate(people, key=lambda x: (x[0], x.global_name)):
             entries.append(rf"{i}\. {member.global_name} - {show_height(height)}")
         embed = discord.Embed(title="The shortest qwdies", colour=discord.Colour(0x75ffe3), description="\n".join(entries))
         await ctx.send(embed=embed)
