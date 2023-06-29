@@ -38,7 +38,7 @@ def is_olivia(ctx):
 
 def parse_height(s):
     nums = re.findall(r"\d+(?:.\d+)?", s)
-    match [float(x) for x in nums]:
+    match [float(x) if "." in x else int(x) for x in nums]:
         case [cm]:
             return cm
         case [feet, inches]:
@@ -53,7 +53,7 @@ def parse_height(s):
 def show_height(cm):
     base_in = cm / 2.54
     feet, inches = divmod(base_in, 12)
-    return f"{cm}cm ({feet:.0f}'{inches:.0f}\")"
+    return f"{cm:.{int(isinstance(cm, float))}f}cm ({feet:.0f}'{inches:.0f}\")"
 
 def rank_enumerate(xs, *, key=lambda x: x, reverse=True):
     cur_idx = None
