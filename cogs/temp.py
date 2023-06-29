@@ -37,7 +37,7 @@ def is_olivia(ctx):
     return True
 
 def parse_height(s):
-    nums = re.findall(r"\d+(?:.\d+)?", s)
+    nums = re.findall(r"\d+(?:\.\d+)?", s)
     match [float(x) if "." in x else int(x) for x in nums]:
         case [cm]:
             return cm
@@ -238,12 +238,13 @@ class Temporary(commands.Cog):
     @is_in_qwd
     async def set(self, ctx, *, height: parse_height):
         """Set your height (in cm or ft/in) for the height leaderboard. You can clear your height by passing `0`."""
-        self.qwdies[str(ctx.author.id)]["height"] = height
-        save_json(QWD_SAVES, self.qwdies)
-        if not height:
+        if height < 50:
+            del self.qwdies[str(ctx.author.id)]["height"]
             await ctx.send("Successfully cleared your height.")
         else:
+            self.qwdies[str(ctx.author.id)]["height"] = height
             await ctx.send(f"I set your height to {show_height(height)}.")
+        save_json(QWD_SAVES, self.qwdies)
 
     @commands.group(hidden=True, invoke_without_command=True)
     async def olivia(self, ctx):
