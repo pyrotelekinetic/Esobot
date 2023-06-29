@@ -209,8 +209,9 @@ class Temporary(commands.Cog):
 
     @commands.group(invoke_without_command=True)
     @is_in_qwd
-    async def height(self, ctx, *, target: discord.Member):
+    async def height(self, ctx, *, target: discord.Member = None):
         """Show someone's height if they have set it through the bot."""
+        target = target or ctx.author
         p = get_pronouns(target)
         if not (height := self.qwdies[str(target.id)].get("height")):
             return await ctx.send(f'{p.Subj()} {p.plrnt("do", "es")} have a height set.')
