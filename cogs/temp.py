@@ -239,8 +239,12 @@ class Temporary(commands.Cog):
     async def set(self, ctx, *, height: parse_height):
         """Set your height (in cm or ft/in) for the height leaderboard. You can clear your height by passing `0`."""
         if height < 50:
-            del self.qwdies[str(ctx.author.id)]["height"]
-            await ctx.send("Successfully cleared your height.")
+            try:
+                del self.qwdies[str(ctx.author.id)]["height"]
+            except KeyError:
+                await ctx.send("Did nothing.")
+            else:
+                await ctx.send("Successfully cleared your height.")
         else:
             self.qwdies[str(ctx.author.id)]["height"] = height
             await ctx.send(f"I set your height to {show_height(height)}.")
