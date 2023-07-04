@@ -16,14 +16,6 @@ LOG_LEVEL_API = logging.WARNING
 LOG_LEVEL_BOT = logging.INFO
 LOG_FMT = "[%(asctime)s] [%(name)s] [%(levelname)s] %(message)s"
 
-
-try:
-    import discord
-    import asyncio
-except ImportError:
-    print("discord.py is required. Run `python3 -m pip install -U discord.py`.")
-    exit(1)
-
 try:
     with open("token.txt") as f:
         TOKEN = f.read().strip()
