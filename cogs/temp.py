@@ -219,7 +219,7 @@ class Temporary(commands.Cog):
         they_are = p.are() if person else "You're"
         await ctx.send(f"{they_are} {show_height(height)} tall.")
 
-    @height.command(aliases=["lb", "top"])
+    @height.command(aliases=["lb", "top", "list"])
     @is_in_qwd
     async def leaderboard(self, ctx):
         """Show a ranking of people's heights."""
