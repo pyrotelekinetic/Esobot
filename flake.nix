@@ -13,6 +13,7 @@ outputs = { self, nixpkgs }: let
   pkgs = nixpkgs.legacyPackages.x86_64-linux;
   jishaku = pkgs.callPackage ./jishaku.nix {};
   discord-ext-menus = pkgs.callPackage ./discord-ext-menus.nix {};
+  aiopywttr = pkgs.callPackage ./aiopywttr.nix {};
 in {
   packages.x86_64-linux.default = pkgs.python311Packages.buildPythonPackage {
       pname = "esobot";
@@ -32,6 +33,7 @@ in {
         pillow
         dateparser
         pyahocorasick
+        aiopywttr
       ];
 
       preBuild = ''
