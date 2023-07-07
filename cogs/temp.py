@@ -242,7 +242,7 @@ class Temporary(commands.Cog):
     @is_in_qwd
     async def set(self, ctx, *, height: parse_height):
         """Set your height (in cm or ft/in) for the height leaderboard. You can clear your height by passing `0`."""
-        if height < 50:
+        if height < 140:
             try:
                 del self.qwdies[str(ctx.author.id)]["height"]
             except KeyError:
