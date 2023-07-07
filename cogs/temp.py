@@ -6,6 +6,7 @@ import random
 import uuid
 import shlex
 import re
+import math
 import unicodedata
 from textwrap import dedent
 from typing import Optional
@@ -52,7 +53,7 @@ def parse_height(s):
             raise commands.BadArgument("couldn't parse height")
 
 def show_height(cm):
-    base_in = int(cm / 2.54)
+    base_in = math.ceil(cm / 2.54)
     feet, inches = divmod(base_in, 12)
     return f"{cm:.{int(isinstance(cm, float))}f}cm ({feet}'{inches}\")"
 
