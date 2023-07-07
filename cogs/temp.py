@@ -226,6 +226,8 @@ class Temporary(commands.Cog):
         """Show a ranking of people's heights."""
         people = []
         for k, v in self.qwdies.items():
+            if k == "166910808305958914":
+                continue
             height = v.get("height")
             member = ctx.guild.get_member(int(k))
             if not height or not member:
@@ -242,7 +244,7 @@ class Temporary(commands.Cog):
     @is_in_qwd
     async def set(self, ctx, *, height: parse_height):
         """Set your height (in cm or ft/in) for the height leaderboard. You can clear your height by passing `0`."""
-        if height < 140:
+        if height < 50:
             try:
                 del self.qwdies[str(ctx.author.id)]["height"]
             except KeyError:
