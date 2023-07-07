@@ -52,9 +52,9 @@ def parse_height(s):
             raise commands.BadArgument("couldn't parse height")
 
 def show_height(cm):
-    base_in = cm / 2.54
+    base_in = int(cm / 2.54)
     feet, inches = divmod(base_in, 12)
-    return f"{cm:.{int(isinstance(cm, float))}f}cm ({feet:.0f}'{inches:.0f}\")"
+    return f"{cm:.{int(isinstance(cm, float))}f}cm ({feet}'{inches}\")"
 
 def rank_enumerate(xs, *, key):
     cur_idx = None
