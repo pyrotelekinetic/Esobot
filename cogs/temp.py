@@ -226,11 +226,9 @@ class Temporary(commands.Cog):
         """Show a ranking of people's heights."""
         people = []
         for k, v in self.qwdies.items():
-            if k == "166910808305958914":
-                continue
             height = v.get("height")
             member = ctx.guild.get_member(int(k))
-            if not height or not member:
+            if not height or not member or "razetime" in (member.global_name, member.name):
                 continue
             people.append((height, member))
 
