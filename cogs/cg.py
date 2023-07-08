@@ -1,9 +1,10 @@
 from collections import defaultdict
 from typing import Union, Optional, MutableMapping
 
-import aiohttp
 import discord
+from datetime import datetime, timedelta, timezone
 from discord.ext import commands
+from bs4 import BeautifulSoup
 
 from utils import get_pronouns
 from constants.anon import CANON_URL, EVENT_DISCUSSION
@@ -26,13 +27,27 @@ async def persona_named(ctx, name):
         return None
     return j["id"]
 
-class Anon(commands.Cog):
-    """Send messages anonymously."""
+class CodeGuessing(commands.Cog, name="Code guessing"):
+    """Functions related to code guessing."""
 
     def __init__(self, bot):
         self.bot = bot
         self.conns = {}
         self.channel_conns: MutableMapping[discord.TextChannel, list[Connection]] = defaultdict(list)
+
+    @commands.command()
+    async def cg(self, ctx):
+        async with self.bot.session.get("https://cg.esolangs.gay/") as resp:
+            soup = BeautifulSoup(await resp.text(), "lxml")
+        target = datetime.fromisoformat(soup.find_all("time")[-1]["datetime"])
+        when = discord.utils.format_dt(target, "R") if datetime.now(timezone.utc) < target else "**when LyricLy wakes up**"
+        header = soup.find("h1")
+        if not header:
+            await ctx.send(f"The next round will start {when}.")
+        elif "stage 1" in header:
+            await ctx.send(f"The uploading stage will end {when}.")
+        else:
+            await ctx.send(f"The round will end {when}.")
 
     @commands.dm_only()
     @commands.group(invoke_without_command=True)
@@ -185,4 +200,4 @@ class Anon(commands.Cog):
             await conn.target.send(f"<{discord.utils.escape_markdown(name)}> {content}", embeds=message.embeds, files=files)
 
 async def setup(bot):
-    await bot.add_cog(Anon(bot))
+    await bot.add_cog(CodeGuessing(bot))
