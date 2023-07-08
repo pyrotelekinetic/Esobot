@@ -37,6 +37,7 @@ class CodeGuessing(commands.Cog, name="Code guessing"):
 
     @commands.command()
     async def cg(self, ctx):
+        """Current information about code guessing."""
         async with self.bot.session.get("https://cg.esolangs.gay/") as resp:
             soup = BeautifulSoup(await resp.text(), "lxml")
         target = datetime.fromisoformat(soup.find_all("time")[-1]["datetime"])
