@@ -37,7 +37,7 @@ def rank_enumerate(xs, *, key):
             cur_key = key(x)
         yield (cur_idx, x)
 
-class QWD(commands.Cog):
+class Qwd(commands.Cog, name="QWD"):
     """Commands for QWD."""
 
     def __init__(self, bot):
@@ -114,4 +114,4 @@ class QWD(commands.Cog):
         save_json(QWD_SAVES, self.qwdies)
 
 async def setup(bot):
-    await bot.add_cog(QWD(bot))
+    await bot.add_cog(Qwd(bot))
