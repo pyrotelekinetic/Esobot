@@ -1,23 +1,15 @@
-import asyncio
 import datetime
 import io
 import os
 import random
 import uuid
-import shlex
 import re
-import math
 import unicodedata
-from textwrap import dedent
 from typing import Optional
-from collections import defaultdict
 
 import discord
 from discord.ext import commands, tasks
 from PIL import Image, ImageOps
-
-from constants.paths import QWD_SAVES
-from utils import aggressive_normalize, load_json, save_json, get_pronouns
 
 
 @commands.check
@@ -27,44 +19,10 @@ def is_in_esolangs(ctx):
     return True
 
 @commands.check
-def is_in_qwd(ctx):
-    if ctx.guild.id != 1047299292492206101:
-        raise commands.CommandNotFound()
-    return True
-
-@commands.check
 def is_olivia(ctx):
     if ctx.author.id not in (156021301654454272, 319753218592866315):
         raise commands.CommandNotFound()
     return True
-
-def parse_height(s):
-    nums = re.findall(r"\d+(?:\.\d+)?", s)
-    match [float(x) if "." in x else int(x) for x in nums]:
-        case [cm]:
-            return cm
-        case [feet, inches]:
-            return int(2.54 * (feet*12 + inches))
-        case [feet, in_top, in_bottom]: 
-            return int(2.54 * (feet*12 + in_top/in_bottom))
-        case [feet, in_whole, in_top, in_bottom]:
-            return int(2.54 * (feet*12 + in_whole + in_top/in_bottom))
-        case _:
-            raise commands.BadArgument("couldn't parse height")
-
-def show_height(cm):
-    base_in = math.ceil(cm / 2.54)
-    feet, inches = divmod(base_in, 12)
-    return f"{cm:.{int(isinstance(cm, float))}f}cm ({feet}'{inches}\")"
-
-def rank_enumerate(xs, *, key):
-    cur_idx = None
-    cur_key = None
-    for idx, x in enumerate(sorted(xs, key=key), start=1):
-        if cur_key is None or key(x) >= cur_key:
-            cur_idx = idx
-            cur_key = key(x)
-        yield (cur_idx, x)
 
 class Temporary(commands.Cog):
     """Temporary, seasonal, random and miscellaneous poorly-written functionality. Things in here should probably be developed further or removed at some point."""
@@ -72,7 +30,6 @@ class Temporary(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.last_10 = None
-        self.qwdies = defaultdict(dict, load_json(QWD_SAVES))
         self.pride_loop.start()
 
     def cog_unload(self):
@@ -110,50 +67,6 @@ class Temporary(commands.Cog):
     async def before_pride_loop(self):
         await self.bot.wait_until_ready()
 
-    # def get_members(self, channel, *, excluding=None):
-    #     if channel.category.id != 730233425251794983:
-    #         return None
-    #     l = [m for m in channel.members if not any(r.name in ("Administrators", "Esobot") for r in m.roles) and m != excluding]
-    #     return l if 1 <= len(l) <= 2 else None
-
-    # @commands.command()
-    # async def start(self, ctx):
-    #     try:
-    #         partner = self.get_members(ctx.channel, excluding=ctx.author)[0]
-    #     except TypeError:
-    #         return await ctx.send("You're not in a game channel.")
-    #     await ctx.send(f"Beginning a start request. Your partner, {partner}, must agree to begin the event in 30 seconds by typing `!accept`!")
-    #     try:
-    #         await self.bot.wait_for("message", check=lambda m: m.channel == ctx.channel and m.content == "!accept", timeout=30)
-    #     except asyncio.TimeoutError:
-    #         await ctx.send("Request not accepted.")
-    #     else:
-    #         await ctx.send("Let the games begin!")
-    #         playing = ctx.guild.get_role(730594078584078378)
-    #         await ctx.author.add_roles(playing)
-    #         await partner.add_roles(playing)
-    #         await self.bot.get_channel(730593893195710525).send(f"Game started in {ctx.channel.mention}.")
-
-    # @commands.command()
-    # async def submit(self, ctx, *, text: commands.clean_content = ""):
-    #     """Submit your submission for the event. Accepts a text argument, which should be a URL or similar to your solution. Sends everything to a logging channel to be verified."""
-    #     try:
-    #         partner = self.get_members(ctx.channel, excluding=ctx.author)[0]
-    #     except TypeError:
-    #         return await ctx.send("You're not in a game channel.")
-    #     playing = ctx.guild.get_role(730594078584078378)
-    #     if playing not in ctx.author.roles or playing not in partner.roles:
-    #         await ctx.send("You have to be playing to submit.")
-    #     await ctx.send("Ending the game. Look over this and make absolutely certain that it is correct! You can't take back your submission! Your partner must agree to submit in 60 seconds by typing `!accept`.")
-    #     try:
-    #         await self.bot.wait_for("message", check=lambda m: m.channel == ctx.channel and m.content == "!accept", timeout=60)
-    #     except asyncio.TimeoutError:
-    #         await ctx.send("Request not accepted.")
-    #     else:
-    #         await ctx.author.remove_roles(playing)
-    #         await partner.remove_roles(playing)
-    #         await self.bot.get_channel(730593893195710525).send(f"{ctx.channel.mention} finished with the following submission: {text}")
-
     @commands.command()
     async def identicon(self, ctx, username: str, color: Optional[discord.Colour] = discord.Colour(0xF0F0F0), alpha: float = 0.0):
         """Send someone's GitHub identicon. `color` and `alpha` control the background colour."""
@@ -187,72 +100,6 @@ class Temporary(commands.Cog):
         b.truncate()
         b.seek(0)
         await ctx.send(file=discord.File(b, "result.png"))
-
-    @commands.group(invoke_without_command=True, aliases=["doxx"])
-    @is_in_qwd
-    async def dox(self, ctx, *, target: discord.Member):
-        """Reveal someone's address if they have set it through the bot. Must be used in a guild; the answer will be DMed to you."""
-        p = get_pronouns(target)
-        if not (addr := self.qwdies[str(target.id)].get("address")):
-            return await ctx.send(f'{p.Subj()} {p.plrnt("do", "es")} have an address set.')
-        await ctx.author.send(addr)
-        await ctx.send(f"Alright, I've DMed you {p.pos_det} address.")
-
-    @dox.command()
-    @commands.dm_only()
-    async def set(self, ctx, *, address=""):
-        """Set your address to be doxxed by others. Must be used in a DM with the bot. You can clear your address by using `set` without an argument."""
-        self.qwdies[str(ctx.author.id)]["address"] = address
-        save_json(QWD_SAVES, self.qwdies)
-        if not address:
-            await ctx.send("Successfully cleared your address.")
-        else:
-            await ctx.send("Successfully set your address.")     
-
-    @commands.group(invoke_without_command=True)
-    @is_in_qwd
-    async def height(self, ctx, *, person: discord.Member = None):
-        """Show someone's height if they have set it through the bot."""
-        target = person or ctx.author
-        p = get_pronouns(target)
-        if not (height := self.qwdies[str(target.id)].get("height")):
-            return await ctx.send(f'{p.Subj()} {p.plrnt("do", "es")} have a height set.')
-        they_are = p.are() if person else "You're"
-        await ctx.send(f"{they_are} {show_height(height)} tall.")
-
-    @height.command(aliases=["lb", "top", "list"])
-    @is_in_qwd
-    async def leaderboard(self, ctx):
-        """Show a ranking of people's heights."""
-        people = []
-        for k, v in self.qwdies.items():
-            height = v.get("height")
-            member = ctx.guild.get_member(int(k))
-            if not height or not member or "razetime" in (member.global_name, member.name):
-                continue
-            people.append((height, member))
-
-        entries = []
-        for i, (height, member) in rank_enumerate(people, key=lambda x: x[0]):
-            entries.append(rf"{i}\. {member.global_name or member.name} - {show_height(height)}")
-        embed = discord.Embed(title="The shortest qwdies", colour=discord.Colour(0x75ffe3), description="\n".join(entries))
-        await ctx.send(embed=embed)
-
-    @height.command()
-    @is_in_qwd
-    async def set(self, ctx, *, height: parse_height):
-        """Set your height (in cm or ft/in) for the height leaderboard. You can clear your height by passing `0`."""
-        if height < 50:
-            try:
-                del self.qwdies[str(ctx.author.id)]["height"]
-            except KeyError:
-                await ctx.send("Did nothing.")
-            else:
-                await ctx.send("Successfully cleared your height.")
-        else:
-            self.qwdies[str(ctx.author.id)]["height"] = height
-            await ctx.send(f"I set your height to {show_height(height)}.")
-        save_json(QWD_SAVES, self.qwdies)
 
     @commands.group(hidden=True, invoke_without_command=True)
     async def olivia(self, ctx):
