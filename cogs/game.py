@@ -30,6 +30,7 @@ class Games(commands.Cog):
 
     @commands.command()
     async def idea(self, ctx):
+        """Get a random idea."""
         while True:
             i = random.randrange(len(self.ideas))
             m = self.ideas[i]
@@ -57,6 +58,7 @@ class Games(commands.Cog):
 
     @commands.group(invoke_without_command=True)
     async def hwdyk(self, ctx):
+        """How well do you know your friends?"""
         pass
 
     @commands.guild_only()

@@ -16,7 +16,7 @@ class Hub(commands.Cog):
 
     @commands.group(invoke_without_command=True)
     async def hub(self, ctx):
-        f"""Commands for managing #hub."""
+        """Commands for managing #hub."""
         await ctx.send_help(ctx.command)
 
     @hub.command()

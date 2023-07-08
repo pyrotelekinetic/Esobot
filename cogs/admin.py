@@ -21,10 +21,7 @@ class Admin(commands.Cog):
 
     @commands.command(aliases=["shutdown!"], hidden=True)
     async def shutdown(self, ctx):
-        """Shuts down the bot without asking for confirmation.
-
-        See `shutdown` for more details.
-        """
+        """Shut down the bot without asking for confirmation."""
         await ctx.send(
             embed=make_embed(
                 color=colors.EMBED_INFO,
@@ -38,7 +35,7 @@ class Admin(commands.Cog):
 
     @commands.command()
     async def update(self, ctx):
-        """Runs `git pull` to update the bot."""
+        """Run `git pull` to update the bot."""
         subproc = await asyncio.create_subprocess_shell("git fetch && git log ..@{u} && git merge", stdout=PIPE, stderr=PIPE)
         embed = make_embed(color=colors.EMBED_INFO, title="Running `git pull`")
         m = await ctx.send(embed=embed)

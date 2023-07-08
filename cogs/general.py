@@ -46,7 +46,7 @@ class General(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.original_help = bot.help_command
-        bot.help_command = EsobotHelp()
+        bot.help_command = EsobotHelp(command_attrs={"brief": "Show this message.", "help": "Show information for all commands or for specific commands, like this."})
         bot.help_command.cog = self
 
     def cog_unload(self):

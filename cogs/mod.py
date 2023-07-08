@@ -170,6 +170,7 @@ class Moderation(commands.Cog):
     @commands.command(aliases=["rmove"])
     @commands.has_permissions(manage_messages=True)
     async def move(self, ctx, msg: Optional[int], where: discord.TextChannel = None):
+        """Move messages en masse."""
         await ctx.message.delete()
 
         start = discord.Object(((msg >> 22) - 10) << 22) if msg else (ctx.message.reference.resolved if ctx.message.reference else None)
