@@ -59,6 +59,8 @@ class Leaderboard:
         q = ureg.Quantity(string)
         if q.dimensionless:
             q *= self.main.unit
+        if not math.isfinite(q.m):
+            raise ValueError("what are you doing?")
         s = self.main.format(q)
         if self.others:
             s += f" ({', '.join([formatter.format(q) for formatter in self.others])})"
@@ -269,7 +271,7 @@ class Qwd(commands.Cog, name="QWD"):
             return await ctx.send("I couldn't parse that as a sensible value.")
         except DimensionalityError:
             return await ctx.send(f"Unit mismatch: your unit is incompatible with the leaderboard's unit '{lb.main.unit:P}'.")
-        self.qwdies[str(member.id)].setdefault("lb", {})[lb.name] = value
+        self.qwdies[str(ctx.author.id)].setdefault("lb", {})[lb.name] = value
         save_json(QWD_SAVES, self.qwdies)
         await ctx.send(f"Okay, your value will display as {lb.format(v)}.")
 
