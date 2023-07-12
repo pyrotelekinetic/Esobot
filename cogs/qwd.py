@@ -55,12 +55,16 @@ class Leaderboard:
         self.others = others
         self.asc = asc
 
-    def format(self, string):
+    def ureq(self, string):
         q = ureg.Quantity(string)
         if q.dimensionless:
             q *= self.main.unit
         if not math.isfinite(q.m):
             raise commands.BadArgument("What are you doing?")
+        return q
+
+    def format(self, string):
+        q = self.ureq(string)
         s = self.main.format(q)
         if self.others:
             s += f" ({', '.join([formatter.format(q) for formatter in self.others])})"
@@ -246,7 +250,7 @@ class Qwd(commands.Cog, name="QWD"):
     async def leaderboard(self, ctx, lb: LeaderboardConv):
         """Show a leaderboard, given its name."""
         entries = []
-        for i, (value, user) in rank_enumerate(self.lb_of(lb.name), key=lambda x: ureg.Quantity(x[0]), reverse=not lb.asc):
+        for i, (value, user) in rank_enumerate(self.lb_of(lb.name), key=lambda x: lb.ureq(x[0]), reverse=not lb.asc):
             entries.append(rf"{i}\. {user.global_name or user.name} - {lb.format(value)}")
         embed = discord.Embed(title=f"The `{lb.name}` leaderboard", colour=discord.Colour(0x75ffe3), description="\n".join(entries))
         if not entries:
@@ -322,7 +326,7 @@ class Qwd(commands.Cog, name="QWD"):
     @leaderboard.command()
     async def graph(self, ctx, lb: LeaderboardConv):
         """Graph a (somewhat humorous) ranking of people's values in a leaderboard such as `height`."""
-        people = [(ureg.Quantity(value).m, user, await user.avatar.read()) for value, user in self.lb_of(lb.name)]
+        people = [(lb.ureq(value).m, user, await user.avatar.read()) for value, user in self.lb_of(lb.name)]
         if len(people) < 2:
             return await ctx.send("There must be at least 2 people on a leaderboard to use `graph`.")
         image = await asyncio.to_thread(render_graph, people)
