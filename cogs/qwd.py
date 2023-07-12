@@ -60,7 +60,7 @@ class Leaderboard:
         if q.dimensionless:
             q *= self.main.unit
         if not math.isfinite(q.m):
-            raise commands.BadArgument("what are you doing?")
+            raise commands.BadArgument("What are you doing?")
         s = self.main.format(q)
         if self.others:
             s += f" ({', '.join([formatter.format(q) for formatter in self.others])})"
@@ -324,7 +324,7 @@ class Qwd(commands.Cog, name="QWD"):
         """Graph a (somewhat humorous) ranking of people's values in a leaderboard such as `height`."""
         people = [(ureg.Quantity(value).m, user, await user.avatar.read()) for value, user in self.lb_of(lb.name)]
         if len(people) < 2:
-            await ctx.send("There must be at least 2 people on a leaderboard to use `graph`.")
+            return await ctx.send("There must be at least 2 people on a leaderboard to use `graph`.")
         image = await asyncio.to_thread(render_graph, people)
         await ctx.send(file=discord.File(image, filename='height_graph.png'))
 
