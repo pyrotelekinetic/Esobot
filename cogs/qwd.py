@@ -40,24 +40,25 @@ def rank_enumerate(xs, *, key):
             cur_key = key(x)
         yield (cur_idx, x)
 
-def render_height_graph(height_member: List[(int, discord.Member, BytesIO)]) -> BytesIO:
+def render_height_graph(height_member):
     # Dimensions: len*60 + 60 x 360
     # Margins: 30 x 20
     height_member.sort(key=lambda x: -x[0])
-    base = Image.new('RGB', (len(height_member * 60 + 60), 360), (255, 255, 255))
+    base = Image.new('RGBA', (len(height_member * 60) + 60, 360), (200, 200, 200))
     max_height, min_height = height_member[0][0], height_member[-1][0]
     height_dif = max_height - min_height
 
     for i, (height, member, avatar) in enumerate(height_member):
         bar_height = math.ceil((height - min_height) * 280 / height_dif) + 20
-        avatar = Image.open(avatar).resize((60, bar_height))
-        base.paste(avatar, (60 * i + 30, 300 - bar_height))
+        avatar = Image.open(BytesIO(avatar)).resize((60, bar_height))
+        base.paste(avatar, (60 * i + 30, 340 - bar_height))
 
     draw = ImageDraw.Draw(base)
-    draw.line([(30, 20), (30, 340), (340, len(height_member) * 60 + 30)], (0, 0, 0), 1)
+    draw.line([(30, 20), (30, 340), (len(height_member) * 60 + 30, 340)], (0, 0, 0), 1)
     # TODO: labels, title, etc.
     rendered = BytesIO()
     base.save(rendered, format='png')
+    rendered.seek(0)
     return rendered
 
 
