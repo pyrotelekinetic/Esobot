@@ -40,7 +40,7 @@ def rank_enumerate(xs, *, key):
             cur_key = key(x)
         yield (cur_idx, x)
 
-def render_height_graph(height_member: List[(int, discord.Member, BytesIO)]) -> BytesIO:
+def render_height_graph(height_member):
     # Dimensions: len*60 + 60 x 360
     # Margins: 30 x 20
     height_member.sort(key=lambda x: -x[0])
