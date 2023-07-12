@@ -51,11 +51,10 @@ def render_height_graph(height_member):
     for i, (height, member, avatar) in enumerate(height_member):
         bar_height = math.ceil((height - min_height) * 280 / height_dif) + 20
         avatar = Image.open(BytesIO(avatar)).resize((60, bar_height))
-        base.paste(avatar, (60 * i + 30, 300 - bar_height))
+        base.paste(avatar, (60 * i + 30, 340 - bar_height))
 
     draw = ImageDraw.Draw(base)
-    draw.line([(30, 20), (30, 340), (340, len(height_member) * 60 + 30)],
-              (0, 0, 0), 1)
+    draw.line([(30, 20), (30, 340), (len(height_member) * 60 + 30, 340)], (0, 0, 0), 1)
     # TODO: labels, title, etc.
     rendered = BytesIO()
     base.save(rendered, format='png')
