@@ -5,7 +5,7 @@ from io import BytesIO
 from collections import defaultdict
 
 import discord
-from PIL import Image, ImageDraw
+from PIL import Image
 from discord.ext import commands
 
 from utils import save_json, load_json, get_pronouns
@@ -44,18 +44,15 @@ def render_height_graph(height_member):
     # Dimensions: len*120 + 120 x 720
     # Margins: 60 x 40
     height_member.sort(key=lambda x: -x[0])
-    base = Image.new('RGBA', (len(height_member * 120) + 120, 720), (200, 200, 200, 255))
+    base = Image.new('RGBA', (len(height_member * 120), 720), (200, 200, 200, 0))
     max_height, min_height = height_member[0][0], height_member[-1][0]
     height_dif = max_height - min_height
 
     for i, (height, member, avatar) in enumerate(height_member):
-        bar_height = math.ceil((height - min_height) * 560 / height_dif) + 40
+        bar_height = math.ceil((height - min_height) * 680 / height_dif) + 40
         avatar = Image.open(BytesIO(avatar)).resize((120, bar_height)).convert('RGBA')
-        base.alpha_composite(avatar, (120 * i + 60, 680 - bar_height))
+        base.alpha_composite(avatar, (120 * i, 720 - bar_height))
 
-    draw = ImageDraw.Draw(base)
-    draw.line([(60, 40), (60, 680), (len(height_member) * 120 + 60, 680)], (0, 0, 0, 255), 1)
-    # TODO: labels, title, etc.
     rendered = BytesIO()
     base.save(rendered, format='png')
     rendered.seek(0)
