@@ -273,7 +273,7 @@ class Qwd(commands.Cog, name="QWD"):
             return await ctx.send(f"Unit mismatch: your unit is incompatible with the leaderboard's unit '{lb.main.unit:P}'.")
         self.qwdies[str(ctx.author.id)].setdefault("lb", {})[lb.name] = value
         save_json(QWD_SAVES, self.qwdies)
-        await ctx.send(f"Okay, your value will display as {lb.format(v)}.")
+        await ctx.send(f"Okay, your value will display as {nice}.")
 
     @leaderboard.command(aliases=["new", "add", "make"])
     async def create(self, ctx, name="", *, definition=""):
