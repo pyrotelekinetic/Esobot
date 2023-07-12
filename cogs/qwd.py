@@ -60,7 +60,7 @@ class Leaderboard:
         if q.dimensionless:
             q *= self.main.unit
         if not math.isfinite(q.m):
-            raise ValueError("what are you doing?")
+            raise commands.BadArgument("what are you doing?")
         s = self.main.format(q)
         if self.others:
             s += f" ({', '.join([formatter.format(q) for formatter in self.others])})"
@@ -263,8 +263,13 @@ class Qwd(commands.Cog, name="QWD"):
         await ctx.send(embed=discord.Embed(title=f"{member.global_name or member.name}'s `{lb.name}`", description=lb.format(value), colour=discord.Colour(0x75ffe3)))
 
     @leaderboard.command()
-    async def set(self, ctx, lb: LeaderboardConv, *, value):
+    async def set(self, ctx, lb: LeaderboardConv, *, value=None):
         """Play nice. Don't you fucking test me."""
+        if not value:
+            if self.qwdies[str(ctx.author.id)].get("lb", {}).pop(lb.name, None):
+                return await ctx.send("Done.")
+            else:
+                return await ctx.send("Nothing to do.")
         try:
             nice = lb.format(value)
         except (TokenError, UndefinedUnitError):
@@ -318,6 +323,8 @@ class Qwd(commands.Cog, name="QWD"):
     async def graph(self, ctx, lb: LeaderboardConv):
         """Graph a (somewhat humorous) ranking of people's values in a leaderboard such as `height`."""
         people = [(ureg.Quantity(value).m, user, await user.avatar.read()) for value, user in self.lb_of(lb.name)]
+        if len(people) < 2:
+            await ctx.send("There must be at least 2 people on a leaderboard to use `graph`.")
         image = await asyncio.to_thread(render_graph, people)
         await ctx.send(file=discord.File(image, filename='height_graph.png'))
 
