@@ -2,6 +2,7 @@ import math
 import asyncio
 from io import BytesIO
 from collections import defaultdict
+from tokenize import TokenError
 
 import discord
 from PIL import Image
