@@ -56,6 +56,8 @@ class Leaderboard:
 
     def format(self, string):
         q = ureg.Quantity(string)
+        if q.dimensionless:
+            q *= self.main.unit
         s = self.main.format(q)
         if self.others:
             s += f" ({', '.join([formatter.format(q) for formatter in self.others])})"
@@ -260,11 +262,15 @@ class Qwd(commands.Cog, name="QWD"):
     @leaderboard.command()
     async def set(self, ctx, lb: LeaderboardConv, *, value):
         """Play nice. Don't you fucking test me."""
-        v = ureg.Quantity(value)
-        if not lb.main.unit.is_compatible_with(v):
-            return await ctx.send(f"Unit mismatch: '{v.u:P}' (your unit) is incompatible with '{lb.main.unit:P}' (leaderboard's unit)")
-        return await ctx.send("Ok")
+        try:
+            nice = lb.format(value)
+        except (TokenError, UndefinedUnitError):
+            return await ctx.send("I couldn't parse that as a sensible value.")
+        except DimensionalityError:
+            return await ctx.send(f"Unit mismatch: your unit is incompatible with the leaderboard's unit '{lb.main.unit:P}'.")
         self.qwdies[str(member.id)].setdefault("lb", {})[lb.name] = value
+        save_json(QWD_SAVES, self.qwdies)
+        await ctx.send(f"Okay, your value will display as {lb.format(v)}.")
 
     @leaderboard.command(aliases=["new", "add", "make"])
     async def create(self, ctx, name="", *, definition=""):
