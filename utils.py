@@ -131,9 +131,7 @@ pronoun_sets = {
 }
 
 def get_pronouns(member):
-    if member.id == 199151261604380672:
-        return Pronouns("e", "er", "er", "ers", "erself", False)
-    elif member.id == 435756251205468160:
+    if member.id == 435756251205468160:
         return Pronouns("I", "me", "my", "mine", "myself", True)
     roles = [role.name for guild in member.mutual_guilds if guild.id in (346530916832903169, 800373244162867231, 1047299292492206101) for role in guild.get_member(member.id).roles]
     pronouns = []
