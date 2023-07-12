@@ -42,8 +42,8 @@ class UnitFormatter:
         return f"UnitFormatter({self.unit!r}, {self.prec!r}, {self.compact!r}, {self.radices!r})"
 
     def __str__(self):
-        s = "".join([f"{unit} + " for unit in self.radices])
-        s += f"{'~'*self.compact}{self.unit}"
+        s = "".join([f"{unit:P} + " for unit in self.radices])
+        s += f"{'~'*self.compact}{self.unit:P}"
         if self.prec:
             s += f".{self.prec}"
         return s
