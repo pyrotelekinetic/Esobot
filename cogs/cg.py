@@ -45,7 +45,7 @@ class CodeGuessing(commands.Cog, name="Code guessing"):
         header = soup.find("h1")
         if not header:
             await ctx.send(f"The next round will start {when}.")
-        elif "stage 1" in header:
+        elif "stage 1" in header.string:
             await ctx.send(f"The uploading stage will end {when}.")
         else:
             await ctx.send(f"The round will end {when}.")
