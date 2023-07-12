@@ -41,20 +41,20 @@ def rank_enumerate(xs, *, key):
         yield (cur_idx, x)
 
 def render_height_graph(height_member):
-    # Dimensions: len*60 + 60 x 360
-    # Margins: 30 x 20
+    # Dimensions: len*120 + 120 x 720
+    # Margins: 60 x 40
     height_member.sort(key=lambda x: -x[0])
-    base = Image.new('RGBA', (len(height_member * 60) + 60, 360), (200, 200, 200, 255))
+    base = Image.new('RGBA', (len(height_member * 120) + 120, 720), (200, 200, 200, 255))
     max_height, min_height = height_member[0][0], height_member[-1][0]
     height_dif = max_height - min_height
 
     for i, (height, member, avatar) in enumerate(height_member):
-        bar_height = math.ceil((height - min_height) * 280 / height_dif) + 20
-        avatar = Image.open(BytesIO(avatar)).resize((60, bar_height)).convert('RGBA')
-        base.alpha_composite(avatar, (60 * i + 30, 340 - bar_height))
+        bar_height = math.ceil((height - min_height) * 560 / height_dif) + 40
+        avatar = Image.open(BytesIO(avatar)).resize((120, bar_height)).convert('RGBA')
+        base.alpha_composite(avatar, (120 * i + 60, 680 - bar_height))
 
     draw = ImageDraw.Draw(base)
-    draw.line([(30, 20), (30, 340), (len(height_member) * 60 + 30, 340)], (0, 0, 0, 255), 1)
+    draw.line([(60, 40), (60, 680), (len(height_member) * 120 + 60, 680)], (0, 0, 0, 255), 1)
     # TODO: labels, title, etc.
     rendered = BytesIO()
     base.save(rendered, format='png')
