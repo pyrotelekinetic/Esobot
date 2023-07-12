@@ -7,7 +7,7 @@ from tokenize import TokenError
 import discord
 from PIL import Image
 from discord.ext import commands
-from pint import UnitRegistry, UndefinedUnitError
+from pint import UnitRegistry, UndefinedUnitError, DimensionalityError
 from typing import Optional, Union
 
 from utils import save_json, load_json, get_pronouns
