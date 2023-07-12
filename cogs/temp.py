@@ -162,7 +162,7 @@ class Temporary(commands.Cog):
                     title = f"TURNED {m[1].replace('CAPITAL', 'BIG')}{m[2]}CHAIR{m[3]}"
                 else:
                     title = {
-                        "🪑": "CHAIR", "💺": "CHAIR", "🛋️": "DOUBLE CHAIR", "⑁": "OPTICAL CHARACTER RECOGNIZABLE CHAIR",
+                        "🪑": "CHAIR", "💺": "CHAIR", "🛋": "DOUBLE CHAIR", "⑁": "OPTICAL CHARACTER RECOGNIZABLE CHAIR",
                         "♿": "SYMBOLIC WHEELED CHAIR", "🦽": "MANUAL WHEELED CHAIR", "🦼": "AUTOMATIC WHEELED CHAIR",
                         "µ": "VERTICALLY-FLIPPED CHAIR", "ɥ": "TURNED CHAIR", "ɰ": "DOUBLE TURNED CHAIR",
                         "ꜧ": "UNEVEN CHAIR", "ћ": "SLAVIC CHAIR WITH STROKE", "ђ": "UNEVEN CHAIR WITH STROKE",
