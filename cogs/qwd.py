@@ -1,8 +1,11 @@
 import re
 import math
+import asyncio
+from io import BytesIO
 from collections import defaultdict
 
 import discord
+from PIL import Image, ImageDraw
 from discord.ext import commands
 
 from utils import save_json, load_json, get_pronouns
@@ -36,6 +39,29 @@ def rank_enumerate(xs, *, key):
             cur_idx = idx
             cur_key = key(x)
         yield (cur_idx, x)
+
+def render_height_graph(height_member) -> BytesIO:
+    # Dimensions: len*60 + 60 x 360
+    # Margins: 30 x 20
+    height_member.sort(key=lambda x: -x[0])
+    base = Image.new('RGB',
+                     (len(height_member * 60 + 60), 360),
+                     (255, 255, 255))
+    max_height, min_height = height_member[0][0], height_member[-1][0]
+    height_dif = max_height - min_height
+    for i, (height, member) in enumerate(height_member):
+        bar_height = math.ceil((height - min_height) * 280 / height_dif) + 20
+        avatar = Image.open(BytesIO(await member.avatar.read()))\
+                .resize((60, bar_height))
+        base.paste(avatar, (60 * i + 30, 300 - bar_height))
+    draw = ImageDraw.Draw(base)
+    draw.line([(30, 20), (30, 340), (340, len(height_member) * 60 + 30)],
+              (0, 0, 0), 1)
+    # TODO: labels, title, etc.
+    rendered = BytesIO()
+    base.save(rendered, format='png')
+    return rendered
+
 
 class Qwd(commands.Cog, name="QWD"):
     """Commands for QWD."""
@@ -112,6 +138,20 @@ class Qwd(commands.Cog, name="QWD"):
             self.qwdies[str(ctx.author.id)]["height"] = height
             await ctx.send(f"I set your height to {show_height(height)}.")
         save_json(QWD_SAVES, self.qwdies)
+
+    @height.command()
+    async def graph(self, ctx):
+        """Graph a ranking of people's heights."""
+        people = []
+        for k, v in self.qwdies.items():
+            height = v.get("height")
+            member = ctx.guild.get_member(int(k))
+            if not height or not member or "razetime" in (member.global_name, member.name):
+                continue
+            people.append((height, member))
+
+        image = await asyncio.to_thread(render_height_graph, people)
+        await ctx.send(file=discord.File(image, filename='height_graph.png'))
 
 async def setup(bot):
     await bot.add_cog(Qwd(bot))
