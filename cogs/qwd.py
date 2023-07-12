@@ -54,8 +54,7 @@ def render_height_graph(height_member: List[(int, discord.Member, BytesIO)]) -> 
         base.paste(avatar, (60 * i + 30, 300 - bar_height))
 
     draw = ImageDraw.Draw(base)
-    draw.line([(30, 20), (30, 340), (340, len(height_member) * 60 + 30)],
-              (0, 0, 0), 1)
+    draw.line([(30, 20), (30, 340), (340, len(height_member) * 60 + 30)], (0, 0, 0), 1)
     # TODO: labels, title, etc.
     rendered = BytesIO()
     base.save(rendered, format='png')
