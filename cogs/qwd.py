@@ -50,11 +50,10 @@ class UnitFormatter:
         return s
 
 class Leaderboard:
-    def __init__(self, main, others, asc, defn):
+    def __init__(self, main, others, asc):
         self.main = main
         self.others = others
         self.asc = asc
-        self.defn = defn
 
     def ureq(self, string):
         q = ureg.Quantity(string)
@@ -164,7 +163,7 @@ class LeaderboardParser:
             formatter = self.formatter()
             self.assert_compatible(main.unit, formatter.unit)
             others.append(formatter)
-        return Leaderboard(main, others, asc, self.s)
+        return Leaderboard(main, others, asc)
 
 def parse_leaderboard(text):
     return LeaderboardParser(text).rule()
@@ -332,7 +331,7 @@ class Qwd(commands.Cog, name="QWD"):
     async def all(self, ctx):
         paginator = EmbedPaginator()
         for name, lb in self.leaderboards.items():
-            paginator.add_line(f"`{name}`: `{lb.defn}`")
+            paginator.add_line(f"`{name}`: `{lb}`")
         paginator.embeds[0].title = "All leaderboards"
         for embed in paginator.embeds:
             await ctx.send(embed=embed)
