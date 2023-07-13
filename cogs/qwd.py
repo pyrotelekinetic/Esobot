@@ -173,7 +173,7 @@ def rank_enumerate(xs, *, key, reverse):
     cur_idx = None
     cur_key = None
     for idx, x in enumerate(sorted(xs, key=key, reverse=reverse), start=1):
-        if cur_key is None or (key(x) >= cur_key if reverse else key(x) < cur_key):
+        if cur_key is None or key(x) != cur_key:
             cur_idx = idx
             cur_key = key(x)
         yield (cur_idx, x)
