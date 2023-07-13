@@ -245,7 +245,7 @@ class Qwd(commands.Cog, name="QWD"):
         for k, v in self.qwdies.items():
             value = v.get("lb", {}).get(key)
             user = self.bot.get_user(int(k))
-            if not value or not user or "razetime" in (user.global_name, user.name):
+            if not value or not user or key == "height" and "razetime" in (user.global_name, user.name):
                 continue
             people.append((value, user))
         return people
