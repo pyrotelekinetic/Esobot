@@ -315,7 +315,7 @@ class Qwd(commands.Cog, name="QWD"):
         """
         if not name or not definition:
             return await ctx.send("No definition provided. **Please** read the text of `!help lb create` in full to learn how to use this command. Do not use it lightly; created leaderboards cannot be removed or edited again without LyricLy. And she will *not* like helping you, no matter how much you think she will.")
-        if definition in self.leaderboards:
+        if name in self.leaderboards:
             return await ctx.send("Look at you. You're so cute, trying to do that. This leaderboard already exists.")
         try:
             lb = parse_leaderboard(definition)
