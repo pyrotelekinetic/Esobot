@@ -103,7 +103,7 @@ class LeaderboardParser:
         n = ""
         while (c := self.peek()) not in ",.~+":
             if c == "-":
-                self.panic("unexpected - in unit name")
+                self.panic("unexpected - in unit")
             n += c
             self.advance()
         n = n.strip()
