@@ -10,7 +10,7 @@ from discord.ext import commands
 from pint import UnitRegistry, UndefinedUnitError, DimensionalityError
 from typing import Optional, Union
 
-from utils import save_json, load_json, get_pronouns
+from utils import save_json, load_json, get_pronouns, EmbedPaginator
 from constants.paths import QWD_SAVES, QWD_LEADERBOARDS
 
 
@@ -50,10 +50,11 @@ class UnitFormatter:
         return s
 
 class Leaderboard:
-    def __init__(self, main, others, asc):
+    def __init__(self, main, others, asc, defn):
         self.main = main
         self.others = others
         self.asc = asc
+        self.defn = defn
 
     def ureq(self, string):
         q = ureg.Quantity(string)
@@ -161,7 +162,7 @@ class LeaderboardParser:
             formatter = self.formatter()
             self.assert_compatible(main.unit, formatter.unit)
             others.append(formatter)
-        return Leaderboard(main, others, asc)
+        return Leaderboard(main, others, asc, self.s)
 
 def parse_leaderboard(text):
     return LeaderboardParser(text).rule()
@@ -324,6 +325,15 @@ class Qwd(commands.Cog, name="QWD"):
         self.leaderboards[name] = lb
         self.save_leaderboards()
         await ctx.send(f"Successfully created a new ``{name}`` leaderboard: ``{definition}``. You'd better not regret this.")
+
+    @leaderboard.command(aliases=["list"])
+    async def all(self, ctx):
+        paginator = EmbedPaginator()
+        for name, lb in self.leaderboards.items():
+            paginator.add_line(f"`{name}`: `{lb.defn}`")
+        paginator.embeds[0].title = "All leaderboards"
+        for embed in paginator.embeds:
+            await ctx.send(embed=embed)
 
     @leaderboard.command()
     async def graph(self, ctx, lb: LeaderboardConv):
