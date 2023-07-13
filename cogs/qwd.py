@@ -59,6 +59,8 @@ class Leaderboard:
         q = ureg.Quantity(string)
         if q.dimensionless:
             q *= self.main.unit
+        else:
+            q.ito(self.main.unit)
         if not math.isfinite(q.m):
             raise commands.BadArgument("What are you doing?")
         return q
