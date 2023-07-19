@@ -366,8 +366,10 @@ class Qwd(commands.Cog, name="QWD"):
             if ctx.author.id != 319753218592866315:
                 return await ctx.send("You can't remove a leaderboard that isn't an alias.")
             else:
+                self.aliases = {k: v for k, v in self.aliases.items() if v != lb.name}
                 for v in self.qwdies.values():
                     v.get("lb", {}).pop(lb.name, None)
+                save_json(QWD_SAVES, self.qwdies)
         self.leaderboards.pop(lb.name)
         self.save_leaderboards()
         await ctx.send("Done.")
