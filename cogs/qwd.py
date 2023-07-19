@@ -193,6 +193,9 @@ def render_graph(member_values):
     base = Image.new('RGBA', (len(member_values * 120), 720), (200, 200, 200, 0))
     max_value, min_value = member_values[0][0], member_values[-1][0]
     diff = max_value - min_value
+    if not diff:
+        diff = 100
+        min_value -= 100
 
     for i, (value, member, avatar) in enumerate(member_values):
         bar_value = math.ceil((value - min_value) * 680 / diff) + 40
