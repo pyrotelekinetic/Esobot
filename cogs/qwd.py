@@ -344,7 +344,7 @@ class Qwd(commands.Cog, name="QWD"):
         That's it! Now you know about all of `create`'s formatting features and how they can be used to make convenient leaderboards. Remember once again to be VERY careful with this command.
         """
         if not name or not definition:
-            return await ctx.send("No definition provided. **Please** read the text of `!help lb create` in full to learn how to use this command. Do not use it lightly; created leaderboards cannot be removed or edited again without LyricLy. And she will *not* like helping you, no matter how much you think she will.")
+            return await ctx.send("No definition provided. **Please** read the text of `!help lb create` in full to learn how to use this command. Do not use it lightly; created leaderboards cannot be removed again without LyricLy. And she will *not* like helping you, no matter how much you think she will.")
         if name in self.leaderboards:
             return await ctx.send("Look at you. You're so cute, trying to do that. This leaderboard already exists.")
         lb = await accept_leaderboard(ctx, definition)
