@@ -356,7 +356,7 @@ class Qwd(commands.Cog, name="QWD"):
             return await ctx.send("Very funny. That name is taken.")
         from_lb = await accept_leaderboard(ctx, definition, compat=to_lb) if definition else to_lb
         self.leaderboards[fro] = from_lb
-        self.aliases[fro] = to_lb.name
+        self.aliases[fro] = self.true_key(to_lb.name)
         self.save_leaderboards()
         await ctx.send(f"Successfully created a new alias ``{fro}`` -> ``{to_lb.name}``: ``{from_lb}``. You can edit or delete this alias at any time.")
 
