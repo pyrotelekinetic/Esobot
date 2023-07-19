@@ -189,7 +189,6 @@ def rank_enumerate(xs, *, key, reverse):
 def render_graph(member_values):
     # Dimensions: len*120 + 120 x 720
     # Margins: 60 x 40
-    member_values.sort(key=lambda x: -x[0])
     base = Image.new('RGBA', (len(member_values * 120), 720), (200, 200, 200, 0))
     max_value, min_value = member_values[0][0], member_values[-1][0]
     diff = max_value - min_value
@@ -266,20 +265,18 @@ class Qwd(commands.Cog, name="QWD"):
     def data_of(self, member, key):
         return self.data(member).get(self.true_key(key))
 
-    def lb_of(self, key):
-        people = []
-        for user in self.qwd.members:
-            value = self.data_of(user, key)
-            if not value or key == "height" and "razetime" in (user.global_name, user.name):
-                continue
-            people.append((value, user))
-        return people
+    def lb_members(self, lb):
+        return rank_enumerate(
+            ((value, member) for member in self.qwd.members if (value := self.data_of(member, lb.name)) and (lb.name != "height" or "razetime" not in (member.global_name, member.name))),
+            key=lambda x: lb.ureq(x[0]),
+            reverse=not lb.asc,
+        )
 
     @commands.group(invoke_without_command=True, aliases=["lb"])
     async def leaderboard(self, ctx, lb: LeaderboardConv):
         """Show a leaderboard, given its name."""
         entries = []
-        for i, (value, user) in rank_enumerate(self.lb_of(lb.name), key=lambda x: lb.ureq(x[0]), reverse=not lb.asc):
+        for i, (value, user) in self.lb_members(lb):
             entries.append(rf"{i}\. {user.global_name or user.name} - {lb.format(value)}")
         embed = discord.Embed(title=f"The `{lb.name}` leaderboard", colour=discord.Colour(0x75ffe3), description="\n".join(entries))
         if not entries:
@@ -405,7 +402,7 @@ class Qwd(commands.Cog, name="QWD"):
     @leaderboard.command()
     async def graph(self, ctx, lb: LeaderboardConv):
         """Graph a (somewhat humorous) ranking of people's values in a leaderboard such as `height`."""
-        people = [(lb.ureq(value).m, user, await user.avatar.read()) for value, user in self.lb_of(lb.name)]
+        people = [(lb.ureq(value).m, user, await user.avatar.read()) for _, (value, user) in self.lb_members(lb)]
         if not people:
             return await ctx.send("A leaderboard must have at least one person on it to use `graph`.")
         image = await asyncio.to_thread(render_graph, people)
