@@ -212,12 +212,15 @@ class Qwd(commands.Cog, name="QWD"):
         self.bot = bot
         self.qwdies = defaultdict(dict, load_json(QWD_SAVES))
         self.leaderboards = {k: parse_leaderboard(v) for k, v in load_json(QWD_LEADERBOARDS).items()}
+        self.qwd = None
 
     def save_leaderboards(self):
         save_json(QWD_LEADERBOARDS, {k: str(v) for k, v in self.leaderboards.items()})
 
     def cog_check(self, ctx):
-        return True
+        if not self.qwd:
+            self.qwd = self.bot.get_guild(1047299292492206101)
+        return not ctx.guild and self.qwd.get_member(ctx.author.id) or ctx.guild == self.qwd
 
     @commands.group(invoke_without_command=True, aliases=["doxx"])
     @commands.guild_only()
@@ -240,12 +243,20 @@ class Qwd(commands.Cog, name="QWD"):
         else:
             await ctx.send("Successfully set your address.")     
 
+    def data(self, member):
+        return self.qwdies[str(member.id)].setdefault("lb", {})
+
+    def data_of(self, member, key):
+        return self.data(member).get(key)
+
     def lb_of(self, key):
         people = []
         for k, v in self.qwdies.items():
-            value = v.get("lb", {}).get(key)
-            user = self.bot.get_user(int(k))
-            if not value or not user or key == "height" and "razetime" in (user.global_name, user.name):
+            user = self.qwd.get_member(int(k))
+            if not user:
+                continue
+            value = self.data_of(user, key)
+            if not value or key == "height" and "razetime" in (user.global_name, user.name):
                 continue
             people.append((value, user))
         return people
@@ -264,7 +275,7 @@ class Qwd(commands.Cog, name="QWD"):
     @leaderboard.command()
     async def get(self, ctx, lb: LeaderboardConv, *, member: discord.Member):
         """Get a specific person's number on a leaderboard."""
-        value = self.qwdies[str(member.id)].get("lb", {}).get(lb.name)
+        value = self.data_of(member or ctx.author, lb.name)
         p = get_pronouns(member)
         if not value:
             return await ctx.send(f'{p.Subj()} {p.plrnt("do", "es")} have a `{lb.name}` value set.')
@@ -273,8 +284,9 @@ class Qwd(commands.Cog, name="QWD"):
     @leaderboard.command()
     async def set(self, ctx, lb: LeaderboardConv, *, value=None):
         """Play nice. Don't you fucking test me."""
+        data = self.data(ctx.author)
         if not value:
-            if self.qwdies[str(ctx.author.id)].get("lb", {}).pop(lb.name, None):
+            if data.pop(lb.name, None):
                 return await ctx.send("Done.")
             else:
                 return await ctx.send("Nothing to do.")
@@ -284,7 +296,7 @@ class Qwd(commands.Cog, name="QWD"):
             return await ctx.send("I couldn't parse that as a sensible value.")
         except DimensionalityError:
             return await ctx.send(f"Unit mismatch: your unit is incompatible with the leaderboard's unit '{lb.main.unit:P}'.")
-        self.qwdies[str(ctx.author.id)].setdefault("lb", {})[lb.name] = value
+        data[lb.name] = value
         save_json(QWD_SAVES, self.qwdies)
         await ctx.send(f"Okay, your value will display as {nice}.")
 
