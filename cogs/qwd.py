@@ -173,10 +173,8 @@ async def accept_leaderboard(ctx, definition, *, compat=None):
         lb = parse_leaderboard(definition)
     except ParseError as e:
         raise commands.BadArgument(f"```ansi{e}```")
-    lb_unit = lb.main.unit
-    compat_unit = compat.main.unit
-    if compat and not lb_unit.is_compatible_with(compat_unit):
-        raise commands.BadArgument(f"unit '{lb_unit:P}' is incompatible with unit '{compat_unit:P}'")
+    if compat and not lb.main.unit.is_compatible_with(compat.main.unit):
+        raise commands.BadArgument(f"unit '{lb.main.unit:P}' is incompatible with unit '{compat.main.unit:P}'")
     return lb
 
 def rank_enumerate(xs, *, key, reverse):
