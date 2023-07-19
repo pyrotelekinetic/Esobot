@@ -190,7 +190,7 @@ def render_graph(member_values):
     # Dimensions: len*120 + 120 x 720
     # Margins: 60 x 40
     base = Image.new('RGBA', (len(member_values) * 120, 720), (200, 200, 200, 0))
-    max_value, min_value = min(member_values)[0], max(member_values)[0]
+    max_value, min_value = max(x[0] for x in member_values), min(x[0] for x in member_values)
     diff = max_value - min_value
     if not diff:
         diff = 100
