@@ -391,6 +391,7 @@ class Qwd(commands.Cog, name="QWD"):
 
     @leaderboard.command(aliases=["list"])
     async def all(self, ctx):
+        """List all of the leaderboards."""
         paginator = EmbedPaginator()
         for name, lb in self.leaderboards.items():
             paginator.add_line(f"`{name}`: `{lb}`")
