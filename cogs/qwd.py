@@ -406,8 +406,8 @@ class Qwd(commands.Cog, name="QWD"):
     async def graph(self, ctx, lb: LeaderboardConv):
         """Graph a (somewhat humorous) ranking of people's values in a leaderboard such as `height`."""
         people = [(lb.ureq(value).m, user, await user.avatar.read()) for value, user in self.lb_of(lb.name)]
-        if len(people) < 2:
-            return await ctx.send("There must be at least 2 people on a leaderboard to use `graph`.")
+        if not people:
+            return await ctx.send("A leaderboard must have at least one person on it to use `graph`.")
         image = await asyncio.to_thread(render_graph, people)
         await ctx.send(file=discord.File(image, filename='height_graph.png'))
 
