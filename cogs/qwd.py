@@ -11,7 +11,7 @@ from pint import UnitRegistry, UndefinedUnitError, DimensionalityError
 from typing import Optional, Union
 
 from utils import save_json, load_json, get_pronouns, EmbedPaginator
-from constants.paths import QWD_SAVES, QWD_LEADERBOARDS
+from constants.paths import QWD_SAVES, QWD_LEADERBOARDS, QWD_LB_ALIASES
 
 
 ureg = UnitRegistry(autoconvert_offset_to_baseunit=True)
@@ -168,6 +168,17 @@ class LeaderboardParser:
 def parse_leaderboard(text):
     return LeaderboardParser(text).rule()
 
+async def accept_leaderboard(ctx, definition, *, compat=None):
+    try:
+        lb = parse_leaderboard(definition)
+    except ParseError as e:
+        raise commands.BadArgument(f"```ansi{e}```")
+    lb_unit = lb.main.unit
+    compat_unit = compat.main.unit
+    if compat and not lb_unit.is_compatible_with(compat_unit):
+        raise commands.BadArgument(f"unit '{lb_unit:P}' is incompatible with unit '{compat_unit:P}'")
+    return lb
+
 def rank_enumerate(xs, *, key, reverse):
     cur_idx = None
     cur_key = None
@@ -212,10 +223,12 @@ class Qwd(commands.Cog, name="QWD"):
         self.bot = bot
         self.qwdies = defaultdict(dict, load_json(QWD_SAVES))
         self.leaderboards = {k: parse_leaderboard(v) for k, v in load_json(QWD_LEADERBOARDS).items()}
+        self.aliases = load_json(QWD_LB_ALIASES)
         self.qwd = None
 
     def save_leaderboards(self):
         save_json(QWD_LEADERBOARDS, {k: str(v) for k, v in self.leaderboards.items()})
+        save_json(QWD_LB_ALIASES, self.aliases)
 
     def cog_check(self, ctx):
         if not self.qwd:
@@ -243,18 +256,18 @@ class Qwd(commands.Cog, name="QWD"):
         else:
             await ctx.send("Successfully set your address.")     
 
+    def true_key(self, key):
+        return self.aliases.get(key, key)
+
     def data(self, member):
         return self.qwdies[str(member.id)].setdefault("lb", {})
 
     def data_of(self, member, key):
-        return self.data(member).get(key)
+        return self.data(member).get(self.true_key(key))
 
     def lb_of(self, key):
         people = []
-        for k, v in self.qwdies.items():
-            user = self.qwd.get_member(int(k))
-            if not user:
-                continue
+        for user in self.qwd.members:
             value = self.data_of(user, key)
             if not value or key == "height" and "razetime" in (user.global_name, user.name):
                 continue
@@ -285,8 +298,9 @@ class Qwd(commands.Cog, name="QWD"):
     async def set(self, ctx, lb: LeaderboardConv, *, value=None):
         """Play nice. Don't you fucking test me."""
         data = self.data(ctx.author)
+        name = self.true_key(lb.name)
         if not value:
-            if data.pop(lb.name, None):
+            if data.pop(name, None):
                 return await ctx.send("Done.")
             else:
                 return await ctx.send("Nothing to do.")
@@ -296,7 +310,7 @@ class Qwd(commands.Cog, name="QWD"):
             return await ctx.send("I couldn't parse that as a sensible value.")
         except DimensionalityError:
             return await ctx.send(f"Unit mismatch: your unit is incompatible with the leaderboard's unit '{lb.main.unit:P}'.")
-        data[lb.name] = value
+        data[name] = value
         save_json(QWD_SAVES, self.qwdies)
         await ctx.send(f"Okay, your value will display as {nice}.")
 
@@ -331,13 +345,42 @@ class Qwd(commands.Cog, name="QWD"):
             return await ctx.send("No definition provided. **Please** read the text of `!help lb create` in full to learn how to use this command. Do not use it lightly; created leaderboards cannot be removed or edited again without LyricLy. And she will *not* like helping you, no matter how much you think she will.")
         if name in self.leaderboards:
             return await ctx.send("Look at you. You're so cute, trying to do that. This leaderboard already exists.")
-        try:
-            lb = parse_leaderboard(definition)
-        except ParseError as e:
-            return await ctx.send(f"```ansi{e}```")
+        lb = await accept_leaderboard(ctx, definition)
         self.leaderboards[name] = lb
         self.save_leaderboards()
-        await ctx.send(f"Successfully created a new ``{name}`` leaderboard: ``{definition}``. You'd better not regret this.")
+        await ctx.send(f"Successfully created a new ``{name}`` leaderboard: ``{lb}``. You'd better not regret this. You can edit this leaderboard at any time.")
+
+    @leaderboard.command(aliases=["link", "point", "ln"])
+    async def alias(self, ctx, to_lb: LeaderboardCond, fro: str, *, definition=None):
+        """Create a new alias to another leaderboard. You may specify a new way to format the values; the default is to use the formatting of the source leaderboard."""
+        if fro in self.leaderboards:
+            return await ctx.send("Very funny. That name is taken.")
+        from_lb = await accept_leaderboard(ctx, definition, compat=to_lb)
+        self.leaderboards[fro] = from_lb
+        self.aliases[fro] = to_lb.name
+        self.save_leaderboards()
+        await ctx.send("Successfully created a new alias ``{fro}`` -> ``{to_lb.name}``: ``{from_lb}``. You can edit or delete this alias at any time.")
+
+    @leaderboard.command(aliases=["delete"])
+    async def remove(self, ctx, lb: LeaderboardConv):
+        """Remove a leaderboard alias."""
+        if not self.aliases.pop(lb.name, None):
+            if ctx.author.id != 319753218592866315:
+                return await ctx.send("You can't remove a leaderboard that isn't an alias.")
+            else:
+                for v in self.qwdies.values():
+                    v.get("lb", {}).pop(lb.name, None)
+        self.leaderboards.pop(lb.name)
+        self.save_leaderboards()
+        await ctx.send("Done.")
+
+    @leaderboard.command(aliases=["modify", "update", "replace"])
+    async def edit(self, ctx, old: LeaderboardConv, *, definition):
+        """Edit a leaderboard's formatting definition."""
+        new = await accept_leaderboard(ctx, definition, compat=old)
+        self.leaderboards[old.name] = new
+        self.save_leaderboards()
+        await ctx.send("Done.")
 
     @leaderboard.command(aliases=["list"])
     async def all(self, ctx):
