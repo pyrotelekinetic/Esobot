@@ -315,7 +315,7 @@ class Qwd(commands.Cog, name="QWD"):
 
     @leaderboard.command(aliases=["new", "add", "make"])
     async def create(self, ctx, name="", *, definition=""):
-        """Create a leaderboard. WARNING: The syntax for this command is complex and you cannot remove or edit leaderboards. Use `!help lb new` for more info.
+        """Create a leaderboard. WARNING: The syntax for this command is complex and you cannot remove leaderboards. Use `!help lb new` for more info.
 
         To make a leaderboard, you pass to this command the name of the command (in quotes if necessary) and its definition. The simplest leaderboards consist of a single unit, and look like this:
         `!lb create height cm`
