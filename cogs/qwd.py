@@ -357,7 +357,7 @@ class Qwd(commands.Cog, name="QWD"):
         self.leaderboards[fro] = from_lb
         self.aliases[fro] = to_lb.name
         self.save_leaderboards()
-        await ctx.send("Successfully created a new alias ``{fro}`` -> ``{to_lb.name}``: ``{from_lb}``. You can edit or delete this alias at any time.")
+        await ctx.send(f"Successfully created a new alias ``{fro}`` -> ``{to_lb.name}``: ``{from_lb}``. You can edit or delete this alias at any time.")
 
     @leaderboard.command(aliases=["delete"])
     async def remove(self, ctx, lb: LeaderboardConv):
@@ -366,7 +366,13 @@ class Qwd(commands.Cog, name="QWD"):
             if ctx.author.id != 319753218592866315:
                 return await ctx.send("You can't remove a leaderboard that isn't an alias.")
             else:
-                self.aliases = {k: v for k, v in self.aliases.items() if v != lb.name}
+                remove = []
+                for k, v in self.aliases.items():
+                    if v == lb.name:
+                        remove.append(k)
+                        self.leaderboards.pop(k)
+                for k in remove:
+                    self.aliases.pop(k)
                 for v in self.qwdies.values():
                     v.get("lb", {}).pop(lb.name, None)
                 save_json(QWD_SAVES, self.qwdies)
