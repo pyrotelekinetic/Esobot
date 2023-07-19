@@ -57,7 +57,7 @@ class Leaderboard:
 
     def ureq(self, string):
         q = ureg.Quantity(string)
-        if q.dimensionless:
+        if q.unitless:
             q = q.m * self.main.unit
         else:
             q.ito(self.main.unit)
