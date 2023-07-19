@@ -353,7 +353,7 @@ class Qwd(commands.Cog, name="QWD"):
         """Create a new alias to another leaderboard. You may specify a new way to format the values; the default is to use the formatting of the source leaderboard."""
         if fro in self.leaderboards:
             return await ctx.send("Very funny. That name is taken.")
-        from_lb = await accept_leaderboard(ctx, definition, compat=to_lb)
+        from_lb = await accept_leaderboard(ctx, definition, compat=to_lb) if definition else to_lb
         self.leaderboards[fro] = from_lb
         self.aliases[fro] = to_lb.name
         self.save_leaderboards()
