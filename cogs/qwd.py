@@ -351,7 +351,7 @@ class Qwd(commands.Cog, name="QWD"):
         await ctx.send(f"Successfully created a new ``{name}`` leaderboard: ``{lb}``. You'd better not regret this. You can edit this leaderboard at any time.")
 
     @leaderboard.command(aliases=["link", "point", "ln"])
-    async def alias(self, ctx, to_lb: LeaderboardCond, fro: str, *, definition=None):
+    async def alias(self, ctx, to_lb: LeaderboardConv, fro: str, *, definition=None):
         """Create a new alias to another leaderboard. You may specify a new way to format the values; the default is to use the formatting of the source leaderboard."""
         if fro in self.leaderboards:
             return await ctx.send("Very funny. That name is taken.")
