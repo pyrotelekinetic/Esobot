@@ -299,6 +299,7 @@ class Qwd(commands.Cog, name="QWD"):
         name = self.true_key(lb.name)
         if not value:
             if data.pop(name, None):
+                save_json(QWD_SAVES, self.qwdies)
                 return await ctx.send("Done.")
             else:
                 return await ctx.send("Nothing to do.")
