@@ -417,6 +417,7 @@ class Qwd(commands.Cog, name="QWD"):
         await ctx.send(discord.utils.format_dt(discord.utils.snowflake_time(self.vore[-1]), "R"))
 
     @vore.command(aliases=["0"])
+    @commands.guild_only()
     async def update(self, ctx):
         self.vore.append(ctx.message.id)
         save_json(VORE_STORE, self.vore)
