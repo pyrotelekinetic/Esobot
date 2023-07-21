@@ -413,8 +413,8 @@ class Qwd(commands.Cog, name="QWD"):
     @commands.guild_only()
     async def vore(self, ctx):
         if not self.vore:
-            await ctx.send("forever")
-        await ctx.send(discord.utils.format_dt(discord.utils.snowflake_time(self.vore[-1])), "R")
+            return await ctx.send("forever")
+        await ctx.send(discord.utils.format_dt(discord.utils.snowflake_time(self.vore[-1]), "R"))
 
     @vore.command(aliases=["0"])
     async def update(self, ctx):
