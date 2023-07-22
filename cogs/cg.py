@@ -74,7 +74,7 @@ class CodeGuessing(commands.Cog, name="Code guessing"):
             async with self.bot.session.get(f"{CANON_URL}/users/{target.id}/settings") as resp:
                 dms = discord.utils.find(lambda x: x["name"] == "dms", await resp.json())["value"]
             if target in self.conns or not dms:
-                return await ctx.send("{p.are()} already in an anonymous channel or {'have' if p.plural else 'has'} anonymous DMs disabled.")
+                return await ctx.send(f"{p.are()} already in an anonymous channel or {'have' if p.plural else 'has'} anonymous DMs disabled.")
             where = f"to {p.obj}"
             prep = "with"
             self.conns[target] = Connection(target.global_name or target.name, ctx.author, None)
