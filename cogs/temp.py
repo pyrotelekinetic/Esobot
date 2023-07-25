@@ -1,15 +1,12 @@
 import datetime
-import io
 import os
 import random
 import uuid
 import re
 import unicodedata
-from typing import Optional
 
 import discord
 from discord.ext import commands, tasks
-from PIL import Image, ImageOps
 
 
 @commands.check

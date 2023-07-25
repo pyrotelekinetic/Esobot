@@ -1,5 +1,8 @@
 import asyncio
 import discord
+import io
+from typing import Optional
+from PIL import Image, ImageOps
 
 from discord.ext import commands
 from utils import make_embed
