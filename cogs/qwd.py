@@ -412,6 +412,7 @@ class Qwd(commands.Cog, name="QWD"):
     @commands.group(invoke_without_command=True, aliases=["voredays", "dayssincevore"])
     @commands.guild_only()
     async def vore(self, ctx):
+        """Mark a vore moment."""
         if not self.vore:
             return await ctx.send("forever")
         await ctx.send(discord.utils.format_dt(discord.utils.snowflake_time(self.vore[-1]), "R"))
