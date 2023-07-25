@@ -233,7 +233,7 @@ class Qwd(commands.Cog, name="QWD"):
 
     def cog_check(self, ctx):
         if not self.qwd:
-            self.qwd = self.bot.get_guild(1047299292492206101)
+            self.qwd = self.bot.get_guild(1133026989637382144)
         return not ctx.guild and self.qwd.get_member(ctx.author.id) or ctx.guild == self.qwd
 
     @commands.group(invoke_without_command=True, aliases=["doxx"])
