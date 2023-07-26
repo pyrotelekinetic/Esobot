@@ -69,23 +69,22 @@ class Temporary(commands.Cog):
         pass
 
     @olivia.command(name="time", hidden=True)
-    @is_in_esolangs
     async def _time(self, ctx):
-        await self.bot.get_command("time")(ctx, user=ctx.guild.get_member(156021301654454272))
+        if member := ctx.guild.get_member(156021301654454272):
+            await self.bot.get_command("time")(ctx, user=member)
 
     @commands.group(hidden=True, invoke_without_command=True, aliases=["ky", "kay", "k"])
     async def kaylynn(self, ctx):
         pass
 
     @kaylynn.command(name="time", hidden=True)
-    @is_in_esolangs
     async def _time2(self, ctx):
-        await self.bot.get_command("time")(ctx, user=ctx.guild.get_member(636797375184240640))
+        if member := ctx.guild.get_member(636797375184240640):
+            await self.bot.get_command("time")(ctx, user=member)
 
     @kaylynn.command(hidden=True)
     async def cute(self, ctx):
-        if ctx.guild.id == 346530916832903169:
-            await ctx.send("yeah!")
+        await ctx.send("yeah!")
 
     @commands.group(hidden=True, invoke_without_command=True)
     async def soup(self, ctx):
