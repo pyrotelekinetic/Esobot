@@ -67,10 +67,11 @@ class Games(commands.Cog):
         """Pick a random message. If you can guess who sent it, you win!"""
 
         if ctx.guild.name == "QVDD":
+            base = datetime.datetime(year=2023, month=7, day=25)
             year = 2023
             channel = ctx.guild.get_channel(1133026989637382149 if random.random() < .909 else 1133027144512049223)
         else:
-            year = 2020
+            base = datetime.datetime(year=2020, month=1, day=1)
             # hardcoded list of "discussion" channels: esolang*, mathematics, off-topic, programming, *-games
             channel = self.bot.get_channel(random.choice([
                 348671457808613388,
@@ -86,7 +87,6 @@ class Games(commands.Cog):
 
         # this doesn't uniformly pick a random message: it strongly prefers messages sent after longer pauses
         # however this is a trade-off for making it incredibly cheap to grab a message because we don't have to spam history calls or store any data
-        base = datetime.datetime(year=year, month=1, day=1)
         t = base + datetime.timedelta(milliseconds=random.randint(0, int((datetime.datetime.utcnow() - base).total_seconds() * 1000)))
         async for message in channel.history(before=t):
             if message.content and len(message.content) >= 20 and message.author in ctx.guild.members:
