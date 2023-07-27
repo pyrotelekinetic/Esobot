@@ -66,9 +66,9 @@ class Games(commands.Cog):
     async def message(self, ctx):
         """Pick a random message. If you can guess who sent it, you win!"""
 
-        if ctx.guild.name == "QWD":
+        if ctx.guild.name == "QVDD":
             year = 2023
-            channel = ctx.guild.get_channel(1047299292492206104 if random.random() < .909 else 1050124370363818037)
+            channel = ctx.guild.get_channel(1133026989637382149 if random.random() < .909 else 1133027144512049223)
         else:
             year = 2020
             # hardcoded list of "discussion" channels: esolang*, mathematics, off-topic, programming, *-games
