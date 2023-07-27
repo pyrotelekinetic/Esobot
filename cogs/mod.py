@@ -64,7 +64,7 @@ class Moderation(commands.Cog):
         else:
             return []
 
-    async def perform(self, ctx, unconfirmed_targets, method, verb, reason, confirm=True):
+    async def perform(self, ctx, unconfirmed_targets, method, verb, reason, confirm=True, **kwargs):
         if confirm:
             targets = await self.confirm(ctx, unconfirmed_targets, reason, verb.lower())
         else:
@@ -75,11 +75,11 @@ class Moderation(commands.Cog):
         message = []
         successful = []
         for target in targets:
-            if ctx.author.top_role <= target.top_role:
+            if isinstance(target, discord.Member) and ctx.author.top_role <= target.top_role:
                 message.append(f"You're a lower rank than {target}.")
                 continue
             try:
-                await method(target, reason=reason)
+                await method(target, reason=reason, **kwargs)
             except discord.HTTPException as e:
                 message.append(f"Operation failed on {target}: {e}")
             else:
@@ -100,7 +100,7 @@ class Moderation(commands.Cog):
     @commands.has_permissions(ban_members=True)
     async def ban(self, ctx, targets: HackTargets, *, reason=None):
         """Ban a member."""
-        await self.perform(ctx, targets, ctx.guild.ban, "Banned", reason)
+        await self.perform(ctx, targets, ctx.guild.ban, "Banned", reason, delete_message_seconds=0)
 
     @commands.command()
     @commands.has_permissions(ban_members=True)
