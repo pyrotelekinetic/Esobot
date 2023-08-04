@@ -425,24 +425,30 @@ class Qwd(commands.Cog, name="QWD"):
         await ctx.send("Done. Now I'm hungry!")
 
     @commands.group(invoke_without_command=True, aliases=["temp"])
-    async def weather(self, ctx, *, target: discord.Member = None):
-        """Display current weather at a user's location."""
+    async def weather(self, ctx, *, target: Union[discord.Member, str] = ""):
+        """Display current weather at a location or a user's stored location."""
         target = target or ctx.author
-        p = get_pronouns(target)
-        location = self.qwdies[str(target.id)].get("weather")
-        if not location:
-            return await ctx.send(f"{p.they_do_not()} have a location set.")
+        if isinstance(target, discord.Member):
+            p = get_pronouns(target)
+            location = self.qwdies[str(target.id)].get("weather")
+            if not location:
+                return await ctx.send(f"{p.they_do_not()} have a location set." if target != ctx.author else "You don't have a location set.")
+        else:
+            location = target
 
         async with self.bot.session.get(f"https://wttr.in/{location}", params={"format": "j1"}) as resp:
+            if resp.status >= 400:
+                return await ctx.send("Unknown location.")
             data = await resp.json()
-    
+
+        area = ", ".join([t for k in ["areaName", "region", "country"] if (t := data["nearest_area"][0][k][0]["value"])])
         current = data["current_condition"][0]
         cel = current["temp_C"]
         far = current["temp_F"]
         desc = current["weatherDesc"][0]["value"]
     
         embed = discord.Embed(
-            title=f"{target.name}'s current weather",
+            title=f"Current weather in {area}",
             description=f"{desc}, {cel}°C ({far}°F)"
         )
         await ctx.send(embed=embed)
@@ -455,7 +461,7 @@ class Qwd(commands.Cog, name="QWD"):
         """
         async with self.bot.session.head(f"https://wttr.in/{location}") as resp:
             if resp.status >= 400:
-                return await ctx.send("Unknown location. See the [wttr documentation](https://wttr.in/:help).")
+                return await ctx.send("Unknown location. See the [wttr documentation](<https://wttr.in/:help>).")
 
         self.qwdies[str(ctx.author.id)]["weather"] = location
         save_json(QWD_SAVES, self.qwdies)
