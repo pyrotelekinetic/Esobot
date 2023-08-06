@@ -409,20 +409,24 @@ class Qwd(commands.Cog, name="QWD"):
         image = await asyncio.to_thread(render_graph, people)
         await ctx.send(file=discord.File(image, filename='height_graph.png'))
 
+    def last_vore(self):
+        return discord.utils.format_dt(discord.utils.snowflake_time(self.vore[-1]), "R")
+
     @commands.group(invoke_without_command=True, aliases=["voredays", "dayssincevore"])
     async def vore(self, ctx):
         """See when the last vore moment was."""
         if not self.vore:
             return await ctx.send("forever")
-        await ctx.send(discord.utils.format_dt(discord.utils.snowflake_time(self.vore[-1]), "R"))
+        await ctx.send(self.last_vore())
 
     @vore.command(aliases=["0"])
     @commands.guild_only()
     async def update(self, ctx):
         """Mark that a vore moment has occurred."""
+        before = self.last_vore()
         self.vore.append(ctx.message.id)
         save_json(VORE_STORE, self.vore)
-        await ctx.send("Done. Now I'm hungry!")
+        await ctx.send(f"{before} -> 0. Now I'm hungry!")
 
     @commands.group(invoke_without_command=True, aliases=["temp"])
     async def weather(self, ctx, *, target: Union[discord.Member, str] = ""):
